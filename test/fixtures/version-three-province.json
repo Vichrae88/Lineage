@@ -1,0 +1,700 @@
+{
+  "version": 3,
+  "scale": "province",
+  "title": "Province",
+  "name": "Alderwick",
+  "year": 1,
+  "season": 0,
+  "turn": 0,
+  "rng": 71421,
+  "ruler": {
+    "name": "Test",
+    "race": "Human",
+    "age": 26,
+    "health": 95,
+    "values": "Harmony",
+    "history": "Inherited",
+    "alive": true
+  },
+  "resources": {
+    "gold": 125,
+    "food": 115,
+    "population": 12000,
+    "infrastructure": 32,
+    "happiness": 48,
+    "military": 40,
+    "trade": 35,
+    "security": 40,
+    "legitimacy": 70,
+    "health": 45,
+    "learning": 35,
+    "ecology": 65,
+    "justice": 45,
+    "faith": 50
+  },
+  "court": [
+    {
+      "id": "mira",
+      "name": "Mira Ashwood",
+      "race": "Elf",
+      "role": "Steward",
+      "skills": {
+        "stewardship": 78,
+        "martial": 22,
+        "diplomacy": 50,
+        "intrigue": 35
+      },
+      "age": 30,
+      "health": 90,
+      "loyalty": 65,
+      "trust": 55,
+      "affection": 35,
+      "respect": 55,
+      "ambition": 40,
+      "grievance": 10,
+      "experience": 0,
+      "alive": true,
+      "status": "serving",
+      "portrait": "mira",
+      "house": "Ashwood",
+      "faction": "elves",
+      "origin": "The lantern orchards of Silverwood",
+      "traits": [
+        "Patient",
+        "Principled",
+        "Quietly stubborn"
+      ],
+      "desire": "A realm where the youngest village is heard as clearly as the oldest house.",
+      "fear": "That progress will become an excuse to fell the sacred groves.",
+      "secret": "She once sheltered a goblin family against the wishes of her own kin.",
+      "voice": "“A bridge is a promise made of stone. Let us be certain we can keep it.”",
+      "story": "Mira left the Silverwood counting houses after a winter in which perfect accounts concealed starving villages. She carries a battered field notebook, knows the name of every miller along the river, and distrusts anyone who calls people an expense.",
+      "appearance": "Silver hair braided with a single green ribbon; ink on the fingers of her left hand.",
+      "faith": "The Green Covenant; offerings of seed rather than coin.",
+      "family": "Her younger brother tends the ancestral orchard. Their letters have grown infrequent.",
+      "memory": "She remembers every promise made at your ascension.",
+      "memories": [],
+      "lastCultivated": -1,
+      "lastAppointed": -1,
+      "location": "Alder Hall"
+    },
+    {
+      "id": "brann",
+      "name": "Brann Stonehand",
+      "race": "Dwarf",
+      "role": "Marshal",
+      "skills": {
+        "stewardship": 35,
+        "martial": 82,
+        "diplomacy": 30,
+        "intrigue": 45
+      },
+      "age": 48,
+      "health": 90,
+      "loyalty": 65,
+      "trust": 55,
+      "affection": 35,
+      "respect": 55,
+      "ambition": 40,
+      "grievance": 10,
+      "experience": 0,
+      "alive": true,
+      "status": "serving",
+      "portrait": "brann",
+      "house": "Stonehand",
+      "faction": "guard",
+      "origin": "The old shield halls beneath Stoneveil",
+      "traits": [
+        "Protective",
+        "Blunt",
+        "Proud"
+      ],
+      "desire": "To leave behind a watch that protects strangers as readily as kin.",
+      "fear": "Losing another recruit to a ruler’s vanity.",
+      "secret": "He still pays a pension to the family of a deserter he once condemned.",
+      "voice": "“Tell me who we are protecting. Then I will tell you what it will cost.”",
+      "story": "At the Battle of the Hollow Ford, Brann brought his broken company home instead of holding a doomed position. Nobles called him disobedient. The soldiers who survived call him captain. His ceremonial shield has a crack he refuses to repair.",
+      "appearance": "A copper beard, an old scar above one eye, and an immaculate blue cloak.",
+      "faith": "The Ancestor Forge; service is the prayer.",
+      "family": "A widower. His daughter runs a stonecutting yard and will not speak of war.",
+      "memory": "He judges your first orders more carefully than your first speech.",
+      "memories": [],
+      "lastCultivated": -1,
+      "lastAppointed": -1,
+      "location": "Alder Hall"
+    },
+    {
+      "id": "sable",
+      "name": "Sable Reed",
+      "race": "Goblin",
+      "role": "Ambassador",
+      "skills": {
+        "stewardship": 45,
+        "martial": 20,
+        "diplomacy": 80,
+        "intrigue": 65
+      },
+      "age": 27,
+      "health": 90,
+      "loyalty": 65,
+      "trust": 55,
+      "affection": 35,
+      "respect": 55,
+      "ambition": 40,
+      "grievance": 10,
+      "experience": 0,
+      "alive": true,
+      "status": "serving",
+      "portrait": "sable",
+      "house": "Reed",
+      "faction": "goblins",
+      "origin": "The reed markets of the Briarroot Compact",
+      "traits": [
+        "Observant",
+        "Witty",
+        "Restless"
+      ],
+      "desire": "Recognition for goblin towns as partners, rather than convenient trading posts.",
+      "fear": "Being welcomed at the table but never trusted with its decisions.",
+      "secret": "An old smuggling contact now serves the Lantern Guild.",
+      "voice": "“An open gate is useful. An open mind is rarer.”",
+      "story": "Sable began as a translator for caravans whose drivers refused to learn each other’s names. A negotiated truce at Briarroot made their reputation; a joke at the wrong banquet nearly ended it. They collect foreign coins and stories of improbable friendships.",
+      "appearance": "Moss-green skin, bright amber eyes, and a russet scarf fastened with a brass leaf.",
+      "faith": "The Many Roads; every guest carries a lesson.",
+      "family": "Three cousins run rival ferry crossings. All insist Sable favors the others.",
+      "memory": "They are still deciding whether your welcome is a courtesy or a conviction.",
+      "memories": [],
+      "lastCultivated": -1,
+      "lastAppointed": -1,
+      "location": "Alder Hall"
+    }
+  ],
+  "factions": [
+    {
+      "id": "commons",
+      "name": "The common hearths",
+      "kind": "The people",
+      "trust": 55,
+      "respect": 50,
+      "affection": 40,
+      "fear": 20,
+      "trade": 20,
+      "grievance": 25,
+      "alliance": false
+    },
+    {
+      "id": "guild",
+      "name": "The Lantern Guild",
+      "kind": "Merchants & artisans",
+      "trust": 55,
+      "respect": 50,
+      "affection": 40,
+      "fear": 20,
+      "trade": 20,
+      "grievance": 25,
+      "alliance": false
+    },
+    {
+      "id": "guard",
+      "name": "The sworn watch",
+      "kind": "Soldiers",
+      "trust": 55,
+      "respect": 50,
+      "affection": 40,
+      "fear": 20,
+      "trade": 20,
+      "grievance": 25,
+      "alliance": false
+    },
+    {
+      "id": "nobles",
+      "name": "The old houses",
+      "kind": "Landed families",
+      "trust": 55,
+      "respect": 50,
+      "affection": 40,
+      "fear": 20,
+      "trade": 20,
+      "grievance": 25,
+      "alliance": false
+    },
+    {
+      "id": "goblins",
+      "name": "Briarroot Compact",
+      "kind": "Goblin neighbor",
+      "trust": 40,
+      "respect": 50,
+      "affection": 40,
+      "fear": 20,
+      "trade": 20,
+      "grievance": 25,
+      "alliance": false
+    },
+    {
+      "id": "gnolls",
+      "name": "Red Dune Clans",
+      "kind": "Gnoll confederation",
+      "trust": 40,
+      "respect": 50,
+      "affection": 40,
+      "fear": 20,
+      "trade": 20,
+      "grievance": 25,
+      "alliance": false
+    },
+    {
+      "id": "elves",
+      "name": "The Silverwood Court",
+      "kind": "Elven realm",
+      "trust": 40,
+      "respect": 50,
+      "affection": 40,
+      "fear": 20,
+      "trade": 20,
+      "grievance": 25,
+      "alliance": false
+    },
+    {
+      "id": "bugbears",
+      "name": "Stoneveil Lodge",
+      "kind": "Bugbear highlanders",
+      "trust": 40,
+      "respect": 50,
+      "affection": 40,
+      "fear": 20,
+      "trade": 20,
+      "grievance": 25,
+      "alliance": false
+    },
+    {
+      "id": "beastfolk",
+      "name": "The Manyfold Assembly",
+      "kind": "Beastfolk communities",
+      "trust": 40,
+      "respect": 50,
+      "affection": 40,
+      "fear": 20,
+      "trade": 20,
+      "grievance": 25,
+      "alliance": false
+    }
+  ],
+  "bonds": [
+    {
+      "a": "mira",
+      "b": "brann",
+      "trust": 40,
+      "affection": 30,
+      "rivalry": 35
+    },
+    {
+      "a": "mira",
+      "b": "sable",
+      "trust": 65,
+      "affection": 60,
+      "rivalry": 10
+    },
+    {
+      "a": "brann",
+      "b": "sable",
+      "trust": 35,
+      "affection": 25,
+      "rivalry": 45
+    }
+  ],
+  "queue": [],
+  "children": [],
+  "spouse": null,
+  "heir": null,
+  "log": [
+    "Your ascension begins a new chapter. The court awaits your first instructions."
+  ],
+  "event": null,
+  "selected": "capital",
+  "dynasty": 1,
+  "applicants": [
+    {
+      "id": "vesh",
+      "name": "Vesh of Stoneveil",
+      "race": "Bugbear",
+      "age": 36,
+      "portrait": "vesh",
+      "house": "Stoneveil",
+      "faction": "bugbears",
+      "skills": {
+        "stewardship": 48,
+        "martial": 76,
+        "diplomacy": 44,
+        "intrigue": 38
+      },
+      "traits": [
+        "Gentle",
+        "Fearless",
+        "Homesick"
+      ],
+      "story": "A towering pass-warden who rescues lost travelers before asking which banner they follow. Vesh wants the lowland court to understand that the mountain lodges are communities, not monsters.",
+      "desire": "A recognized place for Stoneveil at your council.",
+      "fear": "Being hired for strength and never asked for wisdom.",
+      "origin": "The northern lodges",
+      "voice": "“The mountain has room for many footprints.”"
+    },
+    {
+      "id": "liora",
+      "name": "Liora Dawn",
+      "race": "Human",
+      "age": 29,
+      "portrait": "liora",
+      "house": "Dawn",
+      "faction": "nobles",
+      "skills": {
+        "stewardship": 62,
+        "martial": 25,
+        "diplomacy": 73,
+        "intrigue": 69
+      },
+      "traits": [
+        "Cultured",
+        "Ambitious",
+        "Generous"
+      ],
+      "story": "A younger daughter of House Dawn, educated for a marriage she declined. Liora knows which invitations are threats and which silences are debts. She hopes to build a name that belongs to her alone.",
+      "desire": "An office earned on merit rather than inherited.",
+      "fear": "A life as somebody else’s bargaining piece.",
+      "origin": "The eastern manor houses",
+      "voice": "“A favor is only a kindness when it comes without a chain.”"
+    },
+    {
+      "id": "kesh",
+      "name": "Kesh Redmane",
+      "race": "Gnoll",
+      "age": 33,
+      "portrait": "kesh",
+      "house": "Redmane",
+      "faction": "gnolls",
+      "skills": {
+        "stewardship": 34,
+        "martial": 70,
+        "diplomacy": 55,
+        "intrigue": 78
+      },
+      "traits": [
+        "Curious",
+        "Loyal",
+        "Impatient"
+      ],
+      "story": "A pathfinder who has mapped wells the desert kings believed lost. Kesh laughs readily, sleeps lightly, and writes every fallen companion’s name on a strip of red cloth.",
+      "desire": "Safe routes for the scattered Red Dune clans.",
+      "fear": "That peace will mean surrendering the clan’s songs.",
+      "origin": "The Red Dune caravan routes",
+      "voice": "“We can go around the danger. First we must admit it is there.”"
+    },
+    {
+      "id": "orrin",
+      "name": "Orrin Vale",
+      "race": "Halfling",
+      "age": 41,
+      "portrait": "orrin",
+      "house": "Vale",
+      "faction": "commons",
+      "skills": {
+        "stewardship": 81,
+        "martial": 20,
+        "diplomacy": 64,
+        "intrigue": 43
+      },
+      "traits": [
+        "Practical",
+        "Warm",
+        "Skeptical"
+      ],
+      "story": "A miller elected three times to speak for the river villages. Orrin can hear an unhealthy millwheel from across a courtyard and a dishonest account from farther away.",
+      "desire": "A winter without a family choosing between rent and bread.",
+      "fear": "The villages becoming invisible as the realm grows.",
+      "origin": "The Hearthfields mills",
+      "voice": "“Your Majesty, I have brought the figures. And the names behind them.”"
+    },
+    {
+      "id": "tala",
+      "name": "Tala Moss",
+      "race": "Orc",
+      "age": 31,
+      "portrait": "tala",
+      "house": "Moss",
+      "faction": "guild",
+      "skills": {
+        "stewardship": 58,
+        "martial": 61,
+        "diplomacy": 50,
+        "intrigue": 72
+      },
+      "traits": [
+        "Inventive",
+        "Candid",
+        "Independent"
+      ],
+      "story": "A salvager and apothecary whose workshop smells of lavender and hot iron. Tala’s work saved a guildmaster’s son, but their refusal to sell the formula earned powerful enemies.",
+      "desire": "A school where craft secrets become shared knowledge.",
+      "fear": "That patronage will silence uncomfortable discoveries.",
+      "origin": "The old foundry quarter",
+      "voice": "“Some things are broken because nobody was allowed to mend them.”"
+    },
+    {
+      "id": "rowan",
+      "name": "Rowan Vell",
+      "race": "Beastfolk",
+      "species": "Fox",
+      "age": 32,
+      "portrait": "rowan",
+      "house": "Vell",
+      "faction": "beastfolk",
+      "skills": {
+        "stewardship": 74,
+        "martial": 28,
+        "diplomacy": 67,
+        "intrigue": 54
+      },
+      "traits": [
+        "Meticulous",
+        "Idealistic",
+        "Dry-witted"
+      ],
+      "story": "Rowan’s red-furred muzzle is often dusted with chalk from the map room. The cartographer has spent a decade recording villages that official surveys left blank. A fox-born Beastfolk, Rowan refuses the old joke that cunning is a birthright: every useful map, they say, begins with honest listening.",
+      "desire": "Maps on which every settlement has a name and every resident has a voice.",
+      "fear": "That another border will turn neighbors into trespassers.",
+      "origin": "The Manyfold river settlements",
+      "family": "A sister who keeps a ferry and a father who teaches navigation to children of every people.",
+      "faith": "The Hearth Lantern; a light left for anyone still traveling.",
+      "secret": "Their first survey hid a refugee settlement from a predatory landlord.",
+      "voice": "“A line on a map is easy. Ask the people who have to live beside it.”"
+    },
+    {
+      "id": "fen",
+      "name": "Fen Greywood",
+      "race": "Beastfolk",
+      "species": "Wolf",
+      "age": 38,
+      "portrait": "fen",
+      "house": "Greywood",
+      "faction": "beastfolk",
+      "skills": {
+        "stewardship": 43,
+        "martial": 79,
+        "diplomacy": 58,
+        "intrigue": 45
+      },
+      "traits": [
+        "Steady",
+        "Merciful",
+        "Reserved"
+      ],
+      "story": "A gray-furred ranger with a weathered green cloak, Fen resigned a border command rather than evict a mixed village. Their wolf-born heritage matters most at home, where six cousins argue over supper; on patrol they insist that discipline means knowing when to lower a weapon.",
+      "desire": "A watch whose protection stops at no species or family name.",
+      "fear": "Seeing an honest oath twisted into an order to harm the defenseless.",
+      "origin": "The western woodland marches",
+      "family": "Six cousins, a retired potter for a mother, and a home always open to travelers.",
+      "faith": "The Open Hearth; shelter is a duty before it is a privilege.",
+      "secret": "They still send wages to the village their old commander ordered them to destroy.",
+      "voice": "“Strength is knowing whom to bring home.”"
+    },
+    {
+      "id": "nima",
+      "name": "Nima Softstep",
+      "race": "Beastfolk",
+      "species": "Cat",
+      "age": 29,
+      "portrait": "nima",
+      "house": "Softstep",
+      "faction": "beastfolk",
+      "skills": {
+        "stewardship": 77,
+        "martial": 24,
+        "diplomacy": 64,
+        "intrigue": 41
+      },
+      "traits": [
+        "Compassionate",
+        "Tenacious",
+        "Frank"
+      ],
+      "story": "Nima arrives with tawny fur, clear green eyes, and a bag of carefully labeled medicines. The cat-born physician learned beside an orc midwife and a dwarf surgeon. She has no patience for court gossip while a child waits outside the infirmary.",
+      "desire": "A public infirmary where a purse is never the price of admission.",
+      "fear": "Being made the court’s ornament while the villages lose their healer.",
+      "origin": "The river infirmaries",
+      "family": "Her husband died in a fever; her younger brother now tends their herb garden.",
+      "faith": "The Quiet Vigil; care for the ill is its own devotion.",
+      "secret": "She treats a wanted smuggler who brings medicine to families unable to pay.",
+      "voice": "“If you want a miracle, begin with clean water.”"
+    },
+    {
+      "id": "ivo",
+      "name": "Ivo Nightquill",
+      "race": "Beastfolk",
+      "species": "Owl",
+      "age": 45,
+      "portrait": "ivo",
+      "house": "Nightquill",
+      "faction": "beastfolk",
+      "skills": {
+        "stewardship": 60,
+        "martial": 19,
+        "diplomacy": 76,
+        "intrigue": 71
+      },
+      "traits": [
+        "Inquisitive",
+        "Courteous",
+        "Skeptical"
+      ],
+      "story": "Ivory feathers frame Ivo’s face above a blue embroidered scholar’s robe. An owl-born archivist, he has spent years translating land charters that contradict each other. His calm voice has undone more false claims than any sword in the county.",
+      "desire": "A library that preserves the histories of ordinary people beside those of kings.",
+      "fear": "A convenient version of the past becoming the only one anyone may read.",
+      "origin": "The Nightquill traveling libraries",
+      "family": "Two grown daughters, one a shipwright and the other a village storyteller.",
+      "faith": "The Unfinished Book; every certainty must leave room for another witness.",
+      "secret": "He holds an authentic charter challenging an old house’s river rights.",
+      "voice": "“The oldest document is not always the most honest.”"
+    }
+  ],
+  "scheduled": [],
+  "lastAudience": {},
+  "seenEvents": [],
+  "resolvedEvents": [],
+  "expeditionOutcomes": {},
+  "families": [
+    {
+      "id": "dawn",
+      "name": "House Dawn",
+      "crest": "sun",
+      "motto": "Let the light remember",
+      "faction": "nobles",
+      "power": 72,
+      "cohesion": 54,
+      "fortune": 70,
+      "standing": 55,
+      "head": "Lady Yselle Dawn",
+      "members": "Yselle, the formidable matriarch; Liora, her independent daughter; Corven, a charming heir with considerable debts.",
+      "story": "The Dawns financed the rebuilding after the last plague. They expect gratitude to be hereditary. Yselle protects her tenants from bandits and her children from choices she did not make herself.",
+      "estate": "Sunmere Manor and the eastern vineyards",
+      "desire": "A marriage near the throne and a protected place in the succession.",
+      "secret": "A guild ledger would reveal how little coin backs the family’s grand gestures."
+    },
+    {
+      "id": "vale",
+      "name": "House Vale",
+      "crest": "stag",
+      "motto": "Rooted, yet reaching",
+      "faction": "commons",
+      "power": 48,
+      "cohesion": 72,
+      "fortune": 42,
+      "standing": 60,
+      "head": "Lord Halden Vale",
+      "members": "Halden, keeper of the western ford; Orrin, a distant cousin who sides with the mills; young Elen, studying the old boundary stones.",
+      "story": "The Vales rose from mill owners to landed gentry and never agree on what that should mean. Their table still serves common bread. Their western boundary stones have moved twice in a generation.",
+      "estate": "Fordwatch and the river mills",
+      "desire": "Secure water rights and recognition independent of House Dawn.",
+      "secret": "Their oldest charter grants the ford to a vanished monastery."
+    },
+    {
+      "id": "ashwood",
+      "name": "The Ashwood Kin",
+      "crest": "leaf",
+      "motto": "What grows is kept",
+      "faction": "elves",
+      "power": 58,
+      "cohesion": 66,
+      "fortune": 45,
+      "standing": 65,
+      "head": "Warden Ilyan Ashwood",
+      "members": "Ilyan, grove warden; Mira, your steward; Teren, the orchard keeper who wants his sister to come home.",
+      "story": "A kinship of wardens, gardeners, and record keepers who measure inheritance in living things. Mira’s departure wounded their pride, though the gifts of seed they send her say something gentler.",
+      "estate": "The lantern orchards and the old root archives",
+      "desire": "A binding promise that new settlements will respect the groves.",
+      "secret": "One orchard shelters a ruined shrine the wardens will not discuss."
+    }
+  ],
+  "parties": [
+    {
+      "id": "lanterns",
+      "name": "The Wayward Lanterns",
+      "portrait": "liora",
+      "leader": "Captain Iona Bell",
+      "members": "Iona, human swordswoman; Pipp, halfling locksmith; Dree, goblin herbalist; Enna, elven arcanist.",
+      "story": "A found family who leave a lit lantern wherever someone helped them. They prefer preparation to heroics and promise to bring every companion home.",
+      "skill": 72,
+      "caution": 80,
+      "fee": 18,
+      "loyalty": 55,
+      "reputation": 60,
+      "wounds": 0,
+      "status": "available"
+    },
+    {
+      "id": "thorns",
+      "name": "The Thornbound",
+      "portrait": "kesh",
+      "leader": "Rask Redpaw",
+      "members": "Rask, gnoll scout; Uth, bugbear shieldbearer; Meret, human shrine-keeper.",
+      "story": "Survivors of the same disastrous caravan raid. They excel in wild country and distrust noble promises. Rask never accepts a task without knowing who will benefit.",
+      "skill": 80,
+      "caution": 48,
+      "fee": 24,
+      "loyalty": 45,
+      "reputation": 65,
+      "wounds": 0,
+      "status": "available"
+    },
+    {
+      "id": "quills",
+      "name": "The Silver Quills",
+      "portrait": "mira",
+      "leader": "Scholar Vel Anwyn",
+      "members": "Vel, elven historian; Garan, dwarf ward-breaker; Soot, goblin illusionist.",
+      "story": "Scholars who discovered that the archives they need are usually guarded by something with teeth. They prize knowledge and dislike orders to destroy what they cannot yet understand.",
+      "skill": 64,
+      "caution": 65,
+      "fee": 15,
+      "loyalty": 50,
+      "reputation": 50,
+      "wounds": 0,
+      "status": "available"
+    }
+  ],
+  "missions": [],
+  "completed": [],
+  "treasures": [],
+  "pending": [],
+  "diplomaticBonds": [
+    {
+      "a": "elves",
+      "b": "goblins",
+      "trust": 32,
+      "tension": 55
+    },
+    {
+      "a": "gnolls",
+      "b": "bugbears",
+      "trust": 64,
+      "tension": 20
+    },
+    {
+      "a": "nobles",
+      "b": "guild",
+      "trust": 72,
+      "tension": 35
+    },
+    {
+      "a": "beastfolk",
+      "b": "elves",
+      "trust": 48,
+      "tension": 30
+    }
+  ],
+  "policies": {
+    "tax": "balanced",
+    "law": "restorative",
+    "rites": "plural"
+  },
+  "lastEdict": -1,
+  "history": []
+}
