@@ -17,7 +17,7 @@ http
       const data = await readFile(target.endsWith('/') ? target + 'index.html' : target);
       res.setHeader(
         'Content-Type',
-        { html: 'text/html', js: 'text/javascript', css: 'text/css', svg: 'image/svg+xml' }[
+        { html: 'text/html', js: 'text/javascript', css: 'text/css', svg: 'image/svg+xml', png: 'image/png', webp: 'image/webp' }[
           target.split('.').pop()
         ] || 'application/octet-stream',
       );
