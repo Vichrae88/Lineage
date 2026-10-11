@@ -11,8 +11,11 @@ import {
   audienceStories,
   projectReports,
   followupReports,
-} from './data.js?v=0.2.0';
-export { roles, candidates, factionLore, sites, expeditions, relics };
+  races,
+  beastSpecies,
+} from './data.js?v=0.3.0';
+export { roles, candidates, factionLore, sites, expeditions, relics, races, beastSpecies };
+export const raceName = (c) => c.race === 'Beastfolk' ? `Beastfolk · ${c.species || 'Fox'}` : c.race;
 export const seasons = ['Spring', 'Summer', 'Autumn', 'Winter'];
 export const clamp = (n, min = 0, max = 100) => Math.max(min, Math.min(max, n));
 export const projects = [
@@ -81,6 +84,37 @@ export function log(g, text) {
   g.log.unshift(text);
   g.log = g.log.slice(0, 100);
 }
+// Unique stories belong to the campaign, including every ruler who inherits it.
+export function eventKey(e) {
+  if (!e) return null;
+  if (e.type === 'audience') return 'audience:' + (e.id || audienceStories.find((s) => s.title === e.title)?.id || e.title);
+  if (e.type === 'followup') {
+    const id = Object.entries(followupReports).find(([, s]) => s.title === e.title)?.[0];
+    return 'followup:' + (e.id || (id ? id + '-followup' : e.title));
+  }
+  if (e.type === 'personal') return 'personal:' + (e.id || (e.title === 'An empty chair at supper' ? 'care' : 'purpose'));
+  if (e.type === 'expedition') return 'expedition:' + (e.id || expeditions.find((s) => s.name === e.title)?.id || e.title);
+  if (e.type === 'petition') return 'petition:' + e.title;
+  return null; // A death or contested succession can occur in a new generation.
+}
+function reserveEvent(g, e) {
+  const key = eventKey(e);
+  if (key && (g.seenEvents.includes(key) || g.resolvedEvents.includes(key))) return false;
+  if (key) { e.key = key; g.seenEvents.push(key); }
+  return true;
+}
+function queueUnique(g, e) {
+  if (!reserveEvent(g, e)) return false;
+  g.pending.push(e);
+  return true;
+}
+function nextAudience(g) {
+  g.event = null;
+  while (g.pending.length) {
+    const e = g.pending.shift();
+    if (!g.resolvedEvents.includes(eventKey(e))) { g.event = e; break; }
+  }
+}
 const relationship = (n = 50) => ({
   trust: n,
   respect: 50,
@@ -118,7 +152,7 @@ function person(id, name, race, role, skills, age = 30) {
 export function createGame(o) {
   const big = o.scale === 'province';
   const g = {
-    version: 2,
+    version: 3,
     scale: o.scale,
     title: big ? 'Province' : 'Town',
     name: o.realm || 'Alderwick',
@@ -129,6 +163,7 @@ export function createGame(o) {
     ruler: {
       name: o.name || 'Ari',
       race: o.race || 'Human',
+      ...(o.race === 'Beastfolk' ? { species: String(o.species || 'Fox').trim().slice(0, 40) || 'Fox' } : {}),
       age: 26,
       health: 95,
       values: o.values || 'Compassion',
@@ -184,6 +219,7 @@ export function createGame(o) {
       ['gnolls', 'Red Dune Clans', 'Gnoll confederation'],
       ['elves', 'The Silverwood Court', 'Elven realm'],
       ['bugbears', 'Stoneveil Lodge', 'Bugbear highlanders'],
+      ['beastfolk', 'The Manyfold Assembly', 'Beastfolk communities'],
     ].map(([id, name, kind], i) => ({
       id,
       name,
@@ -208,6 +244,9 @@ export function createGame(o) {
     applicants: structuredClone(candidates),
     scheduled: [],
     lastAudience: {},
+    seenEvents: [],
+    resolvedEvents: [],
+    expeditionOutcomes: {},
     families: structuredClone(familyLore),
     parties: structuredClone(parties),
     missions: [],
@@ -218,6 +257,7 @@ export function createGame(o) {
       { a: 'elves', b: 'goblins', trust: 32, tension: 55 },
       { a: 'gnolls', b: 'bugbears', trust: 64, tension: 20 },
       { a: 'nobles', b: 'guild', trust: 72, tension: 35 },
+      { a: 'beastfolk', b: 'elves', trust: 48, tension: 30 },
     ],
     policies: { tax: 'balanced', law: 'restorative', rites: 'plural' },
     lastEdict: -1,
@@ -770,8 +810,8 @@ export function getDecision(g, type, target, agent) {
         fee + 4,
       ),
     ];
-    d.blocked = g.completed.includes(target)
-      ? 'The great question here has already been answered.'
+    d.blocked = g.completed.includes(target) || g.seenEvents.includes('expedition:' + target)
+      ? 'This expedition is a settled chapter. Its outcome remains part of the realm’s history.'
       : g.missions.some((m) => m.task === target)
         ? 'An expedition is already seeking an answer here.'
         : null;
@@ -964,10 +1004,10 @@ export function enact(g, type, target, choice, agent) {
       loyalty: choice === 'patronage' ? 80 : choice === 'probation' ? 48 : 65,
       trust: choice === 'probation' ? 40 : 55,
       ambition: choice === 'patronage' ? 55 : 40,
-      secret: 'Their confidence must be earned before private matters are shared.',
-      faith: 'The customs of their home hearth.',
-      family: `Their kin in ${v.origin} follow this appointment closely.`,
-      appearance: 'Travel-worn clothes, carefully mended for an audience with the crown.',
+      secret: v.secret || 'Their confidence must be earned before private matters are shared.',
+      faith: v.faith || 'The customs of their home hearth.',
+      family: v.family || `Their kin in ${v.origin} follow this appointment closely.`,
+      appearance: v.appearance || 'Travel-worn clothes, carefully mended for an audience with the crown.',
       memories: [],
       lastCultivated: -1,
       lastAppointed: -1,
@@ -1125,6 +1165,7 @@ export function ascend(g, h) {
   g.ruler = {
     name: h.name,
     race: h.race,
+    ...(h.race === 'Beastfolk' ? { species: h.species || 'Fox' } : {}),
     age: h.age,
     health: h.health || 90,
     values: g.ruler.values,
@@ -1263,12 +1304,21 @@ export function eventOptions(g) {
 export function resolveEvent(g, choice) {
   const e = g.event;
   if (!e) return result(false, 'There is no audience awaiting an answer.');
+  const key = eventKey(e);
+  if (key && g.resolvedEvents.includes(key)) {
+    nextAudience(g);
+    return result(true, 'This chapter is already settled; its earlier consequences remain.');
+  }
   const o = eventOptions(g).find((o) => o.id === choice);
   if (!o) return result(false, 'Choose a course offered by the audience.');
   if (g.resources.gold < o.cost) return result(false, 'The treasury cannot support that answer.');
   g.resources.gold -= o.cost;
   effects(g, o.effects);
   diplomaticEffects(g, o.relations);
+  if (key) {
+    if (!g.seenEvents.includes(key)) g.seenEvents.push(key);
+    g.resolvedEvents.push(key);
+  }
   if (e.type === 'vacancy') {
     let h = [...g.court, ...g.children].find((c) => c.id === choice);
     if (choice === 'council-nominee') {
@@ -1331,7 +1381,7 @@ export function resolveEvent(g, choice) {
   }
   if (e.type === 'audience' && followupReports[e.id]) {
     const report = followupReports[e.id];
-    g.scheduled.push({
+    const letter = {
       due: g.turn + 2,
       id: e.id + '-followup',
       speaker: e.speaker,
@@ -1364,18 +1414,22 @@ export function resolveEvent(g, choice) {
           { [report.faction]: { grievance: 4 } },
         ),
       ],
-    });
+    };
+    if (reserveEvent(g, letter)) g.scheduled.push(letter);
   }
   const text = `${e.title}: ${o.label}. ${o.note}`;
   record(g, 'audience', e.id || e.title, choice, text);
-  g.event = null;
-  if (g.pending.length) g.event = g.pending.shift();
+  nextAudience(g);
   return result(true, text);
 }
 function missionReturns(g) {
   for (const m of g.missions.filter((m) => m.returns <= g.turn)) {
     const task = expeditions.find((t) => t.id === m.task),
       p = g.parties.find((p) => p.id === m.party);
+    if (g.seenEvents.includes('expedition:' + task.id)) {
+      p.status = 'available';
+      continue;
+    }
     const local =
       task.site === 'forest'
         ? 'elves'
@@ -1407,15 +1461,15 @@ function missionReturns(g) {
       : m.approach === 'bold'
         ? 3
         : 2;
-    if (success) {
-      g.completed.push(task.id);
-      effects(g, { [task.domain]: 5 });
-    }
+    if (!g.completed.includes(task.id)) g.completed.push(task.id);
+    g.expeditionOutcomes[task.id] = success ? 'success' : 'failure';
+    if (success) effects(g, { [task.domain]: 5 });
     const outcome = success
       ? `${p.leader} lays a cloth bundle on the table. ${relics[task.item].story} ${m.approach === 'respectful' ? 'The local keepers ask that you remember whose trust made this journey possible.' : 'The company waits to hear what you will do with what they found.'}`
       : `${p.leader} returns with fewer supplies and wounded companions. ${m.approach === 'bold' ? 'Haste carried them beyond their preparation.' : 'Even careful plans could not quiet the danger within.'} They ask whether the throne stands behind those it sends into darkness.`;
-    g.pending.push({
+    queueUnique(g, {
       type: 'expedition',
+      id: task.id,
       title: task.name,
       text: outcome,
       success,
@@ -1514,7 +1568,7 @@ export function advance(g) {
   });
   if (g.policies.law === 'restorative') r.gold = Math.max(0, r.gold - 2);
   if (g.policies.rites === 'plural')
-    diplomaticEffects(g, { goblins: { affection: 1 }, gnolls: { affection: 1 } });
+    diplomaticEffects(g, { goblins: { affection: 1 }, gnolls: { affection: 1 }, beastfolk: { affection: 1 } });
   if (g.policies.rites === 'traditional')
     diplomaticEffects(g, { nobles: { trust: 1 }, goblins: { grievance: 1 } });
   r.population = Math.max(
@@ -1565,10 +1619,12 @@ export function advance(g) {
   const spouse = g.court.find((c) => c.id === g.spouse && c.alive);
   if (spouse && g.ruler.age < 55 && random(g) < 0.18) {
     const n = g.children.length + 1;
+    const parent = random(g) < 0.5 ? g.ruler : spouse;
     g.children.push({
       id: 'child' + n,
       name: 'Child ' + n,
-      race: g.ruler.race,
+      race: parent.race,
+      ...(parent.race === 'Beastfolk' ? { species: parent.species || 'Fox' } : {}),
       age: 0,
       alive: true,
       health: 95,
@@ -1613,7 +1669,8 @@ export function advance(g) {
   for (const letter of g.scheduled.filter((e) => e.due <= g.turn)) {
     if (!activeCourt(g).some((c) => c.id === letter.speaker))
       letter.speaker = activeCourt(g)[0]?.id;
-    g.pending.push(letter);
+    if (!g.resolvedEvents.includes(eventKey(letter)) && !g.pending.some((e) => eventKey(e) === eventKey(letter)))
+      g.pending.push(letter);
   }
   g.scheduled = g.scheduled.filter((e) => e.due > g.turn);
   if (
@@ -1638,13 +1695,13 @@ export function advance(g) {
     log(g, 'A new petitioner arrives at the hall. The realm continues to find new voices.');
   }
   if (g.turn % 2 === 0 && g.pending.length === 0) {
-    const available = audienceStories.filter((e) => g.turn - (g.lastAudience[e.id] ?? -20) >= 8);
+    const available = audienceStories.filter((e) => !g.seenEvents.includes('audience:' + e.id));
     const story = available[Math.floor(random(g) * available.length)];
     const speaker =
       story && (g.court.find((c) => c.id === story.speaker && living(c)) || activeCourt(g)[0]);
     if (speaker) {
       g.lastAudience[story.id] = g.turn;
-      g.pending.push({
+      queueUnique(g, {
         ...structuredClone(story),
         type: 'audience',
         speaker: speaker.id,
@@ -1657,12 +1714,13 @@ export function advance(g) {
   }
   if (g.turn % 3 === 0 && g.pending.length === 0) {
     const c =
-      activeCourt(g).find((c) => c.loyalty < 45 || c.health < 50) ||
-      activeCourt(g).find((c) => c.ambition > 65);
+      activeCourt(g).find((c) => (c.loyalty < 45 || c.health < 50) && !g.seenEvents.includes('personal:' + (c.health < 50 ? 'care' : 'purpose'))) ||
+      activeCourt(g).find((c) => c.ambition > 65 && !g.seenEvents.includes('personal:purpose'));
     if (c) {
       const hurt = c.health < 50;
-      g.pending.push({
+      queueUnique(g, {
         type: 'personal',
+        id: hurt ? 'care' : 'purpose',
         speaker: c.id,
         title: hurt ? 'An empty chair at supper' : 'A voice that wants to be heard',
         text: hurt
@@ -1700,8 +1758,68 @@ export function advance(g) {
       });
     }
   }
-  if (g.pending.length) g.event = g.pending.shift();
+  nextAudience(g);
   return true;
+}
+function migrateEventHistory(g) {
+  const seen = new Set(g.seenEvents), resolved = new Set(g.resolvedEvents);
+  const keyForRecord = (target) => {
+    const story = audienceStories.find((s) => s.id === target || s.title === target);
+    if (story) return 'audience:' + story.id;
+    const report = Object.entries(followupReports).find(([id, s]) => id + '-followup' === target || s.title === target);
+    if (report) return 'followup:' + report[0] + '-followup';
+    if (target === 'An empty chair at supper' || target === 'care') return 'personal:care';
+    if (target === 'A voice that wants to be heard' || target === 'purpose') return 'personal:purpose';
+    const task = expeditions.find((t) => t.id === target || t.name === target);
+    return task ? 'expedition:' + task.id : null;
+  };
+  for (const id of Object.keys(g.lastAudience)) seen.add('audience:' + id);
+  for (const record of g.history) {
+    if (record?.type !== 'audience') continue;
+    const key = keyForRecord(record.target);
+    if (key) { seen.add(key); resolved.add(key); }
+  }
+  // Older chronicles kept only a short history; surviving log entries are evidence too.
+  for (const text of g.log) {
+    const key = keyForRecord(text.split(':')[0]);
+    if (key) { seen.add(key); resolved.add(key); }
+  }
+  const waiting = [g.event, ...g.pending, ...g.scheduled].filter(Boolean);
+  for (const id of g.completed) {
+    const key = 'expedition:' + id;
+    seen.add(key);
+    if (!waiting.some((e) => eventKey(e) === key)) resolved.add(key);
+    g.expeditionOutcomes[id] ||= 'success';
+  }
+  const retained = new Set();
+  const keep = (e) => {
+    const key = eventKey(e);
+    if (!key) return true;
+    seen.add(key);
+    if (e.type === 'expedition') {
+      const task = expeditions.find((t) => 'expedition:' + t.id === key);
+      if (task) {
+        if (!g.completed.includes(task.id)) g.completed.push(task.id);
+        g.expeditionOutcomes[task.id] = e.success ? 'success' : 'failure';
+      }
+    }
+    if (resolved.has(key) || retained.has(key)) return false;
+    retained.add(key); e.key = key;
+    return true;
+  };
+  if (g.event && !keep(g.event)) g.event = null;
+  g.pending = g.pending.filter(keep);
+  g.scheduled = g.scheduled.filter(keep);
+  for (const key of resolved) {
+    if (key.startsWith('expedition:')) {
+      const id = key.slice(11);
+      if (expeditions.some((t) => t.id === id) && !g.completed.includes(id)) {
+        g.completed.push(id); g.expeditionOutcomes[id] = 'failure';
+      }
+    }
+  }
+  g.seenEvents = [...seen]; g.resolvedEvents = [...resolved];
+  if (!g.event && g.pending.length && g.ruler.alive) nextAudience(g);
 }
 export function parseSave(text) {
   let g;
@@ -1712,7 +1830,7 @@ export function parseSave(text) {
   }
   if (
     !g ||
-    ![1, 2].includes(g.version) ||
+    ![1, 2, 3].includes(g.version) ||
     !g.resources ||
     !Array.isArray(g.court) ||
     !Array.isArray(g.factions) ||
@@ -1728,6 +1846,7 @@ export function parseSave(text) {
     g.season > 3
   )
     throw Error('This is not a supported Lineage save.');
+  const legacy = g.version < 3;
   const keys = [
     'gold',
     'food',
@@ -1794,6 +1913,8 @@ export function parseSave(text) {
       memories: [],
       lastCultivated: -1,
     }));
+    const sovereign = g.dynasty > 1 && g.court.find((c) => c.name === g.ruler.name && c.race === g.ruler.race);
+    if (sovereign) { sovereign.alive = true; sovereign.status = 'ruler'; }
     g.version = 2;
     log(
       g,
@@ -1803,6 +1924,15 @@ export function parseSave(text) {
   if (!g.applicants) g.applicants = structuredClone(candidates);
   if (!g.scheduled) g.scheduled = [];
   if (!g.lastAudience) g.lastAudience = {};
+  if (legacy) {
+    g.seenEvents = []; g.resolvedEvents = []; g.expeditionOutcomes = {};
+    if (!g.factions.some((f) => f.id === 'beastfolk'))
+      g.factions.push({ id: 'beastfolk', name: 'The Manyfold Assembly', kind: 'Beastfolk communities', ...relationship(40), alliance: false });
+    for (const c of candidates.filter((c) => c.race === 'Beastfolk')) {
+      if (Array.isArray(g.applicants) && ![...g.applicants, ...g.court].some((p) => p.id === c.id))
+        g.applicants.push(structuredClone(c));
+    }
+  }
   if (
     !Array.isArray(g.families) ||
     !Array.isArray(g.parties) ||
@@ -1813,12 +1943,17 @@ export function parseSave(text) {
     !g.policies ||
     !Array.isArray(g.diplomaticBonds) ||
     !Array.isArray(g.completed) ||
+    !Array.isArray(g.seenEvents) || !Array.isArray(g.resolvedEvents) ||
+    !g.expeditionOutcomes || typeof g.expeditionOutcomes !== 'object' || Array.isArray(g.expeditionOutcomes) ||
+    !Array.isArray(g.scheduled) ||
+    typeof g.lastAudience !== 'object' || Array.isArray(g.lastAudience) ||
     g.court.some((c) => !Array.isArray(c.memories) || !Array.isArray(c.traits))
   )
     throw Error('This chronicle is incomplete or damaged.');
   const idOK = (id) => typeof id === 'string' && /^[a-zA-Z0-9_-]+$/.test(id);
   const finite = (n) => typeof n === 'number' && Number.isFinite(n);
   const str = (t) => typeof t === 'string';
+  const speciesOK = (c) => c.species === undefined || (str(c.species) && c.species.trim().length > 0 && c.species.length <= 40);
   const metricKeys = ['trust', 'respect', 'affection', 'fear', 'trade', 'grievance'];
   const effectsOK = (object) =>
     !object ||
@@ -1852,6 +1987,12 @@ export function parseSave(text) {
       (e.type !== 'expedition' ||
         (Object.hasOwn(relics, e.item) && g.parties.some((p) => p.id === e.party))));
   const bad =
+    !speciesOK(g.ruler) ||
+    new Set(g.seenEvents).size !== g.seenEvents.length || new Set(g.resolvedEvents).size !== g.resolvedEvents.length ||
+    g.resolvedEvents.some((s) => !g.seenEvents.includes(s)) ||
+    [...g.seenEvents, ...g.resolvedEvents].some((s) => !str(s) || !/^(audience|followup|personal|expedition|petition):.+$/.test(s) || s.length > 240) ||
+    Object.entries(g.expeditionOutcomes).some(([id, outcome]) => !expeditions.some((t) => t.id === id) || !['success', 'failure'].includes(outcome)) ||
+    !g.factions.some((f) => f.id === 'beastfolk') ||
     ![g.name, g.title, g.ruler.name, g.ruler.race, g.ruler.values, g.ruler.history].every(str) ||
     ![g.year, g.turn, g.dynasty, g.rng, g.ruler.age, g.ruler.health].every(finite) ||
     g.log.some((s) => !str(s)) ||
@@ -1859,6 +2000,7 @@ export function parseSave(text) {
     g.court.some(
       (c) =>
         !idOK(c.id) ||
+        !speciesOK(c) ||
         ![c.name, c.race, c.role, c.status].every(str) ||
         !['serving', 'departed', 'deceased', 'ruler'].includes(c.status) ||
         !['health', 'loyalty', 'trust', 'affection', 'respect', 'ambition', 'grievance'].every(
@@ -1871,7 +2013,7 @@ export function parseSave(text) {
       (f) => !idOK(f.id) || ![f.name, f.kind].every(str) || !metricKeys.every((k) => finite(f[k])),
     ) ||
     g.children.some(
-      (c) => !idOK(c.id) || !str(c.name) || !str(c.race) || !finite(c.age) || !finite(c.health),
+      (c) => !idOK(c.id) || !str(c.name) || !str(c.race) || !speciesOK(c) || !finite(c.age) || !finite(c.health),
     ) ||
     g.bonds.some(
       (b) =>
@@ -1918,6 +2060,7 @@ export function parseSave(text) {
         !idOK(c.id) ||
         !str(c.name) ||
         !str(c.race) ||
+        !speciesOK(c) ||
         !c.skills ||
         !Object.values(c.skills).every(finite),
     ) ||
@@ -1928,5 +2071,12 @@ export function parseSave(text) {
         ![b.trust, b.tension].every(finite),
     );
   if (bad) throw Error('This chronicle is incomplete or damaged.');
+  if (legacy) {
+    migrateEventHistory(g);
+    for (const c of [g.ruler, ...g.court, ...g.children, ...g.applicants])
+      if (c.race === 'Beastfolk' && !c.species) c.species = 'Fox';
+    log(g, 'The chronicler has preserved your earlier stories as settled chapters and welcomed the Manyfold Assembly.');
+  }
+  g.version = 3;
   return g;
 }

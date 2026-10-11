@@ -1,3 +1,5 @@
+export const races = ['Human', 'Elf', 'Dwarf', 'Halfling', 'Orc', 'Goblin', 'Gnoll', 'Bugbear', 'Beastfolk'];
+export const beastSpecies = ['Fox', 'Wolf', 'Cat', 'Owl', 'Bear', 'Rabbit', 'Deer', 'Lion', 'Tiger', 'Otter', 'Raven', 'Badger', 'Boar', 'Dog', 'Rat', 'Lizard', 'Snake', 'Turtle', 'Shark', 'Dragon'];
 export const roles = {
   Steward: {
     skill: 'stewardship',
@@ -160,7 +162,75 @@ export const candidates = [
     voice: '“Some things are broken because nobody was allowed to mend them.”',
   },
 ];
+// Species describes appearance and heritage, never a prescribed personality or skill.
+candidates.push(
+  {
+    id: 'rowan', name: 'Rowan Vell', race: 'Beastfolk', species: 'Fox', age: 32,
+    portrait: 'rowan', house: 'Vell', faction: 'beastfolk',
+    skills: { stewardship: 74, martial: 28, diplomacy: 67, intrigue: 54 },
+    traits: ['Meticulous', 'Idealistic', 'Dry-witted'],
+    story: 'Rowan’s red-furred muzzle is often dusted with chalk from the map room. The cartographer has spent a decade recording villages that official surveys left blank. A fox-born Beastfolk, Rowan refuses the old joke that cunning is a birthright: every useful map, they say, begins with honest listening.',
+    desire: 'Maps on which every settlement has a name and every resident has a voice.',
+    fear: 'That another border will turn neighbors into trespassers.',
+    origin: 'The Manyfold river settlements',
+    family: 'A sister who keeps a ferry and a father who teaches navigation to children of every people.',
+    faith: 'The Hearth Lantern; a light left for anyone still traveling.',
+    secret: 'Their first survey hid a refugee settlement from a predatory landlord.',
+    voice: '“A line on a map is easy. Ask the people who have to live beside it.”',
+  },
+  {
+    id: 'fen', name: 'Fen Greywood', race: 'Beastfolk', species: 'Wolf', age: 38,
+    portrait: 'fen', house: 'Greywood', faction: 'beastfolk',
+    skills: { stewardship: 43, martial: 79, diplomacy: 58, intrigue: 45 },
+    traits: ['Steady', 'Merciful', 'Reserved'],
+    story: 'A gray-furred ranger with a weathered green cloak, Fen resigned a border command rather than evict a mixed village. Their wolf-born heritage matters most at home, where six cousins argue over supper; on patrol they insist that discipline means knowing when to lower a weapon.',
+    desire: 'A watch whose protection stops at no species or family name.',
+    fear: 'Seeing an honest oath twisted into an order to harm the defenseless.',
+    origin: 'The western woodland marches',
+    family: 'Six cousins, a retired potter for a mother, and a home always open to travelers.',
+    faith: 'The Open Hearth; shelter is a duty before it is a privilege.',
+    secret: 'They still send wages to the village their old commander ordered them to destroy.',
+    voice: '“Strength is knowing whom to bring home.”',
+  },
+  {
+    id: 'nima', name: 'Nima Softstep', race: 'Beastfolk', species: 'Cat', age: 29,
+    portrait: 'nima', house: 'Softstep', faction: 'beastfolk',
+    skills: { stewardship: 77, martial: 24, diplomacy: 64, intrigue: 41 },
+    traits: ['Compassionate', 'Tenacious', 'Frank'],
+    story: 'Nima arrives with tawny fur, clear green eyes, and a bag of carefully labeled medicines. The cat-born physician learned beside an orc midwife and a dwarf surgeon. She has no patience for court gossip while a child waits outside the infirmary.',
+    desire: 'A public infirmary where a purse is never the price of admission.',
+    fear: 'Being made the court’s ornament while the villages lose their healer.',
+    origin: 'The river infirmaries',
+    family: 'Her husband died in a fever; her younger brother now tends their herb garden.',
+    faith: 'The Quiet Vigil; care for the ill is its own devotion.',
+    secret: 'She treats a wanted smuggler who brings medicine to families unable to pay.',
+    voice: '“If you want a miracle, begin with clean water.”',
+  },
+  {
+    id: 'ivo', name: 'Ivo Nightquill', race: 'Beastfolk', species: 'Owl', age: 45,
+    portrait: 'ivo', house: 'Nightquill', faction: 'beastfolk',
+    skills: { stewardship: 60, martial: 19, diplomacy: 76, intrigue: 71 },
+    traits: ['Inquisitive', 'Courteous', 'Skeptical'],
+    story: 'Ivory feathers frame Ivo’s face above a blue embroidered scholar’s robe. An owl-born archivist, he has spent years translating land charters that contradict each other. His calm voice has undone more false claims than any sword in the county.',
+    desire: 'A library that preserves the histories of ordinary people beside those of kings.',
+    fear: 'A convenient version of the past becoming the only one anyone may read.',
+    origin: 'The Nightquill traveling libraries',
+    family: 'Two grown daughters, one a shipwright and the other a village storyteller.',
+    faith: 'The Unfinished Book; every certainty must leave room for another witness.',
+    secret: 'He holds an authentic charter challenging an old house’s river rights.',
+    voice: '“The oldest document is not always the most honest.”',
+  },
+);
 export const factionLore = {
+  beastfolk: {
+    leader: 'Speaker Asha Reedbank, an otter-born elected mediator',
+    story: 'The Manyfold Assembly brings together Beastfolk of every animal heritage: fox and wolf, cat and owl, deer and bear, scaled and feathered and furred. They are people with their own professions, convictions, households, and rivalries. Their riverside settlements share guesthouses and schools, but no single species speaks for the rest. The Assembly asks the throne for equal citizenship, rather than favors that depend on a ruler’s mood.',
+    custom: 'At an assembly, the first chair is offered to the person whose voice has traveled farthest to be heard.',
+    goal: 'Equal rights, representation, and room for every animal heritage to keep its customs.',
+    strength: 'A network of healers, surveyors, artisans, and trade contacts across many lands.',
+    weakness: 'Scattered settlements and disagreements over how much authority an assembly should wield.',
+    ties: 'The common hearths share their schools. Silverwood disputes woodland leases; the guild depends on their river workshops.',
+  },
   commons: {
     leader: 'Orrin Vale, speaker for the hearths',
     story:
@@ -699,6 +769,16 @@ export const audienceStories = [
     ],
   },
 ];
+audienceStories.push({
+  id: 'manyfold', speaker: 'sable', scene: 'fields',
+  title: 'A seat for every hearth',
+  text: 'Asha Reedbank arrives with a petition bearing dozens of pawprints, signatures, and careful claw marks. The otter-born mediator speaks softly. “Our children learn beside yours. Our workshops mend your ferries. Yet an old charter still calls us temporary guests. A fox, an owl, a deer, a serpent: we have different customs, but we are all asking the same thing. Where do we belong?” Sable sets the disputed charter beside your seal.',
+  options: [
+    { id: 'charter', label: 'Grant equal citizenship by a public charter', note: 'Beastfolk gain enduring recognition. Old houses resent the loss of inherited privileges.', cost: 12, effects: { justice: 8, legitimacy: 3 }, relations: { beastfolk: { trust: 15, respect: 8 }, nobles: { grievance: 9 } } },
+    { id: 'assembly', label: 'Give the Assembly a voice in local councils', note: 'A practical compromise builds trust, while the old charter remains unsettled.', cost: 5, effects: { trade: 4, happiness: 3 }, relations: { beastfolk: { trust: 7 }, commons: { respect: 4 } } },
+    { id: 'guests', label: 'Keep the charter and promise individual exceptions', note: 'Established houses approve. Beastfolk remember that belonging still requires permission.', cost: 0, effects: { justice: -5 }, relations: { nobles: { trust: 6 }, beastfolk: { grievance: 14, trust: -8 } } },
+  ],
+});
 export const projectReports = {
   roads: {
     balanced:
@@ -748,6 +828,11 @@ export const projectReports = {
   },
 };
 export const followupReports = {
+  manyfold: {
+    title: 'Names in the register',
+    text: 'Asha sends a school register from the river villages. Beside the names are fox-born, bear-born, feathered, and scaled children who will grow up remembering what the crown decided. Their families ask how that decision will be honored by clerks far from the hall.',
+    faction: 'beastfolk', domain: 'justice',
+  },
   water: {
     title: 'Clear water, old debts',
     text: 'A Hearthfields healer sends a letter stained with mint tea. The wells are being watched now, but trust returns more slowly than clean water.',
