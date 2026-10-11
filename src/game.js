@@ -11,7 +11,7 @@ import {
   audienceStories,
   projectReports,
   followupReports,
-} from './data.js';
+} from './data.js?v=0.2.0';
 export { roles, candidates, factionLore, sites, expeditions, relics };
 export const seasons = ['Spring', 'Summer', 'Autumn', 'Winter'];
 export const clamp = (n, min = 0, max = 100) => Math.max(min, Math.min(max, n));

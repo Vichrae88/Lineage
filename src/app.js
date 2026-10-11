@@ -16,7 +16,7 @@ import {
   eventOptions,
   resolveEvent,
   parseSave,
-} from './game.js';
+} from './game.js?v=0.2.0';
 const app = document.querySelector('#app');
 let g = null,
   tab = 'council',
