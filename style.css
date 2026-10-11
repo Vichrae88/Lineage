@@ -407,3 +407,352 @@ blockquote { color: var(--muted); font-style: italic; margin: 20px 0; border-lef
   footer { font-size: 8px; letter-spacing: 1px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* Campaign creation, portraits, and illustrated audiences. */
+textarea {
+  font: 13px/1.6 var(--ui);
+  width: 100%;
+  min-width: 0;
+  padding: 12px 13px;
+  border: 1px solid #585d48;
+  border-radius: 4px;
+  background: #182119;
+  color: var(--ink);
+  resize: vertical;
+}
+textarea:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+.campaign-portrait {
+  background-image: url("assets/campaign-portraits.png");
+  background-size: 400% var(--portrait-sheet-height, 600%);
+}
+.reign-title {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+.ruler-portrait {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.ruler-portrait:hover {
+  background: none;
+}
+.ruler-portrait .portrait {
+  width: 70px;
+}
+.creation-note {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+}
+.fields small {
+  font-size: 9px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted);
+}
+.fields > label:nth-child(3),
+.fields > label:nth-child(4) {
+  grid-column: auto;
+}
+.appearance-fields {
+  grid-template-columns: 1fr;
+}
+.age-choice {
+  margin: 25px 0;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #253025;
+}
+.age-choice label {
+  max-width: 160px;
+}
+.age-choice input {
+  font-size: 23px;
+}
+.age-choice p {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 20px 0 0;
+}
+.disposition-choices {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.disposition-choices .choice {
+  padding: 14px;
+  gap: 6px;
+}
+.disposition-choices .choice strong {
+  font-size: 19px;
+}
+.disposition-choices .choice > span {
+  font-size: 11px;
+}
+.disposition-choices .choice b {
+  display: none;
+}
+.counselor-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.counselor {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 17px;
+  text-align: left;
+  align-items: flex-start;
+  min-width: 0;
+}
+.counselor > span:not(.portrait) {
+  display: grid;
+  gap: 5px;
+}
+.counselor .portrait {
+  width: 84px;
+}
+.counselor strong {
+  font: 18px/1.3 var(--serif);
+}
+.counselor em {
+  font: 10px/1.6 var(--ui);
+}
+.quiet-council {
+  padding: 19px 21px;
+  background: #253225;
+  border: 1px solid #49543f;
+  border-radius: 4px;
+  margin-bottom: 24px;
+}
+.quiet-council p {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+}
+.recent-chapter {
+  margin: 25px 0;
+  padding-left: 17px;
+  border-left: 2px solid #72805b;
+}
+.recent-chapter p {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 8px 0 0;
+}
+.optional-council {
+  margin-top: 24px;
+  padding-top: 19px;
+  border-top: 1px solid var(--line);
+}
+.optional-council summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--gold);
+}
+.optional-council > p {
+  margin: 18px 0;
+}
+.kin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+}
+.kin-card {
+  display: flex;
+  gap: 16px;
+  text-align: left;
+  min-width: 0;
+}
+.kin-card > span:not(.portrait) {
+  display: grid;
+  gap: 5px;
+}
+.kin-card strong {
+  font: 18px var(--serif);
+}
+.kin-card em,
+.kin-card > span > span {
+  font: 11px/1.5 var(--ui);
+  color: var(--muted);
+}
+.context-landscape {
+  display: block;
+  width: 100%;
+  aspect-ratio: 6 / 5;
+  background: url("assets/audiences.png") 0 0 / 200% 300%;
+}
+.context-market {
+  background-position: 100% 0;
+}
+.context-gate {
+  background-position: 0 50%;
+}
+.context-healer {
+  background-position: 100% 50%;
+}
+.context-shrine {
+  background-position: 0 100%;
+}
+.context-archive {
+  background-position: 100% 100%;
+}
+.audience-art {
+  position: relative;
+  height: 210px;
+  overflow: hidden;
+  margin: -30px -30px 28px;
+  width: calc(100% + 60px);
+  background: #4c5137;
+}
+.audience-art > .context-landscape {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.audience-narrative p {
+  margin: 0 0 18px;
+}
+.audience-narrative {
+  font-size: 17px;
+}
+.tutorial-copy {
+  font-size: 18px;
+  color: #655b43;
+}
+.tutorial-court {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 17px;
+  margin: 25px 0;
+}
+.tutorial-court article {
+  display: grid;
+  gap: 9px;
+  justify-items: center;
+  text-align: center;
+}
+.tutorial-court .portrait {
+  width: 95px;
+}
+.tutorial-court strong {
+  font: 17px var(--serif);
+}
+.tutorial-actions {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 20px;
+  margin-top: 25px;
+  border-top: 1px solid var(--line);
+}
+.dossier .select-label {
+  max-width: 100%;
+}
+.profile-head > div,
+.member-copy,
+.kin-card > span,
+.counselor > span,
+.audience-head > div {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 1200px) {
+  .counselor {
+    padding: 14px;
+  }
+  .kin-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .reign-title {
+    gap: 11px;
+  }
+  .ruler-portrait .portrait {
+    width: 43px;
+  }
+  .realm-heading h2 {
+    font-size: 23px;
+    overflow-wrap: anywhere;
+  }
+  .realm-heading .eyebrow {
+    font-size: 7px;
+  }
+  .realm-heading p {
+    font-size: 10px;
+  }
+  .season .primary {
+    max-width: 128px;
+  }
+  .counselor-row {
+    grid-template-columns: 1fr;
+  }
+  .counselor {
+    flex-direction: row;
+    align-items: center;
+    padding: 15px;
+  }
+  .counselor .portrait {
+    width: 64px;
+  }
+  .counselor strong {
+    font-size: 20px;
+  }
+  .audience-art {
+    height: 175px;
+    margin: -22px -22px 23px;
+    width: calc(100% + 44px);
+  }
+  .audience-art .context-landscape {
+    width: max(100%, 340px);
+  }
+  .tutorial-copy {
+    font-size: 16px;
+  }
+  .tutorial-court {
+    gap: 10px;
+  }
+  .tutorial-court .portrait {
+    width: 70px;
+  }
+  .tutorial-court strong {
+    font-size: 13px;
+  }
+  .tutorial-actions {
+    gap: 12px;
+  }
+  .tutorial-actions button {
+    font-size: 11px;
+  }
+  .kin-card {
+    padding: 14px;
+  }
+  .kin-card .portrait {
+    width: 56px;
+  }
+  .disposition-choices {
+    grid-template-columns: 1fr;
+  }
+  .creation-note {
+    font-size: 11px;
+  }
+  .fields > label:nth-child(3),
+  .fields > label:nth-child(4) {
+    grid-column: auto;
+  }
+  .audience-narrative {
+    font-size: 16px;
+  }
+}
+
+/* Keep portrait crops square when a long profile sits beside them. */
+.portrait {
+  align-self: flex-start;
+}
