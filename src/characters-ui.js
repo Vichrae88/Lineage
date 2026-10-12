@@ -1,11 +1,12 @@
+import { gold as coins } from './format.js?v=0.5.3';
 import {
   attributes,
   skills,
   traitRules,
   professionalForecast,
-} from './characters.js?v=0.5.2';
-import { personById } from './sim-core.js?v=0.5.2';
-import { escapeText as esc } from './reports-ui.js?v=0.5.2';
+} from './characters.js?v=0.5.3';
+import { personById } from './sim-core.js?v=0.5.3';
+import { escapeText as esc } from './reports-ui.js?v=0.5.3';
 const action = (label, type, id) =>
   '<button type="button" data-action="decision" data-type="' +
   type +
@@ -71,9 +72,9 @@ export function characterDevelopmentView(g, p) {
       )
       .join('') +
     '</details><details><summary>Personal life & resources</summary><div class="personal-ledger"><p>Personal wealth: ' +
-    Math.round(p.wealth) +
+    coins(p.wealth) +
     ' gold. Usual income: ' +
-    p.income +
+    coins(p.income) +
     ' per working season.</p><p>Morale: ' +
     Math.round(p.morale) +
     '/100 · Reputation: ' +
@@ -144,7 +145,7 @@ export function forecastView(g, p, projectId) {
   if (!p || !project) return '';
   const f = professionalForecast(g, p, project);
   return (
-    '<details class="assignment-forecast" open><summary>' +
+    '<details class="assignment-forecast"><summary>' +
     esc(f.description) +
     '</summary><p>The relevant craft is ' +
     esc(f.skill) +

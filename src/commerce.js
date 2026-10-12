@@ -1,8 +1,8 @@
-import { bound, roll, hash, idValid } from './sim-core.js?v=0.5.2';
-import { appendRecord, addFact, snapshot } from './history.js?v=0.5.2';
-import { practice, isBusy } from './characters.js?v=0.5.2';
-import { transitionsBetween } from './transitions.js?v=0.5.2';
-import { addPromise } from './promises.js?v=0.5.2';
+import { bound, roll, hash, idValid } from './sim-core.js?v=0.5.3';
+import { appendRecord, addFact, snapshot } from './history.js?v=0.5.3';
+import { practice, isBusy } from './characters.js?v=0.5.3';
+import { transitionsBetween } from './transitions.js?v=0.5.3';
+import { addPromise } from './promises.js?v=0.5.3';
 export const commercialKinds = {
   caravan: {
     name: 'A merchant caravan',

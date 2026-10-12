@@ -1,9 +1,10 @@
+import { issueChoices } from './decision-strategies.js?v=0.5.3';
 import {
   races,
   sites as oldSites,
   expeditions as oldExpeditions,
   relics as oldRelics,
-} from './data.js?v=0.5.2';
+} from './data.js?v=0.5.3';
 
 export const dispositions = [
   'Patient',
@@ -1498,7 +1499,7 @@ export function generateCampaign(seed, ruler, baseProjects = []) {
     notables.push(visitor);
     const adviser = court.find((c) => c.role === office) || court[0];
     const text = `${pick(['The chamberlain opens the doors while the morning candles are still burning.', 'A petition interrupts the quiet work of the seal room.', 'Rain taps the high windows as a visitor is shown inside.', 'The last court bell fades before the speaker takes a breath.'])} ${visitor.name}, ${visitor.role.toLowerCase()} for ${factions.find((f) => f.id === faction).name}, arrives from ${site.name}. You notice ${visitor.appearance}. ${detail}\n\n“${problem}”\n\n${adviser.name} waits beside your chair. ${pick(['The hall falls quiet. Outside, ordinary work continues as if the answer were already known.', 'The witnesses have carried their testimony a long way. They are asking what your protection means.', 'Both sides have sent witnesses. Neither believes the other will be heard fairly.'])}`;
-    const options = [
+    const options = issueChoices({ archetype }, [
       {
         id: 'support',
         label: act,
@@ -1532,7 +1533,7 @@ export function generateCampaign(seed, ruler, baseProjects = []) {
         effects: { [domain]: -4 },
         relations: { [faction]: { trust: -5, grievance: 9 } },
       },
-    ];
+    ]);
     const id = 'incident-' + archetype;
     const followups = Object.fromEntries(
       options.map((o, j) => [
@@ -1541,11 +1542,11 @@ export function generateCampaign(seed, ruler, baseProjects = []) {
           id: id + '-aftermath',
           type: 'followup',
           title:
-            [
+            ([
               'The promise carried home',
               'The bargain tested in public',
               'The cost of leaving it unanswered',
-            ][j] +
+            ][j] || 'A different promise takes root') +
             ' · ' +
             site.name,
           speaker: visitor.id,
@@ -1555,7 +1556,7 @@ export function generateCampaign(seed, ruler, baseProjects = []) {
           site: siteId,
           faction,
           archetype: archetype + '-aftermath',
-          text: `A letter from ${visitor.name} arrives with ${pick(['a pressed local flower', 'a sketch of the work', 'a small knot of colored thread', 'the signatures of three households'])}. ${j === 0 ? 'The first remedy has begun to change daily life, but people now ask whether its protection will last.' : j === 1 ? 'The compromise gave both sides room to act. A few have honored it; others are testing its limits.' : 'The households who asked for help have made their own arrangements. Some found shelter, and some have become harder to reach.'}\n\nAt ${site.name}, your decision to “${o.label.toLowerCase()}” is already part of the local story. ${adviser.name} asks what should carry that story forward.`,
+          text: `A letter from ${visitor.name} arrives with ${j > 2 ? 'a copy of your sealed ruling' : pick(['a pressed local flower', 'a sketch of the work', 'a small knot of colored thread', 'the signatures of three households'])}. ${j > 2 ? 'The alternative you chose is changing local work and loyalties. ' + o.note : j === 0 ? 'The first remedy has begun to change daily life, but people now ask whether its protection will last.' : j === 1 ? 'The compromise gave both sides room to act. A few have honored it; others are testing its limits.' : 'The households who asked for help have made their own arrangements. Some found shelter, and some have become harder to reach.'}\n\nAt ${site.name}, your decision to “${o.label.toLowerCase()}” is already part of the local story. ${adviser.name} asks what should carry that story forward.`,
           options: [
             {
               id: 'continue',

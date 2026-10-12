@@ -1,4 +1,5 @@
-import { narrativeForRecord, recordTransitions } from './narrative.js?v=0.5.2';
+import { gold as coins, moneyField } from './format.js?v=0.5.3';
+import { narrativeForRecord, recordTransitions } from './narrative.js?v=0.5.3';
 const esc = (s) =>
   String(s ?? '').replace(
     /[&<>"']/g,
@@ -32,7 +33,7 @@ export function exactLedger(g, e) {
   const rows = recordTransitions(e),
     signed = (n) => (n > 0 ? '+' : '') + Math.round(n * 100) / 100;
   return (
-    '<details class="outcome-ledger"><summary>Open the clerk’s exact ledger</summary><div class="change-grid">' +
+    '<details class="outcome-ledger"><summary>Open the clerk’s detailed ledger</summary><div class="change-grid">' +
     rows
       .map(
         (t) =>
@@ -47,13 +48,18 @@ export function exactLedger(g, e) {
           esc(t.field) +
           '</small><strong>' +
           (Number.isFinite(t.before)
-            ? t.before + ' → ' + t.after + ' · '
+            ? (moneyField(t.field) ? coins(t.before) : t.before) +
+              ' → ' +
+              (moneyField(t.field) ? coins(t.after) : t.after) +
+              ' · '
             : '') +
-          signed(t.change) +
+          (moneyField(t.field)
+            ? coins(t.change, true) + ' gold'
+            : signed(t.change)) +
           '</strong></div>',
       )
       .join('') +
-    '</div></details>'
+    '</div><p class="ink-note">Coin is displayed to the nearest whole gold. Saved accounts retain their precision.</p></details>'
   );
 }
 export function promisesView(g) {
@@ -86,7 +92,8 @@ export function promisesView(g) {
           ? 'late'
           : 'active',
     due: o.originalDue || o.due,
-    progress: o.status === 'paid' ? 'Repaid' : o.amount + ' gold remains due',
+    progress:
+      o.status === 'paid' ? 'Repaid' : coins(o.amount) + ' gold remains due',
     source: o.source,
     text:
       o.status === 'paid'

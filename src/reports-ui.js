@@ -1,6 +1,8 @@
-import { narrativeView, exactLedger } from './narrative-ui.js?v=0.5.2';
-import { seasonProjection } from './economy.js?v=0.5.2';
-import { personById } from './sim-core.js?v=0.5.2';
+import { advisorView } from './advisors-ui.js?v=0.5.3';
+import { gold as coins, moneyField } from './format.js?v=0.5.3';
+import { narrativeView, exactLedger } from './narrative-ui.js?v=0.5.3';
+import { seasonProjection } from './economy.js?v=0.5.3';
+import { personById } from './sim-core.js?v=0.5.3';
 export const escapeText = (s) =>
   String(s ?? '').replace(
     /[&<>"']/g,
@@ -27,7 +29,7 @@ export const changeList = (changes) =>
         '<div><small>' +
         esc(k) +
         '</small><strong>' +
-        signed(n) +
+        (moneyField(k) ? coins(n, true) : signed(n)) +
         '</strong></div>',
     )
     .join('') +
@@ -38,15 +40,15 @@ export function projectionView(g, choices) {
     '<span class="eyebrow">BEFORE THE CALENDAR TURNS</span><h2 id="dialog-title">The next season’s accounts</h2><p class="lead">' +
     esc(p.assumptions) +
     '</p><div class="projection-grid"><section><h3>The treasury</h3><dl><dt>Expected income</dt><dd>' +
-    p.income +
+    coins(p.income) +
     ' gold</dd><dt>Court wages</dt><dd>' +
-    p.wages +
+    coins(p.wages) +
     '</dd><dt>Institutions & watch</dt><dd>' +
-    p.upkeep +
+    coins(p.upkeep) +
     '</dd><dt>Courts of justice</dt><dd>' +
-    p.law +
+    coins(p.law) +
     '</dd><dt>Projected balance</dt><dd>' +
-    signed(p.balance) +
+    coins(p.balance, true) +
     ' gold</dd></dl></section><section><h3>The stores</h3><dl><dt>Consumption</dt><dd>' +
     p.consumption +
     '</dd><dt>Expected harvest</dt><dd>' +
@@ -62,6 +64,7 @@ export function projectionView(g, choices) {
     (g.resources.food + p.foodBalance <= 0
       ? '<p class="blocked">Stores may run short. Choose relief or replenish the granaries before hardship deepens.</p>'
       : '') +
+    advisorView(g, { type: 'season', options: choices }) +
     '<h3>What counsel guides this season?</h3><div class="decision-options">' +
     choices
       .map((o) =>
@@ -71,7 +74,7 @@ export function projectionView(g, choices) {
             '</strong><span>' +
             esc(o.note) +
             '</span><small>' +
-            o.cost +
+            coins(o.cost) +
             ' gold</small>',
           'season-counsel',
           'data-choice="' +
@@ -393,7 +396,7 @@ export function localDevelopmentView(g, id) {
           '</h4><p>' +
           esc(i.status) +
           ' · ' +
-          i.budget +
+          coins(i.budget) +
           ' gold upkeep each season · condition ' +
           Math.round(i.condition) +
           '/100</p><p>' +
