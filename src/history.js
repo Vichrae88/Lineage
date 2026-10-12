@@ -43,14 +43,18 @@ export function decisionRecord(g, meta, before, text) {
       const h=g.families.find(h=>h.id===meta.target);
       const members=(h?.memberIds||[]).map(id=>personById(g,id)).filter(Boolean);
       for(const p of members) {
-        p.wealth=Math.max(0,(p.wealth||12)+(meta.choice==='patron'?8:meta.choice==='charter'?4:-2));
+        p.wealth=Math.max(0,(p.wealth||12)+(meta.choice==='patron'?5:meta.choice==='charter'?1:-2));
         p.grievance=bound((p.grievance||0)+(meta.choice==='service'?12:-3));
         rememberPerson(g,p,text);
       }
       const f=addFact(g,meta.choice==='service'?'family-grievance':meta.choice==='charter'?'family-charter':'family-favor',{families:[meta.target],people:members.map(p=>p.id),family:meta.target,site:h?.site||'fields',severity:meta.choice==='service'?16:8},e.id);
       g.lastOutcome.facts.push(f.id);
     }
-    if(meta.type==='policy')g.lastOutcome.facts.push(addFact(g,'law',{choice:meta.choice,policy:meta.target || 'realm'},e.id).id);
+    if(meta.type==='policy'){
+      const policy=['gentle','balanced','heavy'].includes(meta.choice)?'tax':['restore','strict'].includes(meta.choice)?'law':'rites';
+      for(const f of Object.values(g.facts))if(f.kind==='law'&&f.policy===policy&&f.status==='active'){f.status='ended';f.ended=g.turn;}
+      g.lastOutcome.facts.push(addFact(g,'law',{choice:meta.choice,policy},e.id).id);
+    }
     if(meta.type==='dismiss')g.lastOutcome.facts.push(addFact(g,'former-adviser',{people:[meta.target],choice:meta.choice},e.id).id);
     if(meta.type==='diplomacy')g.lastOutcome.facts.push(addFact(g,meta.choice==='alliance'?'treaty':'diplomatic-promise',{faction:meta.target,choice:meta.choice},e.id).id);
   }

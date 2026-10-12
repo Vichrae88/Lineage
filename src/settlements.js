@@ -1,4 +1,4 @@
-import {practice} from './characters.js?v=0.5.0';
+import {practice,newPerson} from './characters.js?v=0.5.0';
 import {bound, hash, personById, personList, rememberPerson} from './sim-core.js?v=0.5.0';
 import {addFact, appendRecord, schedule} from './history.js?v=0.5.0';
 export const developmentProjects=[
@@ -64,10 +64,10 @@ export function commissionConsequences(g,q,success,source) {
     schedule(g,'mill-community',source,3,{site,people:[q.who],fact:f.id,choice:q.approach});
   }
   if(q.id==='school'){
-    const pupil=g.futurePeople?.shift() || personList(g).find(p=>p.alive&&p.age>=12&&p.age<=22&&p.tier!=='reserve'&&p.status==='citizen');
+    const pupil=g.futurePeople?.shift() || newPerson(g,{race:g.world.predominantRace,age:16,role:'Student',site});
     if(pupil){
       pupil.age=16;pupil.status='citizen';pupil.role='Student';pupil.siteId=site;pupil.location=local.name;pupil.skills.scholarship=18;pupil.story=pupil.name+' entered the school at '+local.name+' with a talent still finding its direction. The founding decision opened a path beyond the work their household had known.';pupil.education={institution:null,seasons:0,status:'studying'};
-      g.notables.push(pupil);
+      if(!g.notables.some(p=>p.id===pupil.id))g.notables.push(pupil);
       const kind=q.approach==='guild'?'apprenticeship':'school';
       const i=createInstitution(g,kind,site,source,{budget:q.approach==='public'?3:q.approach==='guild'?2:1,staff:[q.who],students:[pupil.id],quality:success?65:40});
       pupil.education.institution=i.id;
@@ -79,6 +79,13 @@ export function commissionConsequences(g,q,success,source) {
 export function tickInstitutions(g) {
   for(const i of g.institutions.filter(i=>i.status==='active')){
     const local=g.settlements[i.site],funded=i.budget===0||g.fundedInstitutions;
+    if(['school','apprenticeship'].includes(i.kind)&&funded){
+      if(!i.staff.some(id=>personById(g,id)?.alive)){const teacher=newPerson(g,{race:g.world.predominantRace,age:28,role:'Teacher',site:i.site});teacher.skills.training=65;teacher.skills.scholarship=65;i.staff.push(teacher.id);}
+      if(g.turn%8===0&&!i.students.some(id=>personById(g,id)?.alive&&personById(g,id).education?.status==='studying')){
+        const pupil=newPerson(g,{race:g.world.predominantRace,age:16,role:'Student',site:i.site});pupil.skills.scholarship=18;pupil.education={institution:i.id,seasons:0,status:'studying'};i.students.push(pupil.id);
+        appendRecord(g,{kind:'education',people:[pupil.id],site:i.site,cause:i.source,text:pupil.name+' enters '+i.name+', joining a later class under the founding promise.'});
+      }
+    }
     i.condition=bound(i.condition+(funded?.4:-5));
     if(!funded&& !local.problems.includes('unfunded institutions'))local.problems.push('unfunded institutions');
     if(funded&&['school','apprenticeship'].includes(i.kind)){
@@ -108,7 +115,7 @@ export function dueConsequences(g) {
     }
     c.status='offered';
     const local=g.settlements[c.site],origin=g.archive.find(e=>e.id===c.source);
-    const speaker=c.people.map(id=>personById(g,id)).find(p=>p?.alive) || g.court.find(p=>p.alive&&p.status==='serving');
+    const speaker=c.people.map(id=>personById(g,id)).find(p=>p?.alive&&p.id!==g.ruler.id) || personList(g).find(p=>p.alive&&p.age>=18&&p.tier!=='reserve'&&p.id!==g.ruler.id);
     if(!speaker){c.status='cancelled';continue;}
     if(c.kind==='road-commerce'){
       local.trade=bound(local.trade+6*c.strength);local.prosperity=bound(local.prosperity+4*c.strength);

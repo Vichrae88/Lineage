@@ -19,7 +19,9 @@ import {initializeWorld,worldStateValid} from './world-state.js?v=0.5.0';
 import {snapshot,decisionRecord,appendRecord} from './history.js?v=0.5.0';
 import {seasonProjection,applyEconomy,finishSeasonReport} from './economy.js?v=0.5.0';
 import {developmentProjects,developmentChoices,projectSite,commissionConsequences,tickInstitutions,dueConsequences,settleConsequence} from './settlements.js?v=0.5.0';
-import {skills,isBusy,availableMentors,professionalForecast,assignmentDevelopment,practice,startTraining,tickTraining} from './characters.js?v=0.5.0';
+import {skills,newPerson,isBusy,availableMentors,professionalForecast,assignmentDevelopment,practice,startTraining,tickTraining} from './characters.js?v=0.5.0';
+import {tickPeople,tickCommunities,recordDeath,recordMarriage,lifeExpectancy} from './living.js?v=0.5.0';
+import {generateEmergentEvent,resolveEmergent,tickObligations} from './emergent.js?v=0.5.0';
 export {professionalForecast,availableMentors};
 export {seasonProjection};
 export {
@@ -1380,6 +1382,7 @@ export function enact(g, type, target, choice, agent) {
   }
   if (type === 'marry') {
     if (choice !== 'wait') {
+      recordMarriage(g,g.ruler,c);
       g.spouse = target;
       c.loyalty = clamp(c.loyalty + 15);
       c.affection = clamp(c.affection + 10);
@@ -1414,7 +1417,8 @@ export const recruit = (g) => {
   const c = g.applicants.find((c) => !g.court.some((p) => p.id === c.id));
   return c ? enact(g, 'hire', c.id, 'retainer').ok : false;
 };
-export function succession(g) {
+export function succession(g,cause='an unrecorded cause') {
+  recordDeath(g,g.ruler,cause);
   const h = household(g).find(
     (c) =>
       c.id === g.heir &&
@@ -1758,6 +1762,7 @@ export function resolveEvent(g, choice, agent) {
     );
     if (choice === 'care') p.wounds = Math.max(0, p.wounds - 1);
   }
+  if(e.engine==='emergent')resolveEmergent(g,e,choice);
   if(e.engine==='consequence')settleConsequence(g,e,choice);
   const speaker = findPerson(g, e.speaker);
   if (speaker) {
@@ -2001,12 +2006,6 @@ function advanceCore(g) {
     });
   if (g.policies.rites === 'traditional')
     diplomaticEffects(g, { nobles: { trust: 1 }, goblins: { grievance: 1 } });
-  r.population = Math.max(
-    100,
-    Math.round(
-      r.population * (r.happiness > 50 && r.health > 35 ? 1.012 : 0.995),
-    ),
-  );
   for (const t of g.treasures) {
     const relic = realmRelics(g)[t.id];
     effects(g, { [relic.resource]: relic.amount });
@@ -2059,18 +2058,9 @@ function advanceCore(g) {
     h.cohesion = clamp(h.cohesion + (h.fortune > 50 ? 1 : -1));
   }
   const spouse = g.court.find((c) => c.id === g.spouse && c.alive);
-  if (spouse && g.ruler.age < 55 && random(g) < 0.18) {
+  if (spouse && g.ruler.age < lifeExpectancy(g.ruler)*.6 && g.turn-(g.ruler.lastBirthTurn??-10)>=4 && random(g) < 0.18) {
     const n = g.children.length + 1;
-    const eligible = g.preparedIdentities
-      ? [g.ruler, spouse].filter((parent) =>
-          g.futurePeople.some(
-            (c) =>
-              c.race === parent.race &&
-              (c.race !== 'Beastfolk' || c.species === parent.species),
-          ),
-        )
-      : [g.ruler, spouse];
-    const parent = eligible[Math.floor(random(g) * eligible.length)];
+    const parent=[g.ruler,spouse][Math.floor(random(g)*2)];
     if (parent) {
       const identityIndex = g.futurePeople?.findIndex(
         (c) =>
@@ -2078,7 +2068,7 @@ function advanceCore(g) {
           (c.race !== 'Beastfolk' || c.species === parent.species),
       );
       const identity =
-        identityIndex >= 0 ? g.futurePeople.splice(identityIndex, 1)[0] : null;
+        identityIndex >= 0 ? g.futurePeople.splice(identityIndex, 1)[0] : newPerson(g,{race:parent.race,species:parent.species,age:0,role:'Royal child',site:g.ruler.siteId||'capital',parents:[g.ruler.id,spouse.id],house:g.ruler.house});
       g.children.push({
         ...(identity || {}),
         id: identity?.id || 'child' + n,
@@ -2104,20 +2094,20 @@ function advanceCore(g) {
   }
   g.ruler.health = clamp(
     g.ruler.health -
-      (g.ruler.age > 55 ? 3 : 0) -
+      (g.ruler.age > lifeExpectancy(g.ruler)*.7 ? 3 : 0) -
       (r.food === 0 ? 5 : 0) -
       (r.health < 25 ? 2 : 0),
   );
   if (
     g.ruler.health === 0 ||
-    (g.ruler.age > 65 && random(g) < 0.04) ||
+    (g.ruler.age > lifeExpectancy(g.ruler)*.85 && random(g) < 0.04) ||
     (r.security < 25 && random(g) < 0.05)
   ) {
     log(
       g,
       `${g.ruler.name}'s reign ends in ${g.ruler.health === 0 ? 'illness' : r.security < 25 ? 'assassination' : 'old age'}. The realm turns toward the line of succession.`,
     );
-    succession(g);
+    succession(g,g.ruler.health===0?'illness':r.security<25?'assassination':'old age');
     return true;
   }
   if (
@@ -2268,9 +2258,13 @@ export function advance(g, prior=null) {
   const ok=advanceCore(g);
   if(ok){
     initializeWorld(g,projects);
+    tickPeople(g);
+    tickCommunities(g);
+    tickObligations(g);
     tickTraining(g);
     tickInstitutions(g);
     for(const e of dueConsequences(g))queueUnique(g,e);
+    if(g.ruler.alive){const emerging=generateEmergentEvent(g);if(emerging)queueUnique(g,emerging);}
     if(!g.event&&g.ruler.alive)nextAudience(g);
     const report=finishSeasonReport(g,before,g.archive.slice(archiveStart).map(e=>e.id));
     const record=appendRecord(g,{kind:'season',type:'season',text:'The realm enters '+seasons[g.season]+', Year '+g.year+'.',effects:report.changes});
@@ -2417,6 +2411,7 @@ export function parseSave(text) {
     throw Error('This chronicle is incomplete or damaged.');
   if (g.version === 1) {
     const defaults = createGame({ scale: g.scale, history: g.ruler.history });
+    defaults.families=structuredClone(familyLore);defaults.parties=structuredClone(parties);defaults.applicants=structuredClone(candidates);
     for (const k of [
       'families',
       'parties',

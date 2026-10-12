@@ -1,3 +1,5 @@
+import {initEmergent} from './emergent.js?v=0.5.0';
+import {initializeKnownFigures} from './living.js?v=0.5.0';
 import {canonicalizePeople,charactersValid} from './characters.js?v=0.5.0';
 import {sites,factionLore,expeditions,relics} from './data.js?v=0.5.0';
 import {initHistory,historyValid} from './history.js?v=0.5.0';
@@ -9,17 +11,21 @@ export function initializeWorld(g,projects) {
   for(const p of developmentProjects)if(!g.world.projects.some(old=>old.id===p.id))g.world.projects.push(structuredClone(p));
   g.kin ||= [];g.notables ||= [];g.futurePeople ||= [];
   canonicalizePeople(g);
-  g.simulationVersion=2;
+  g.simulationVersion=Math.max(g.simulationVersion||0,3);
+  initEmergent(g);
+  g.obligations ||= [];
   for(const p of personList(g)){
     p.alive ??= true;
     p.wealth ??= 8+hash(p.id)%28;
     p.id ||= 'sovereign';
   }
   initHistory(g);initSettlements(g,g.world.sites);
+  initializeKnownFigures(g);
   g.version=5;
   return g;
 }
 export function worldStateValid(g) {
+  if(g.simulationVersion>=3&&(!g.eventMemory||!g.eventMemory.templates||!g.eventMemory.subjects||!g.eventMemory.fingerprints||!Array.isArray(g.obligations)||g.obligations.some(o=>!o||!Number.isInteger(o.due)||!Number.isFinite(o.amount)||o.amount<0||!g.archive.some(e=>e.id===o.source))))return false;
   if(g.simulationVersion>=2&&!charactersValid(g))return false;
   if(!g.serial||!['record','fact','institution','arc','event','person'].every(k=>Number.isInteger(g.serial[k])&&g.serial[k]>=0))return false;
   if(!Array.isArray(g.archive)||!g.facts||Array.isArray(g.facts)||!Array.isArray(g.institutions)||!g.settlements||Array.isArray(g.settlements)||!Array.isArray(g.reports)||!historyValid(g))return false;
