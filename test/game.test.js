@@ -251,7 +251,7 @@ test('legacy version-one saves gain new systems without losing progress or pendi
     delete c.status;
   });
   const g = parseSave(JSON.stringify(old));
-  assert.equal(g.version, 4);
+  assert.equal(g.version, 5);
   assert.equal(g.year, 8);
   assert.equal(g.resources.gold, 47);
   assert.equal(g.queue.length, 1);
@@ -508,8 +508,8 @@ test('a Beastfolk campaign automatically supplies varied animal heritages', () =
     history: 'Inherited',
   });
   assert.equal(g.ruler.race, 'Beastfolk');
-  assert.equal(new Set(g.court.map((c) => c.species)).size, 3);
-  assert.ok(g.court.every((c) => c.race === 'Beastfolk'));
+  assert.equal(new Set(g.court.filter(c=>c.race==='Beastfolk').map((c) => c.species)).size, 2);
+  assert.equal(g.court.filter(c=>c.race==='Beastfolk').length,2);
   assert.deepEqual(parseSave(JSON.stringify(g)), g);
 });
 
