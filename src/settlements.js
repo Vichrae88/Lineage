@@ -1,12 +1,19 @@
-import { practice, newPerson } from './characters.js?v=0.5.0';
+import { transitionsBetween } from './transitions.js?v=0.5.1';
+import { addPromise } from './promises.js?v=0.5.1';
+import { practice, newPerson } from './characters.js?v=0.5.1';
 import {
   bound,
   hash,
   personById,
   personList,
   rememberPerson,
-} from './sim-core.js?v=0.5.0';
-import { addFact, appendRecord, schedule } from './history.js?v=0.5.0';
+} from './sim-core.js?v=0.5.1';
+import {
+  addFact,
+  appendRecord,
+  schedule,
+  snapshot,
+} from './history.js?v=0.5.1';
 export const developmentProjects = [
   {
     id: 'mill',
@@ -295,6 +302,15 @@ export function commissionConsequences(g, q, success, source) {
         quality: success ? 65 : 40,
       });
       pupil.education.institution = i.id;
+      addPromise(g, {
+        kind: 'education',
+        title: 'Educate ' + pupil.name + ' at ' + i.name,
+        source,
+        due: g.turn + 9,
+        person: pupil.id,
+        site,
+        total: 8,
+      });
       schedule(g, 'school-maturity', source, 8, {
         site,
         people: [pupil.id],
@@ -381,6 +397,7 @@ export function tickInstitutions(g) {
         );
         p.education.seasons++;
         if (p.education.seasons >= 8 && p.education.status !== 'graduated') {
+          const before = snapshot(g);
           p.education.status = 'graduated';
           p.role =
             i.kind === 'apprenticeship'
@@ -388,8 +405,9 @@ export function tickInstitutions(g) {
               : 'Apprentice scholar';
           p.profession = p.role;
           p.wealth = (p.wealth || 0) + 6;
-          appendRecord(g, {
+          const record = appendRecord(g, {
             kind: 'education',
+            transitions: transitionsBetween(before, g),
             people: [p.id],
             site: i.site,
             cause: i.source,
@@ -398,6 +416,12 @@ export function tickInstitutions(g) {
               ' completes their first education at ' +
               i.name +
               '. Their skills and prospects have changed.',
+          });
+          p.education.result = record.id;
+          p.achievements.push({
+            kind: 'graduation',
+            turn: g.turn,
+            source: record.id,
           });
         }
       }

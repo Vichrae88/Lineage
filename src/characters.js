@@ -5,9 +5,10 @@ import {
   rememberPerson,
   roll,
   idValid,
-} from './sim-core.js?v=0.5.0';
-import { appendRecord, addFact } from './history.js?v=0.5.0';
-import { generatePerson, animalHeritages } from './campaign.js?v=0.5.0';
+} from './sim-core.js?v=0.5.1';
+import { transitionsBetween } from './transitions.js?v=0.5.1';
+import { appendRecord, addFact, snapshot } from './history.js?v=0.5.1';
+import { generatePerson, animalHeritages } from './campaign.js?v=0.5.1';
 export const attributes = [
   'strength',
   'dexterity',
@@ -275,6 +276,9 @@ export function relationship(g, a, b, kind = 'acquaintances') {
 }
 export const isBusy = (g, id) =>
   (personById(g, id)?.awayUntil || 0) > g.turn ||
+  (g.ventures || []).some(
+    (v) => v.actor === id && ['forming', 'outbound'].includes(v.status),
+  ) ||
   g.queue.some((q) => q.who === id) ||
   g.trainingJobs?.some(
     (j) => j.status === 'active' && (j.student === id || j.mentor === id),
@@ -479,7 +483,24 @@ export function assignmentDevelopment(
 export function startTraining(g, target, skill, mentor = null, source = null) {
   const student = personById(g, target),
     teacher = mentor ? personById(g, mentor) : null;
+  const bond = teacher
+    ? relationship(g, teacher.id, student.id, 'mentorship')
+    : null;
+  const baseline = {
+    resources: {},
+    people: { [student.id]: { skills: { [skill]: student.skills[skill] } } },
+    relationships: {},
+  };
+  if (teacher) {
+    baseline.people[teacher.id] = {
+      skills: { training: teacher.skills.training },
+    };
+    baseline.relationships[[teacher.id, student.id].sort().join('|')] = {
+      ...bond,
+    };
+  }
   g.trainingJobs.push({
+    baseline,
     id: 'training-' + g.serial.arc++,
     student: target,
     mentor: mentor || null,
@@ -505,6 +526,7 @@ export function tickTraining(g) {
       });
       continue;
     }
+    const before = j.baseline || snapshot(g);
     const ability = teacher
       ? Math.min(teacher.skills[j.skill], teacher.skills.training + 15)
       : 58;
@@ -534,6 +556,7 @@ export function tickTraining(g) {
       const e = appendRecord(g, {
         kind: 'training',
         cause: j.source,
+        transitions: transitionsBetween(before, g),
         people: [student.id, ...(teacher ? [teacher.id] : [])],
         text:
           student.name +

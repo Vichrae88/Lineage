@@ -1,17 +1,20 @@
-import { worldReferencesValid } from './integrity.js?v=0.5.0';
-import { initDynasty, dynastyValid } from './dynasty.js?v=0.5.0';
+import { initAmbitions, ambitionsValid } from './ambitions.js?v=0.5.1';
+import { initCommerce, commerceValid } from './commerce.js?v=0.5.1';
+import { initPromises, promisesValid } from './promises.js?v=0.5.1';
+import { worldReferencesValid } from './integrity.js?v=0.5.1';
+import { initDynasty, dynastyValid } from './dynasty.js?v=0.5.1';
 import {
   initializeDemographics,
   demographicValid,
-} from './demographics.js?v=0.5.0';
-import { initializePortraits, portraitsValid } from './portraits.js?v=0.5.0';
-import { initEmergent } from './emergent.js?v=0.5.0';
-import { initializeKnownFigures } from './living.js?v=0.5.0';
-import { canonicalizePeople, charactersValid } from './characters.js?v=0.5.0';
-import { sites, factionLore, expeditions, relics } from './data.js?v=0.5.0';
-import { initHistory, historyValid } from './history.js?v=0.5.0';
-import { initSettlements, developmentProjects } from './settlements.js?v=0.5.0';
-import { personList, hash, idValid } from './sim-core.js?v=0.5.0';
+} from './demographics.js?v=0.5.1';
+import { initializePortraits, portraitsValid } from './portraits.js?v=0.5.1';
+import { initEmergent } from './emergent.js?v=0.5.1';
+import { initializeKnownFigures } from './living.js?v=0.5.1';
+import { canonicalizePeople, charactersValid } from './characters.js?v=0.5.1';
+import { sites, factionLore, expeditions, relics } from './data.js?v=0.5.1';
+import { initHistory, historyValid } from './history.js?v=0.5.1';
+import { initSettlements, developmentProjects } from './settlements.js?v=0.5.1';
+import { personList, hash, idValid } from './sim-core.js?v=0.5.1';
 export function initializeWorld(g, projects) {
   g.preparedIdentities ??= Boolean(g.storyDeck);
   g.world ||= {
@@ -31,7 +34,7 @@ export function initializeWorld(g, projects) {
   g.notables ||= [];
   g.futurePeople ||= [];
   canonicalizePeople(g);
-  g.simulationVersion = Math.max(g.simulationVersion || 0, 5);
+  g.simulationVersion = Math.max(g.simulationVersion || 0, 8);
   initEmergent(g);
   g.obligations ||= [];
   for (const p of personList(g)) {
@@ -46,10 +49,21 @@ export function initializeWorld(g, projects) {
   delete g.newDynasty;
   initializeDemographics(g);
   initializePortraits(g);
+  initPromises(g);
+  initCommerce(g);
+  initAmbitions(g);
   g.version = 5;
   return g;
 }
 export function worldStateValid(g) {
+  if (
+    g.portraitPresentation !== undefined &&
+    !['natural', 'formal', 'chronicle'].includes(g.portraitPresentation)
+  )
+    return false;
+  if (g.simulationVersion >= 8 && !ambitionsValid(g)) return false;
+  if (g.simulationVersion >= 7 && !commerceValid(g)) return false;
+  if (g.simulationVersion >= 6 && !promisesValid(g)) return false;
   if (g.simulationVersion >= 5 && !dynastyValid(g)) return false;
   if (g.simulationVersion >= 4 && (!demographicValid(g) || !portraitsValid(g)))
     return false;

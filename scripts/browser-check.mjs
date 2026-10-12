@@ -40,6 +40,9 @@ try {
   for (let i = 0; i < 7; i++) await click('next');
   await click('tutorial-skip');
   await choice('balanced');
+  assert.ok(await page.locator('dialog .narrative-outcome').isVisible());
+  assert.equal(await page.locator('dialog .change-grid').isVisible(), false);
+  await page.locator('dialog .outcome-ledger summary').click();
   assert.ok(await page.locator('dialog .change-grid').isVisible());
   await click('entry');
   assert.match(await page.locator('dialog').textContent(), /consequences/i);

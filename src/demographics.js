@@ -1,5 +1,5 @@
-import { hash, bound } from './sim-core.js?v=0.5.0';
-import { races } from './data.js?v=0.5.0';
+import { hash, bound } from './sim-core.js?v=0.5.1';
+import { races } from './data.js?v=0.5.1';
 export function initializeDemographics(g) {
   const predominant = g.world.predominantRace || g.ruler.race;
   for (const s of Object.values(g.settlements)) {

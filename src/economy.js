@@ -1,4 +1,10 @@
-import { bound, delta } from './sim-core.js?v=0.5.0';
+import {
+  projectedCommerce,
+  commercialUpkeep,
+  tickCommerce,
+} from './commerce.js?v=0.5.1';
+import { transitionsBetween } from './transitions.js?v=0.5.1';
+import { bound, delta } from './sim-core.js?v=0.5.1';
 export function seasonProjection(g) {
   const r = g.resources,
     nextSeason = (g.season + 1) % 4;
@@ -8,7 +14,7 @@ export function seasonProjection(g) {
       (n, s) => n + s.trade * s.population,
       0,
     ) / Math.max(1, r.population);
-  const income = Math.round(
+  const taxIncome = Math.round(
     (8 +
       r.trade / 8 +
       r.infrastructure / 12 +
@@ -16,9 +22,15 @@ export function seasonProjection(g) {
       (g.scale === 'province' ? 1.4 : 1) +
       (g.policies.tax === 'heavy' ? 9 : g.policies.tax === 'gentle' ? -5 : 0),
   );
+  const commercialIncome = projectedCommerce(g).reduce(
+    (n, v) => n + v.expected,
+    0,
+  );
+  const income = taxIncome + commercialIncome;
   const wages = court * 2;
   const institutions = g.institutions.filter((i) => i.status === 'active');
   const upkeep =
+    commercialUpkeep(g) +
     institutions.reduce((sum, i) => sum + i.budget, 0) +
     Object.values(g.settlements || {}).filter((s) => s.governorId).length +
     Math.ceil((g.guards?.count || 0) * 0.035);
@@ -41,6 +53,8 @@ export function seasonProjection(g) {
   const spoilage = Math.round(Math.max(0, r.food - consumption * 8) * 0.08);
   return {
     income,
+    taxIncome,
+    commercialIncome,
     wages,
     upkeep,
     law,
@@ -59,7 +73,11 @@ export function applyEconomy(g) {
   // The turn has already advanced: project the season being processed.
   const p = seasonProjection({ ...g, season: (g.season + 3) % 4 });
   const r = g.resources;
-  const available = r.gold + p.income;
+  const actualCommercial = tickCommerce(g);
+  p.commercialIncome = actualCommercial;
+  p.income = p.taxIncome + actualCommercial;
+  p.balance = p.income - p.spending;
+  const available = r.gold + p.taxIncome;
   g.wageFraction = p.wages ? Math.min(1, available / p.wages) : 1;
   g.fundedInstitutions = available >= p.spending;
   p.paidSpending = Math.min(available, p.spending);
@@ -69,7 +87,12 @@ export function applyEconomy(g) {
   g.economyActual = p;
   return p;
 }
-export function finishSeasonReport(g, before, outcomes = []) {
+export function finishSeasonReport(
+  g,
+  before,
+  outcomes = [],
+  wholeBefore = null,
+) {
   const changes = delta(before, g.resources);
   const report = {
     id: 'season-' + g.turn,
@@ -80,6 +103,15 @@ export function finishSeasonReport(g, before, outcomes = []) {
     economy: { ...g.economyActual },
     outcomes,
     entry: null,
+    transitions: wholeBefore
+      ? transitionsBetween(wholeBefore, g).filter(
+          (t) =>
+            t.scope !== 'person' ||
+            Math.abs(t.change) >= 3 ||
+            g.people[t.id]?.tier === 'major' ||
+            Object.hasOwn(g.people[t.id]?.skills || {}, t.field),
+        )
+      : [],
   };
   g.reports.unshift(report);
   g.reports = g.reports.slice(0, 12);

@@ -1,6 +1,10 @@
-import { personById, bound } from './sim-core.js?v=0.5.0';
-import { appendRecord, addFact } from './history.js?v=0.5.0';
-import { createInstitution } from './settlements.js?v=0.5.0';
+import {
+  commerceProposals,
+  resolveCommerceEvent,
+} from './commerce-events.js?v=0.5.1';
+import { personById, bound } from './sim-core.js?v=0.5.1';
+import { appendRecord, addFact } from './history.js?v=0.5.1';
+import { createInstitution } from './settlements.js?v=0.5.1';
 const option = (id, label, note, cost, effects = {}) => ({
   id,
   label,
@@ -489,6 +493,7 @@ function proposals(g) {
       ],
     });
   }
+  result.push(...commerceProposals(g));
   return result;
 }
 export function generateEmergentEvent(g) {
@@ -534,6 +539,12 @@ export function generateEmergentEvent(g) {
   };
 }
 export function resolveEmergent(g, e, choice) {
+  if (
+    ['commercial-concern', 'commercial-legacy', 'royal-legacy'].includes(
+      e.template,
+    )
+  )
+    resolveCommerceEvent(g, e, choice);
   const p = personById(g, e.speaker),
     local = g.settlements[e.site];
   if (e.template === 'shortage') {
@@ -695,6 +706,7 @@ export function tickObligations(g) {
     const paid = Math.min(o.amount, g.resources.gold);
     g.resources.gold -= paid;
     o.amount -= paid;
+    o.paid = (o.paid || 0) + paid;
     if (!o.amount) {
       o.status = 'paid';
       appendRecord(g, {

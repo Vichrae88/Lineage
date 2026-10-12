@@ -64,7 +64,7 @@ test('individual portrait recipes create different visual compositions and prese
   assert.equal(portraitMarkup(restored.ruler), portraitMarkup(g.ruler));
   assert.match(
     portraitMarkup(g.court[0]),
-    /assets\/(campaign-portraits|face-variants)\.png/,
+    /assets\/(campaign-portraits|face-variants|human-faces|fantasy-faces-[a-d]|beast-faces-[a-d])\.(png|webp)/,
   );
 });
 test('an explicitly chosen Beastfolk ruler heritage does not make the court uniform', () => {

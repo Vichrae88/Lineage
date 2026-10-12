@@ -1,5 +1,6 @@
-import { seasonProjection } from './economy.js?v=0.5.0';
-import { personById } from './sim-core.js?v=0.5.0';
+import { narrativeView, exactLedger } from './narrative-ui.js?v=0.5.1';
+import { seasonProjection } from './economy.js?v=0.5.1';
+import { personById } from './sim-core.js?v=0.5.1';
 export const escapeText = (s) =>
   String(s ?? '').replace(
     /[&<>"']/g,
@@ -88,29 +89,12 @@ export function outcomeView(g) {
     e = g.archive.find((e) => e.id === o?.entry);
   if (!e) return '<h2 id="dialog-title">The chronicle holds your decision</h2>';
   return (
+    chronicleMoment(e) +
     '<span class="eyebrow">YOUR WORD HAS CONSEQUENCES</span><h2 id="dialog-title">The ruling is recorded</h2><p class="lead">' +
     esc(o.text) +
     '</p>' +
-    changeList(o.effects) +
-    (o.changes.length
-      ? '<h3>The people who felt it</h3>' +
-        o.changes
-          .map(
-            (c) =>
-              '<p class="memory">' +
-              esc(
-                personById(g, c.person)?.name ||
-                  g.factions.find((f) => f.id === c.faction)?.name ||
-                  'The realm',
-              ) +
-              ' · ' +
-              esc(c.field) +
-              ' ' +
-              signed(c.change) +
-              '</p>',
-          )
-          .join('')
-      : '') +
+    narrativeView(g, e) +
+    exactLedger(g, e) +
     (o.facts.length
       ? '<h3>A lasting condition</h3>' +
         o.facts
@@ -168,11 +152,18 @@ export function seasonReportView(g) {
     ', Year ' +
     r.year +
     '</h2><p class="lead">Your commissions were tested, the household’s obligations came due, and the realm carried on.</p>' +
-    changeList(r.changes) +
+    narrativeView(g, {
+      id: r.id,
+      effects: r.changes,
+      transitions: r.transitions,
+    }) +
+    exactLedger(g, {
+      id: r.id,
+      effects: r.changes,
+      transitions: r.transitions,
+    }) +
     (r.economy.unpaid
-      ? '<p class="blocked">' +
-        r.economy.unpaid +
-        ' gold of planned spending could not be funded. Court wages were reduced and public institutions lost condition.</p>'
+      ? '<p class="blocked">The treasury could not meet every planned commitment. Court wages were reduced and public institutions lost condition.</p>'
       : '') +
     '<h3>Work and lives changed</h3>' +
     r.outcomes
@@ -313,6 +304,7 @@ export function entryView(g, id) {
   const origin = g.archive.find((old) => old.id === e.cause);
   const later = g.archive.filter((child) => child.cause === e.id);
   return (
+    chronicleMoment(e) +
     '<span class="eyebrow">THE CAUSE AND ITS CONSEQUENCES</span><h2 id="dialog-title">' +
     esc(e.kind.replaceAll('-', ' ')) +
     ' · Year ' +
@@ -320,7 +312,8 @@ export function entryView(g, id) {
     '</h2><p class="lead">' +
     esc(e.text) +
     '</p>' +
-    changeList(e.effects) +
+    narrativeView(g, e) +
+    exactLedger(g, e) +
     assessmentView(e) +
     (origin
       ? '<h3>Why it happened</h3><p>' +
@@ -423,4 +416,28 @@ export function localDevelopmentView(g, id) {
       .join('') +
     '</section>'
   );
+}
+
+function chronicleMoment(e) {
+  const motifs = {
+    succession: ['♛', 'A new reign'],
+    ascension: ['♛', 'A new reign'],
+    'realm-growth': ['♜', 'A realm transformed'],
+    'institution-growth': ['▥', 'A lasting work grows'],
+    birth: ['❧', 'A new life'],
+    death: ['✧', 'A life remembered'],
+    education: ['▤', 'A life of learning'],
+    institution: ['⌂', 'A lasting work'],
+    commerce: ['⚖', 'The royal bargain'],
+    'royal-milestone': ['✦', 'An ambition fulfilled'],
+    promotion: ['♜', 'A realm transformed'],
+  };
+  const m = motifs[e.kind];
+  return m
+    ? '<aside class="chronicle-moment"><i aria-hidden="true">' +
+        m[0] +
+        '</i><small>' +
+        m[1] +
+        '</small></aside>'
+    : '';
 }
