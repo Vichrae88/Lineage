@@ -252,3 +252,24 @@ test('malformed local, event, outcome and serial references cannot become playab
     assert.throws(() => parseSave(serializeGame(g)));
   }
 });
+
+test('numeric profile and report fields cannot carry imported markup into the interface', () => {
+  for (const change of [
+    (g) => (g.ruler.experience = '<img src=x onerror=alert(1)>'),
+    (g) => (g.archive[0].year = '<script>bad()</script>'),
+    (g) => (g.archive[0].kind = null),
+    (g) => (g.ruler.race = 'Unknown culture'),
+    (g) => {
+      g.version = 4;
+      g.ruler.id = '__proto__';
+    },
+    (g) => {
+      advance(g);
+      g.lastSeasonReport.year = '<img onerror=alert(1)>';
+    },
+  ]) {
+    const g = make();
+    change(g);
+    assert.throws(() => parseSave(serializeGame(g)));
+  }
+});

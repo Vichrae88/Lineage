@@ -1,53 +1,70 @@
 # Lineage
 
-A seasonal fantasy roleplaying game about ruling a realm and the people who make it live. [Play Lineage](https://vichrae88.github.io/Lineage/).
+A seasonal fantasy roleplaying game about ruling a realm and the people who make it live. [Play the current release](https://vichrae88.github.io/Lineage/).
+
+**This branch contains the 0.5.0 living-world iteration for review. It has not been merged or deployed.** See [the implementation report](docs/living-world-review.md) for scope, evidence, and limitations.
 
 ## Develop
 
-Node.js 20+ is sufficient. There are no runtime packages, external fonts, or service credentials.
+Node.js 20+ is sufficient; development and production have no runtime dependencies or service credentials.
 
 ```sh
 npm start
 npm test
 npm run build
+node scripts/simulate-century.mjs
 ```
 
-The development server uses port 3000 (`PORT` overrides it). The build creates a clean static release in `dist/`, including all four local artwork atlases. Tests cover generated campaigns, persistent unique stories, decisions, delegation, court management, families, succession, expeditions, and saves from versions 1–4. The version-three fixtures preserve real earlier campaigns for compatibility checks.
+The development server uses port 3000 (`PORT` overrides it). The build creates a clean static game in `dist/`, including every browser module and the local artwork. The simulation tests include production saves from versions 1–4 and full/compact version-5 round trips. The century script uses ordinary starting resources and actual decisions; it prints population, finances, reigns, petition counts, save size, and elapsed time.
 
-## Begin a reign
+Browser checks are optional and require Playwright and a Chromium installation. They do not add a runtime dependency to the game:
 
-Choose town or province first, then establish your name, race, gender, age, disposition, appearance, values, and claim to the throne through seven questions. Names and realm names may be left blank for generation. Your ruler has a full profile, and starts with two to five surviving siblings, aunts, uncles, or cousins. No parent survives the accession. Adult relatives can be cultivated and named as heirs.
+```sh
+# Install browser tooling separately, then run with the development server running.
+npm install --prefix /tmp/lineage-browser --no-save playwright
+LINEAGE_PLAYWRIGHT_MODULE=/tmp/lineage-browser/node_modules/playwright/index.mjs \
+LINEAGE_CHROMIUM=/usr/bin/chromium \
+node scripts/browser-check.mjs
+```
 
-Every new campaign draws its own seed. It generates the court, recruitment candidates, later arrivals, family members, faction representatives, prominent families, adventuring companions, location names and histories, rumors, relics, and the initial event deck before play begins. Names draw from the person’s fantasy culture or animal species. Biography details, dispositions, talents, ambitions, appearance, faith, and relationships vary. Future recruits and children draw identities from a reserve generated at campaign start. The seed, world, event order, future identities, and subsequent simulation state are stored together in the save.
+Set `LINEAGE_URL` for a different server or built-game address. Alternatively, an existing local Playwright installation can be used without the module-path override; Playwright's own browser can be used without `LINEAGE_CHROMIUM`.
 
-Choosing Beastfolk automatically makes the starting court and recruitment roster Beastfolk with varied animal heritages. There is no species selector. Current illustrated heritages include fox, wolf, cat, owl, bear, rabbit, otter, and lizard. Neighboring communities include humans, elves, dwarves, halflings, orcs, goblins, gnolls, bugbears, and Beastfolk.
+## Begin and govern a reign
 
-A short, skippable ruler’s guide introduces the court, leads into an actual first petition, explains its consequences and the seasonal calendar, and introduces family, heirs, and saving. Reopen it through Chronicle whenever needed.
+Seven questions establish realm size, identity, race, gender, age, disposition, appearance, values, and the claim to the throne. Names may be generated. Choose a town for gentler pressures or a province for a larger administration. No parent survives the accession, but family records can include remembered ancestors and surviving siblings, aunts, uncles, and cousins.
 
-## Govern through audiences
+The predominant people form a majority alongside real minorities. Regional censuses vary, and welcoming migrations change them. Beastfolk include fox, wolf, cat, owl, bear, rabbit, otter, and lizard heritages. The ruler may choose their own heritage without making the court uniform. Each person has a saved portrait recipe: painted faces, individual proportions and facial features, clothing, adornments, age, and inherited family features.
 
-Courtiers, petitioners, ambassadors, guild representatives, applicants, and adventuring captains bring illustrated audiences directly to the throne. Choose a ruling in the popup; commissions and adventure contracts also let you choose a delegate there. A speaker’s name opens their profile and returns you to the same audience. Pending rulings pause the season and always offer a course without a treasury expense. Closing the season brings further visitors automatically.
+A skippable guide introduces audiences, delegation, the calendar, the dynasty, and saving. Court members and other visitors bring illustrated petitions to the throne. A pending ruling pauses the season and offers an affordable course. Direct commissions and edicts are also available through the council desk. Five main chapters, the resource bar, and an interactive map keep the realm within reach, including on mobile.
 
-The initial deck contains 49 distinct issues: 36 incident archetypes, six commissions, three recruitment offers, and four adventure proposals. Each is assembled with generated people, local names, flavor, and campaign context, then shuffled before play. Incident choices can produce one of three precomputed, distinct aftermath letters two seasons later. Unique chapters never recur, including after saving, loading, or inheriting the crown. Successful and failed expeditions both close their chapter. When this finite story deck is exhausted, the simulation continues without recycling incidents.
+The opening deck has 52 unique issues and their aftermaths. After those stories, new petitions arise from actual shortages, deteriorating buildings, rivalries, careers, workshops, graduates, family grievances, foreign disputes, displaced claimants, and local initiatives. Each instance has a unique identity; template and participant cooldowns prevent immediate repetition. Completed instances and rewards stay completed after loading or succession. A historical letter can be delivered by a living representative; an individual's career petition closes if they die.
 
-The council desk has five chapters: Council, Court, Realm, Adventures, and Lineage. The compact resource bar and interactive map remain nearby. Optional direct commissions and edicts sit in a collapsed council section. Click a person, faction, family, resource, or location for a dossier. Narrative assessments expose exact values on hover, and resource reports include a ledger.
+## People, places, and consequences
 
-Court members can be hired, transferred, cultivated, and dismissed. Their capability, office, loyalty, rivalries, and local resistance affect commissions. Three commissions can run in a season, with one charge per person. Biographies include origins, traits, hopes, fears, family, faith, confidences, skills, bonds, and memories. Former retainers remain in the archive; recruitment can replenish as the realm ages.
+Hire, transfer, cultivate, train, mentor, reward, or dismiss retainers through their profiles. Six attributes, fifteen skills, meaningful traits, equipment, health, morale, loyalty, reputation, connections, and office affect professional work. Recruitment produces actual soldiers; a magnetic captain recruits differently from an otherwise comparable captain. Forecasts explain suitability. Actual reports preserve the assessment and result. Practice takes time, is limited within a season, and slows near mastery. Mentorship reserves both people's time and develops their relationship.
 
-Public health, learning, ecology, justice, faith, food, population, authority, defense, trade, infrastructure, and treasury evolve with seasonal decisions. Tax, justice, and religious edicts recur. Families track influence, cohesion, fortune, and standing; factions track trust, respect, affection, fear, commerce, grievances, and alliances. Companies track capability, caution, loyalty, reputation, and wounds. Expedition discoveries may strengthen the realm, be returned to their keepers, or be sold.
+Named people own wealth, income, property, equipment, goals, personal relationships, achievements, and memories. They invest, form bonds and rivalries, marry, have children, leave royal service, and die independently. Major people are updated each season; secondary adults take turns pursuing their agendas. The broader population uses regional cohorts rather than one object for every resident.
 
-Cultivate trust and affection before proposing marriage. Children can be named. Any eligible adult household member may inherit. Rulers and courtiers age, sicken, and die; succession can be peaceful, contested, or decided by the council. Towns can grow into cities and provinces into kingdoms. There is no prescribed victory condition.
+Projects create local institutions and changes. A mill changes food production and work, creates a later community ruling, and leaves a legacy. Schools and apprenticeships educate named pupils. Graduates can enter service, teach, or pursue their own careers. A maintained school becomes an academy after twenty years. Buildings have upkeep and condition; closing them stops their work while preserving their founding history.
 
-## Keep a chronicle
+The seasonal forecast and actual report distinguish income, wages, institution/watch costs, food consumption, harvest, spoilage, counsel, and other outcomes. Unpaid commitments reduce wages and damage institutions. Taxation, justice, rites, local prosperity, capacity, and migration shape the realm. Towns can become cities and provinces kingdoms, creating a populated chartered district, larger courts, additional commission capacity, and governorship decisions.
 
-Decisions save automatically in this browser. Chronicle offers save, load, JSON export, and JSON import. Starting a new campaign keeps a separate previous-campaign backup; restore it through Chronicle. Export important chronicles to keep them outside this browser.
+Adventuring companies retain named companions with their own abilities and identities. Missions reserve their time; outcomes give them experience, wealth, reputation, and injuries. Unique discoveries can strengthen the realm, be returned to their keepers, or sold. Expeditions close after success or failure.
 
-Older saves retain their existing people, locations, event history, and progress. Start a new campaign to receive the generated world, starting family, expanded ruler creation, and first-reign tutorial.
+## The crown and the Chronicle
 
-## Publish
+The interactive family register connects actual parents, siblings, partners, and children, including the dead. Each reign remains recorded. An heir inherits their own identity, traits, abilities, portrait, relationships, and biography. Estates transfer actual wealth and holdings. A contested ascension names a real rival and permits compromise, enforcement, ratification, or recognition of that rival. Displaced heirs and prominent families can bring old grievances into later reigns.
 
-The repository’s Pages source is **Deploy from a branch → gh-pages → / (root)**. Every push to `main` runs tests, builds the game, updates `gh-pages` without a force push, and explicitly requests a Pages build. `bash scripts/publish-pages.sh` can publish an already built release from an authorized local checkout, without changing the source checkout or its normal index. All asset paths are relative for `/Lineage/`.
+Decisions save automatically in the browser. Chronicle provides load, export, import, a previous-campaign backup, and a filterable permanent archive. Filter by ruler, person, place, family, faction, kind, or year; follow links between causes and consequences. Recent prose and seasonal reports are bounded views, while major records and facts remain available across reigns.
 
-## Current scope
+Compact version-5 saves store each individual once and refer to that identity from household lists. Imports accept earlier production schemas and validate nested data and references. Older campaigns retain known people, names, locations, pending work, and history. Unknown ancestry is left unrecorded. Browser storage quotas vary: export important chronicles to keep a backup outside the browser. Imports have a 12 MB limit.
 
-Campaign generation uses authored narrative building blocks and a finite set of unique incident archetypes. It runs entirely in the browser without an AI service. The simulation does not generate unlimited distinct incident plots, animate tactical combat, or model every individual in the population. Realistic fantasy portraits and context scenes are stored locally; people of the same illustrated heritage may share portrait artwork.
+## Review and publication
+
+The production Pages workflow still publishes only `main`; pushes to this feature branch do not deploy it. The separate pull-request workflow runs tests, builds, checks a century of play, and provides a downloadable build for review. Merge or production publication requires the user's review first.
+
+The current public release remains [vichrae88.github.io/Lineage](https://vichrae88.github.io/Lineage/). Production uses `gh-pages` with relative asset paths under `/Lineage/`.
+
+## Current limits
+
+Stories use authored, state-driven building blocks rather than an AI narrative service. Templates can recur in different circumstances; completed event instances cannot. Portraits use shared painted source layers with generated individual composition and facial changes, rather than independently painted art for every person. Eight animal heritages are illustrated. Personal holdings are abstract assets, regional administration is lightweight, and adventuring is resolved through decisions rather than tactical combat. See the review report for further details.

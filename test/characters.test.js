@@ -192,3 +192,16 @@ test('a magnetic captain recruits more people from the same circumstances and re
   assert.ok(record.effects.military > 0);
   assert.ok(record.changes.some((c) => c.field === 'recruiting'));
 });
+
+test('a pension reaches the former courtier and an ambassador moves into the border community', () => {
+  const g = make(),
+    p = g.court[0],
+    before = p.wealth;
+  assert.ok(enact(g, 'transfer', p.id, 'Ambassador').ok);
+  assert.equal(p.siteId, 'border');
+  assert.ok(g.settlements.border.residents.includes(p.id));
+  assert.ok(!g.settlements.capital.residents.includes(p.id));
+  assert.ok(enact(g, 'dismiss', p.id, 'honor').ok);
+  assert.equal(p.wealth, before + 12);
+  assert.deepEqual(parseSave(JSON.stringify(g)), g);
+});

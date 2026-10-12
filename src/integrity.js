@@ -83,7 +83,17 @@ export function worldReferencesValid(g) {
   for (const p of Object.values(people))
     if (
       !g.settlements[p.siteId] ||
-      typeof p.race !== 'string' ||
+      ![
+        'Human',
+        'Elf',
+        'Dwarf',
+        'Halfling',
+        'Orc',
+        'Goblin',
+        'Gnoll',
+        'Bugbear',
+        'Beastfolk',
+      ].includes(p.race) ||
       typeof p.profession !== 'string' ||
       typeof p.values !== 'string' ||
       !Array.isArray(p.memories) ||
@@ -179,14 +189,29 @@ export function worldReferencesValid(g) {
     );
     if (g.serial[counter] <= max) return false;
   }
-  for (const r of g.reports)
-    if (
-      !numeric(r.changes) ||
-      !Array.isArray(r.outcomes) ||
-      r.outcomes.some((id) => !records.has(id)) ||
-      (r.entry && !records.has(r.entry))
-    )
-      return false;
+  const reportValid = (r) =>
+    r &&
+    Number.isInteger(r.year) &&
+    r.year >= 1 &&
+    Number.isInteger(r.season) &&
+    r.season >= 0 &&
+    r.season <= 3 &&
+    Number.isInteger(r.turn) &&
+    numeric(r.changes) &&
+    Array.isArray(r.outcomes) &&
+    r.outcomes.every((id) => records.has(id)) &&
+    (!r.entry || records.has(r.entry)) &&
+    objects(r.economy) &&
+    Object.entries(r.economy).every(([key, value]) =>
+      key === 'assumptions'
+        ? typeof value === 'string'
+        : Number.isFinite(value),
+    );
+  if (
+    g.reports.some((r) => !reportValid(r)) ||
+    (g.lastSeasonReport && !reportValid(g.lastSeasonReport))
+  )
+    return false;
   const o = g.lastOutcome;
   if (
     o &&

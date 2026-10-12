@@ -218,7 +218,9 @@ export function canonicalizePeople(g) {
   ];
   for (const p of sources) {
     if (!p) continue;
-    if (!idValid(p.id)) p.id ||= 'sovereign';
+    p.id ||= 'sovereign';
+    if (!idValid(p.id))
+      throw Error('This household contains an invalid identity.');
     const old = people[p.id];
     if (old && old !== p) Object.assign(old, p);
     else people[p.id] = p;
@@ -634,9 +636,21 @@ export function charactersValid(g) {
           p.skills[k] >= 0 &&
           p.skills[k] <= 100,
       ) ||
-      !['wealth', 'income', 'reputation', 'morale', 'connections'].every(
-        (k) => Number.isFinite(p[k]) && p[k] >= 0,
-      ) ||
+      ![
+        'wealth',
+        'income',
+        'reputation',
+        'morale',
+        'connections',
+        'experience',
+        'health',
+        'trust',
+        'loyalty',
+        'respect',
+        'affection',
+        'ambition',
+        'grievance',
+      ].every((k) => Number.isFinite(p[k]) && p[k] >= 0) ||
       ![
         'parentIds',
         'childIds',

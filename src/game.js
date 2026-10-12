@@ -1559,6 +1559,7 @@ export function enact(g, type, target, choice, agent) {
   }
   if (type === 'dismiss') {
     c.status = 'departed';
+    if (choice === 'honor') c.wealth += 12;
     c.location = c.origin;
     c.loyalty = clamp(
       c.loyalty + (choice === 'honor' ? 0 : choice === 'release' ? -15 : -35),
@@ -1589,6 +1590,14 @@ export function enact(g, type, target, choice, agent) {
     c.lastAppointed = g.turn;
     c.role = choice;
     c.profession = choice;
+    const oldSite = c.siteId;
+    c.siteId = choice === 'Ambassador' ? 'border' : 'capital';
+    if (g.settlements[oldSite])
+      g.settlements[oldSite].residents = g.settlements[
+        oldSite
+      ].residents.filter((id) => id !== c.id);
+    if (!g.settlements[c.siteId].residents.includes(c.id))
+      g.settlements[c.siteId].residents.push(c.id);
     c.location = realmSites(g).find(
       (s) => s.id === (choice === 'Ambassador' ? 'border' : 'capital'),
     ).name;
@@ -3123,7 +3132,10 @@ export function parseSave(text) {
     g.court.some((c) => !Array.isArray(c.memories) || !Array.isArray(c.traits))
   )
     throw Error('This chronicle is incomplete or damaged.');
-  const idOK = (id) => typeof id === 'string' && /^[a-zA-Z0-9_-]+$/.test(id);
+  const idOK = (id) =>
+    typeof id === 'string' &&
+    /^[a-zA-Z0-9_-]{1,120}$/.test(id) &&
+    !['__proto__', 'constructor', 'prototype'].includes(id);
   const finite = (n) => typeof n === 'number' && Number.isFinite(n);
   const str = (t) => typeof t === 'string';
   const speciesOK = (c) =>
@@ -3257,7 +3269,8 @@ export function parseSave(text) {
           : false);
   const eventOK = (e) =>
     !e ||
-    (str(e.title) &&
+    ((e.id === undefined || idOK(e.id)) &&
+      str(e.title) &&
       str(e.text) &&
       actionOK(e.action) &&
       (!e.followups ||
@@ -3291,6 +3304,7 @@ export function parseSave(text) {
     throw Error('This campaign’s stories are incomplete or damaged.');
   const bad =
     !speciesOK(g.ruler) ||
+    (g.ruler.id !== undefined && !idOK(g.ruler.id)) ||
     new Set(g.seenEvents).size !== g.seenEvents.length ||
     new Set(g.resolvedEvents).size !== g.resolvedEvents.length ||
     g.resolvedEvents.some((s) => !g.seenEvents.includes(s)) ||
@@ -3444,5 +3458,7 @@ export function parseSave(text) {
   if (oldVersion === 5 && !worldStateValid(g))
     throw Error('This living-world chronicle is incomplete or damaged.');
   initializeWorld(g, projects);
+  if (!worldStateValid(g))
+    throw Error('This chronicle contains inconsistent world records.');
   return g;
 }

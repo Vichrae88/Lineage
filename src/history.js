@@ -263,6 +263,12 @@ export function historyValid(g) {
       typeof e.text !== 'string' ||
       e.text.length > 20000 ||
       !Number.isInteger(e.turn) ||
+      !Number.isInteger(e.year) ||
+      e.year < 1 ||
+      !Number.isInteger(e.season) ||
+      e.season < 0 ||
+      e.season > 3 ||
+      typeof e.kind !== 'string' ||
       !Array.isArray(e.people) ||
       !Array.isArray(e.families) ||
       !Array.isArray(e.factions)
