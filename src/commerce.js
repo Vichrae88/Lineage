@@ -559,8 +559,8 @@ export function tickCommerce(g) {
         gross = 0;
       }
     }
-    const share = v.plan === 'shared' ? Math.floor(gross * 0.2) : 0,
-      royal = gross - share;
+    const share = v.plan === 'shared' ? Math.round(gross * 20) / 100 : 0,
+      royal = Math.round((gross - share) * 100) / 100;
     g.resources.gold += royal;
     total += royal;
     const owner = g.people[v.privateOwner]?.alive

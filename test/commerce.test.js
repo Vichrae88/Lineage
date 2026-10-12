@@ -298,3 +298,18 @@ test('an established undertaking keeps its completed founding promise through la
   assert.equal(promise.status, 'completed');
   assert.equal(promise.result, result);
 });
+test('a proprietor receives the promised fifth even when the receipt is smaller than five gold', async () => {
+  const { tickCommerce } = await import('../src/commerce.js');
+  const g = make();
+  enact(g, 'commercial', 'estate', 'shared', g.court[0].id);
+  const v = g.ventures[0],
+    p = g.people[v.privateOwner],
+    wealth = p.wealth;
+  g.turn++;
+  tickCommerce(g);
+  const r = g.commerce.receipts[0],
+    dividend = p.wealth - wealth - (r.success ? 1 : 0);
+  assert.ok(dividend > 0);
+  assert.ok(Math.abs(dividend * 4 - r.amount) < 1e-10);
+  assert.deepEqual(parseSave(serializeGame(g)), g);
+});
