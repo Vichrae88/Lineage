@@ -2,7 +2,7 @@
 
 A seasonal fantasy roleplaying game about ruling a realm and the people who make it live. [Play the current release](https://vichrae88.github.io/Lineage/).
 
-**This branch contains the 0.5.0 living-world iteration for review. GitHub Pages now serves the feature branch for testing. [Test the isolated preview](https://vichrae88.github.io/Lineage/?preview=1); it uses separate browser-save slots.** See [the implementation report](docs/living-world-review.md) for scope, evidence, and limitations.
+**This branch contains the 0.5.1 enhancement pass for review. It has not been deployed.** GitHub Pages continues serving the existing `feature/living-world` version. See [the enhancement review](docs/enhancement-review.md) for phases, compatibility, balance results and review instructions. The existing [isolated preview](https://vichrae88.github.io/Lineage/?preview=1) still runs 0.5.0 and uses separate browser-save slots.
 
 ## Develop
 
@@ -13,9 +13,10 @@ npm start
 npm test
 npm run build
 node scripts/simulate-century.mjs
+node scripts/simulate-commerce-century.mjs
 ```
 
-The development server uses port 3000 (`PORT` overrides it). The build creates a clean static game in `dist/`, including every browser module and the local artwork. The simulation tests include production saves from versions 1–4 and full/compact version-5 round trips. The century script uses ordinary starting resources and actual decisions; it prints population, finances, reigns, petition counts, save size, and elapsed time.
+The development server uses port 3000 (`PORT` overrides it). The build creates a clean static game in `dist/`, including every browser module and the local artwork. The simulation tests include production saves from versions 1–5 and full/compact version-5 round trips. The century script uses ordinary starting resources and actual decisions; it prints population, finances, reigns, petition counts, save size, and elapsed time.
 
 Browser checks are optional and require Playwright and a Chromium installation. They do not add a runtime dependency to the game:
 
@@ -35,9 +36,17 @@ Seven questions establish realm size, identity, race, gender, age, disposition, 
 
 The predominant people form a majority alongside real minorities. Regional censuses vary, and welcoming migrations change them. Beastfolk include fox, wolf, cat, owl, bear, rabbit, otter, and lizard heritages. The ruler may choose their own heritage without making the court uniform. Each person has a saved portrait recipe: painted faces, individual proportions and facial features, clothing, adornments, age, and inherited family features.
 
-A skippable guide introduces audiences, delegation, the calendar, the dynasty, and saving. Court members and other visitors bring illustrated petitions to the throne. A pending ruling pauses the season and offers an affordable course. Direct commissions and edicts are also available through the council desk. Five main chapters, the resource bar, and an interactive map keep the realm within reach, including on mobile.
+A skippable guide introduces audiences, delegation, the calendar, the dynasty, and saving. Court members and other visitors bring illustrated petitions to the throne. A pending ruling pauses the season and offers an affordable course. Direct commissions and edicts are also available through the council desk. Six main chapters, including Treasury, the resource bar, and an interactive map keep the realm within reach, including on mobile.
 
 The opening deck has 52 unique issues and their aftermaths. After those stories, new petitions arise from actual shortages, deteriorating buildings, rivalries, careers, workshops, graduates, family grievances, foreign disputes, displaced claimants, and local initiatives. Each instance has a unique identity; template and participant cooldowns prevent immediate repetition. Completed instances and rewards stay completed after loading or succession. A historical letter can be delivered by a living representative; an individual's career petition closes if they die.
+
+## New in the review build
+
+Completed rulings, seasonal reports and Chronicle changes lead with deterministic prose based on actual before-and-after state. Expand the clerk’s ledger for exact values. Strategic forecasts remain quantitative. Promises & obligations, available from Treasury and the save menu, track commitments, education, returning ventures and debts across rulers.
+
+Treasury offers caravans, royal estates, marketplaces, commercial charters, foreign agreements and finite prospecting expeditions. Choose a delegate and royal, shared or riskier terms. Upkeep, condition, security, relationships, public hardship, competition and limited administrative capacity affect returns. Maintain, expand, pause, liquidate or change a delegate through decisions; investments, private ownership and historical receipts survive succession.
+
+New campaigns use 144 additional painted faces with saved facial proportions and inherited family features. Formal, naturalistic and illustrated Chronicle treatments preserve the face. Existing saves retain their original portraits; commissioning a painting upgrades an old portrait deliberately. Places have painted scenes and visible recorded development; factions have distinct banners. Profiles highlight actual professional milestones. The dynasty page offers optional personal ambitions, with later petitions arising from fulfilled ambitions and commercial legacies.
 
 ## People, places, and consequences
 
@@ -61,10 +70,10 @@ Compact version-5 saves store each individual once and refer to that identity fr
 
 ## Review and publication
 
-The production Pages workflow still publishes only `main`; pushes to this feature branch do not deploy it. The separate pull-request workflow runs tests, builds, checks a century of play, and provides a downloadable build for review. Merge or production publication requires the user's review first.
+The production Pages workflow publishes on `main`. The directly served branch is currently `feature/living-world`; this review branch is `feature/immersion-economy` and is not served. Keep both production sources unchanged until review. The separate pull-request workflow runs tests, builds, checks a century of play, and provides a downloadable build for review. Merge or production publication requires the user's review first.
 
-The current public release remains [vichrae88.github.io/Lineage](https://vichrae88.github.io/Lineage/). Production uses `gh-pages` with relative asset paths under `/Lineage/`.
+The current public release remains [vichrae88.github.io/Lineage](https://vichrae88.github.io/Lineage/). All assets use relative paths under `/Lineage/`.
 
 ## Current limits
 
-Stories use authored, state-driven building blocks rather than an AI narrative service. Templates can recur in different circumstances; completed event instances cannot. Portraits use shared painted source layers with generated individual composition and facial changes, rather than independently painted art for every person. Eight animal heritages are illustrated. Personal holdings are abstract assets, regional administration is lightweight, and adventuring is resolved through decisions rather than tactical combat. See the review report for further details.
+Stories use authored, state-driven building blocks rather than an AI narrative service. Templates can recur in different circumstances; completed event instances cannot. Portraits use a finite painted face library with saved facial proportions and family features. Large populations can share a base painting; each person does not have independently painted art. Eight animal heritages are illustrated. Personal holdings are abstract assets, regional administration is lightweight, and adventuring is resolved through decisions rather than tactical combat. See the review report for further details.

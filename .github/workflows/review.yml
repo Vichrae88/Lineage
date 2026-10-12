@@ -15,6 +15,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: node scripts/simulate-century.mjs
+      - run: node scripts/simulate-commerce-century.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: lineage-review-build
