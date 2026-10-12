@@ -1,3 +1,14 @@
+import { delta } from './sim-core.js?v=0.5.0';
+import { readSave } from './persistence.js?v=0.5.0';
+import {
+  courtCapacity,
+  commissionCapacity,
+  closeKin,
+  competingClaim,
+  beginReign,
+  evolveRealm,
+  governDistricts,
+} from './dynasty.js?v=0.5.0';
 import {
   roles,
   biographies,
@@ -15,15 +26,52 @@ import {
   beastSpecies,
 } from './data.js?v=0.5.0';
 import { generateCampaign, freshSeed } from './campaign.js?v=0.5.0';
-import {initializeWorld,worldStateValid} from './world-state.js?v=0.5.0';
-import {snapshot,decisionRecord,appendRecord} from './history.js?v=0.5.0';
-import {seasonProjection,applyEconomy,finishSeasonReport} from './economy.js?v=0.5.0';
-import {developmentProjects,developmentChoices,projectSite,commissionConsequences,tickInstitutions,dueConsequences,settleConsequence} from './settlements.js?v=0.5.0';
-import {skills,newPerson,isBusy,availableMentors,professionalForecast,assignmentDevelopment,practice,startTraining,tickTraining} from './characters.js?v=0.5.0';
-import {tickPeople,tickCommunities,recordDeath,recordMarriage,lifeExpectancy} from './living.js?v=0.5.0';
-import {generateEmergentEvent,resolveEmergent,tickObligations} from './emergent.js?v=0.5.0';
-export {professionalForecast,availableMentors};
-export {seasonProjection};
+import { initializeWorld, worldStateValid } from './world-state.js?v=0.5.0';
+import {
+  snapshot,
+  decisionRecord,
+  appendRecord,
+  addFact,
+} from './history.js?v=0.5.0';
+import {
+  seasonProjection,
+  applyEconomy,
+  finishSeasonReport,
+} from './economy.js?v=0.5.0';
+import {
+  developmentProjects,
+  developmentChoices,
+  projectSite,
+  commissionConsequences,
+  tickInstitutions,
+  dueConsequences,
+  settleConsequence,
+} from './settlements.js?v=0.5.0';
+import {
+  skills,
+  newPerson,
+  isBusy,
+  availableMentors,
+  professionalForecast,
+  assignmentDevelopment,
+  practice,
+  startTraining,
+  tickTraining,
+} from './characters.js?v=0.5.0';
+import {
+  tickPeople,
+  tickCommunities,
+  recordDeath,
+  recordMarriage,
+  lifeExpectancy,
+} from './living.js?v=0.5.0';
+import {
+  generateEmergentEvent,
+  resolveEmergent,
+  tickObligations,
+} from './emergent.js?v=0.5.0';
+export { professionalForecast, availableMentors };
+export { seasonProjection };
 export {
   roles,
   candidates,
@@ -42,7 +90,11 @@ export const realmExpeditions = (g) => g.world?.expeditions || expeditions;
 export const realmRelics = (g) => g.world?.relics || relics;
 export const realmProjects = (g) => g.world?.projects || projects;
 export const household = (g) => [...g.court, ...g.children, ...(g.kin || [])];
-export const findPerson = (g,id) => g.people?.[id] || [g.ruler,...household(g),...g.applicants,...(g.notables||[])].find(p=>p.id===id);
+export const findPerson = (g, id) =>
+  g.people?.[id] ||
+  [g.ruler, ...household(g), ...g.applicants, ...(g.notables || [])].find(
+    (p) => p.id === id,
+  );
 export const seasons = ['Spring', 'Summer', 'Autumn', 'Winter'];
 export const clamp = (n, min = 0, max = 100) => Math.max(min, Math.min(max, n));
 export const projects = [
@@ -162,7 +214,7 @@ function nextAudience(g) {
   while (g.pending.length) {
     const e = g.pending.shift();
     if (!g.resolvedEvents.includes(eventKey(e))) {
-      prepareAudience(g, e);
+      if (prepareAudience(g, e) === false) continue;
       g.event = e;
       break;
     }
@@ -170,6 +222,81 @@ function nextAudience(g) {
 }
 export function prepareAudience(g, e = g.event) {
   if (!e) return;
+  const original = findPerson(g, e.speaker);
+  const cancel = () => {
+    const key = eventKey(e);
+    if (key && !g.resolvedEvents.includes(key)) g.resolvedEvents.push(key);
+    const arc = e.arc && g.consequences.find((c) => c.id === e.arc);
+    if (arc) arc.status = 'cancelled';
+    e.closedReason =
+      'The original participants can no longer carry this matter forward.';
+    e.text = e.closedReason;
+    e.options = [
+      option(
+        'close',
+        'Close this chapter',
+        'The earlier history remains, with no new charge or reward.',
+        0,
+      ),
+    ];
+    delete e.engine;
+    delete e.action;
+    delete e.speaker;
+    appendRecord(g, {
+      kind: 'closed-petition',
+      cause: e.origin || null,
+      people: original ? [original.id] : [],
+      site: e.site || null,
+      text:
+        'The matter “' +
+        e.title +
+        '” closes because its original participants can no longer carry it forward.',
+    });
+    return false;
+  };
+  if (
+    e.engine === 'emergent' &&
+    e.template === 'rivalry' &&
+    e.relation.some((id) => !findPerson(g, id)?.alive)
+  )
+    return cancel();
+  if (
+    original &&
+    (!original.alive ||
+      original.status === 'departed' ||
+      original.id === g.ruler.id) &&
+    e.engine
+  ) {
+    if (
+      ['enterprise', 'talent', 'graduate', 'claimant'].includes(e.template) ||
+      (e.engine === 'consequence' &&
+        g.consequences.find((c) => c.id === e.arc)?.kind === 'school-maturity')
+    )
+      return cancel();
+    const family = e.family && g.families.find((h) => h.id === e.family);
+    const replacement = (
+      family
+        ? family.memberIds.map((id) => findPerson(g, id))
+        : Object.values(g.people)
+    ).find(
+      (p) =>
+        p?.alive &&
+        p.age >= 18 &&
+        p.tier !== 'reserve' &&
+        p.status !== 'departed' &&
+        p.id !== g.ruler.id &&
+        (family || p.siteId === e.site),
+    );
+    if (!replacement) return cancel();
+    e.text =
+      'The original petitioner, ' +
+      original.name +
+      ', can no longer speak in this matter. ' +
+      replacement.name +
+      ' now brings the community’s unfinished request.\n\n' +
+      e.text;
+    e.speaker = replacement.id;
+  }
   const adviser = findPerson(g, e.adviser);
   if (adviser && !living(adviser)) {
     const replacement = activeCourt(g)[0];
@@ -190,11 +317,18 @@ export function prepareAudience(g, e = g.event) {
   ) {
     e.text = `The chronicler brings forward a written petition left by ${speaker.name}, whose place in the hall is now part of its history. Their earlier words still ask for an answer:\n\n${e.text}`;
     e.archivedPetition = true;
+    e.archivedPerson = speaker.id;
+    e.speaker =
+      activeCourt(g).find((p) => p.id !== g.ruler.id)?.id ||
+      Object.values(g.people).find(
+        (p) =>
+          p.alive && p.age >= 18 && p.tier !== 'reserve' && p.id !== g.ruler.id,
+      )?.id;
   }
   if (!e.action) return;
   const available =
     e.action.type === 'project'
-      ? activeCourt(g).filter((c) => !isBusy(g,c.id))
+      ? activeCourt(g).filter((c) => !isBusy(g, c.id))
       : e.action.type === 'expedition'
         ? g.parties.filter((p) => p.status === 'available' && !p.wounds)
         : [];
@@ -392,7 +526,8 @@ export function createGame(o) {
   g.log = [
     `${g.ruler.name} takes the throne at ${realmSites(g)[0].name}. ${g.ruler.family}`,
   ];
-  initializeWorld(g,projects);
+  g.newDynasty = true;
+  initializeWorld(g, projects);
   bringForward(g, 1);
   nextAudience(g);
   return g;
@@ -684,7 +819,7 @@ export function getDecision(g, type, target, agent) {
     text: '',
     options: [],
   };
-  const c = findPerson(g,target);
+  const c = findPerson(g, target);
   const f = g.factions.find((f) => f.id === target);
   const p = realmProjects(g).find((p) => p.id === target);
   if (type === 'project' && p) {
@@ -693,15 +828,27 @@ export function getDecision(g, type, target, agent) {
     d.options = projectOptions(p);
     d.requiresAgent = true;
     d.skill = p.skill;
-    if(target==='school'&&g.institutions?.some(i=>['school','apprenticeship'].includes(i.kind)&&i.site==='capital'&&i.status==='active'))d.existingSchool=true;
+    if (
+      target === 'school' &&
+      g.institutions?.some(
+        (i) =>
+          ['school', 'academy', 'apprenticeship'].includes(i.kind) &&
+          i.site === 'capital' &&
+          i.status === 'active',
+      )
+    )
+      d.existingSchool = true;
     d.blocked =
       g.event &&
       (g.event.action?.type !== type || g.event.action?.target !== target)
         ? 'Hear the waiting audience before issuing a new commission.'
-        : d.existingSchool ? 'A school already operates here. Its students and upkeep continue through the seasons.'
-        : g.queue.length >= 3
-          ? 'Your court has capacity for three commissions each season.'
-          : null;
+        : d.existingSchool
+          ? 'A school already operates here. Its students and upkeep continue through the seasons.'
+          : g.queue.length >= commissionCapacity(g)
+            ? 'Your court has capacity for ' +
+              commissionCapacity(g) +
+              ' commissions each season.'
+            : null;
   }
   if (type === 'hire') {
     const v = g.applicants.find((c) => c.id === target);
@@ -735,11 +882,15 @@ export function getDecision(g, type, target, agent) {
       ),
     ];
     d.blocked =
-      activeCourt(g).length >= 8
-        ? 'There are eight places at your council. Release someone before recruiting.'
-        : g.court.some((c) => c.id === target)
-          ? 'This petitioner has already answered your invitation.'
-          : null;
+      activeCourt(g).length >= courtCapacity(g)
+        ? 'There are ' +
+          courtCapacity(g) +
+          ' places at your council. Release someone before recruiting.'
+        : !v.alive
+          ? 'This petitioner is remembered; they cannot enter service.'
+          : g.court.some((c) => c.id === target)
+            ? 'This petitioner has already answered your invitation.'
+            : null;
   }
   if (type === 'dismiss' && c) {
     d.title = `Release ${c.name} from service`;
@@ -773,7 +924,7 @@ export function getDecision(g, type, target, agent) {
     ];
     d.blocked = !living(c)
       ? 'They no longer serve at court.'
-      : isBusy(g,c.id)
+      : isBusy(g, c.id)
         ? 'Let their current commission finish before ending their service.'
         : activeCourt(g).length <= 1
           ? 'The realm needs at least one serving councillor.'
@@ -798,7 +949,7 @@ export function getDecision(g, type, target, agent) {
       ? 'Only serving court members may receive an office.'
       : c.lastAppointed === g.turn
         ? 'Let this appointment settle before transferring them again.'
-        : isBusy(g,c.id)
+        : isBusy(g, c.id)
           ? 'Their present commission must conclude before a transfer.'
           : null;
   }
@@ -1033,12 +1184,10 @@ export function getDecision(g, type, target, agent) {
       ),
     ];
     d.blocked =
-      (g.kin || []).some((k) => k.id === c.id) ||
-      g.children.some((k) => k.id === c.id) ||
-      c.age < 18
+      closeKin(g, g.ruler, c) || c.age < 18
         ? 'A close relative or a child cannot be courted.'
-        : g.spouse
-          ? 'You are already married.'
+        : g.spouse || c.spouseId
+          ? 'A marriage already binds one of your households.'
           : !living(c) || c.affection < 59 || c.trust < 65
             ? 'They need a closer, more trusting relationship before accepting marriage.'
             : null;
@@ -1075,22 +1224,131 @@ export function getDecision(g, type, target, agent) {
       ),
     ];
   }
-  if(['training','mentorship','reward'].includes(type)){
-    if(!c || !c.alive || c.tier==='reserve')return null;
-    d.title=type==='reward'?'A reward for '+c.name:'Invest in '+c.name;
-    d.text=type==='reward'?'A stipend changes their actual wealth, morale and reputation.':'Professional development takes several seasons. Practice is limited per season and slows near mastery.';
-    d.requiresAgent=type==='mentorship';d.requiresMentor=type==='mentorship';d.skill='training';
-    d.options=type==='reward'?[option('stipend','Offer a personal stipend','10 gold. Their finances, morale and confidence improve.',10),option('equipment','Provide tools for their profession','16 gold. An equipment grant improves morale and makes professional work easier.',16),option('honor','Recognize their service publicly','4 gold. Reputation and influence rise, and rivals may take notice.',4)]:
-      skills.map(skill=>option(skill,(type==='mentorship'?'Arrange mentorship in ':'Fund professional study in ')+skill,'A paid course, with measurable progress over '+(type==='mentorship'?'two':'three')+' seasons. It reserves the student’s time'+(type==='mentorship'?' and the mentor’s.':'.'),type==='mentorship'?18:16));
-    d.blocked=c.age<12?'Formal professional study begins at twelve.':isBusy(g,c.id)?'Their time is already committed to work or study.':null;
-    if(type==='mentorship'&&agent){const mentor=findPerson(g,agent);if(!mentor||!availableMentors(g,c.id).some(m=>m.id===agent))d.blocked='Choose an available, experienced adult mentor.';}
-    if(type==='reward'&&c.lastReward===g.turn)d.blocked='A personal reward has already been given this season.';
+  if (['training', 'mentorship', 'reward'].includes(type)) {
+    if (!c || !c.alive || c.tier === 'reserve') return null;
+    d.title =
+      type === 'reward' ? 'A reward for ' + c.name : 'Invest in ' + c.name;
+    d.text =
+      type === 'reward'
+        ? 'A stipend changes their actual wealth, morale and reputation.'
+        : 'Professional development takes several seasons. Practice is limited per season and slows near mastery.';
+    d.requiresAgent = type === 'mentorship';
+    d.requiresMentor = type === 'mentorship';
+    d.skill = 'training';
+    d.options =
+      type === 'reward'
+        ? [
+            option(
+              'stipend',
+              'Offer a personal stipend',
+              '10 gold. Their finances, morale and confidence improve.',
+              10,
+            ),
+            option(
+              'equipment',
+              'Provide tools for their profession',
+              '16 gold. An equipment grant improves morale and makes professional work easier.',
+              16,
+            ),
+            option(
+              'honor',
+              'Recognize their service publicly',
+              '4 gold. Reputation and influence rise, and rivals may take notice.',
+              4,
+            ),
+          ]
+        : skills.map((skill) =>
+            option(
+              skill,
+              (type === 'mentorship'
+                ? 'Arrange mentorship in '
+                : 'Fund professional study in ') + skill,
+              'A paid course, with measurable progress over ' +
+                (type === 'mentorship' ? 'two' : 'three') +
+                ' seasons. It reserves the student’s time' +
+                (type === 'mentorship' ? ' and the mentor’s.' : '.'),
+              type === 'mentorship' ? 18 : 16,
+            ),
+          );
+    d.blocked =
+      c.age < 12
+        ? 'Formal professional study begins at twelve.'
+        : isBusy(g, c.id)
+          ? 'Their time is already committed to work or study.'
+          : null;
+    if (type === 'mentorship' && agent) {
+      const mentor = findPerson(g, agent);
+      if (!mentor || !availableMentors(g, c.id).some((m) => m.id === agent))
+        d.blocked = 'Choose an available, experienced adult mentor.';
+    }
+    if (type === 'reward' && c.lastReward === g.turn)
+      d.blocked = 'A personal reward has already been given this season.';
   }
-  if(type==='institution'){
-    const i=g.institutions.find(i=>i.id===target);if(!i)return null;
-    d.title='The future of '+i.name;d.text='Funding pays for real work each season. Closing it ends that work; its founding history remains.';
-    d.options=[option('fund','Restore and maintain the institution','12 gold now, then its normal upkeep. Work and education can resume.',12),option('expand','Increase its grant and quality','10 gold; upkeep rises by 2, to a maximum of 8. The staff can improve its work.',10),option('close','Suspend royal funding','No new cost. Work and classes pause, while the building and its history remain.',0,{happiness:-2})];
-    d.blocked=i.lastReviewed===g.turn?'This institution’s funding has already been reviewed this season.':null;
+  if (type === 'governor') {
+    const local = g.settlements[target];
+    if (!local || target === 'capital') return null;
+    d.title = 'Administration at ' + local.name;
+    d.text =
+      'A governor remains a member of your court and supports this district through their own administration and leadership. Their office costs 1 gold each season.';
+    d.requiresAgent = true;
+    d.skill = 'administration';
+    d.options = [
+      option(
+        'appoint',
+        'Entrust the district to this courtier',
+        '8 gold. Their capabilities support local prosperity and security, with continuing upkeep.',
+        8,
+      ),
+      option(
+        'consult',
+        'Keep a local consultative council',
+        '4 gold. No individual governor or continuing royal salary; local autonomy improves confidence.',
+        4,
+        { justice: 2 },
+      ),
+      option(
+        'release',
+        'Return direct oversight to the throne',
+        'No new cost. End the governor’s salary and their ongoing local work.',
+        0,
+      ),
+    ];
+    d.blocked =
+      local.lastAdministration === g.turn
+        ? 'The district’s administration has already been settled this season.'
+        : null;
+  }
+  if (type === 'institution') {
+    const i = g.institutions.find((i) => i.id === target);
+    if (!i) return null;
+    d.title = 'The future of ' + i.name;
+    d.text =
+      'Funding pays for real work each season. Closing it ends that work; its founding history remains.';
+    d.options = [
+      option(
+        'fund',
+        'Restore and maintain the institution',
+        '12 gold now, then its normal upkeep. Work and education can resume.',
+        12,
+      ),
+      option(
+        'expand',
+        'Increase its grant and quality',
+        '10 gold; upkeep rises by 2, to a maximum of 8. The staff can improve its work.',
+        10,
+      ),
+      option(
+        'close',
+        'Suspend royal funding',
+        'No new cost. Work and classes pause, while the building and its history remain.',
+        0,
+        { happiness: -2 },
+      ),
+    ];
+    d.blocked =
+      i.lastReviewed === g.turn
+        ? 'This institution’s funding has already been reviewed this season.'
+        : null;
   }
   if (type === 'season') {
     d.title = 'Close this season’s council';
@@ -1148,15 +1406,32 @@ function remember(g, c, text) {
   c.memories.unshift(`${seasons[g.season]}, Year ${g.year}: ${text}`);
   c.memories = c.memories.slice(0, 15);
 }
-function record(g, type, target, choice, text, context={}) {
+function record(g, type, target, choice, text, context = {}) {
   g.history.unshift({ turn: g.turn, type, target, choice, text });
   g.history = g.history.slice(0, 100);
   log(g, text);
-  const {before,...details}=context;
-  initializeWorld(g,projects);
-  return decisionRecord(g,{type,target,choice,people:[context.agent,context.speaker,target].filter(id=>findPerson(g,id)),families:type==='family'?[target]:[],factions:[],site:context.site || (type==='project'?projectSite(g,target):null),...details},before,text);
+  const { before, ...details } = context;
+  initializeWorld(g, projects);
+  return decisionRecord(
+    g,
+    {
+      type,
+      target,
+      choice,
+      people: [context.agent, context.speaker, target].filter((id) =>
+        findPerson(g, id),
+      ),
+      families: type === 'family' ? [target] : [],
+      factions: [],
+      site:
+        context.site || (type === 'project' ? projectSite(g, target) : null),
+      ...details,
+    },
+    before,
+    text,
+  );
 }
-const result = (ok, text, entry=null) => ({ ok, text, entry });
+const result = (ok, text, entry = null) => ({ ok, text, entry });
 export function enact(g, type, target, choice, agent) {
   const d = getDecision(g, type, target, agent);
   if (!d) return result(false, 'That decision is no longer available.');
@@ -1168,11 +1443,11 @@ export function enact(g, type, target, choice, agent) {
     );
   if (g.resources.gold < o.cost)
     return result(false, 'The treasury cannot yet support that promise.');
-  const before=snapshot(g);
-  let c = findPerson(g,target);
+  const before = snapshot(g);
+  let c = findPerson(g, target);
   if (type === 'project') {
     const a = g.court.find((c) => c.id === agent);
-    if (!a || !living(a) || isBusy(g,agent))
+    if (!a || !living(a) || isBusy(g, agent))
       return result(
         false,
         'Choose a serving councillor with no commission this season.',
@@ -1185,7 +1460,7 @@ export function enact(g, type, target, choice, agent) {
       effects: o.effects,
       relations: o.relations,
       cost: o.cost,
-      site:projectSite(g,target),
+      site: projectSite(g, target),
     });
     remember(
       g,
@@ -1193,9 +1468,9 @@ export function enact(g, type, target, choice, agent) {
       `You entrusted them with “${d.title}”: ${o.label.toLowerCase()}.`,
     );
     const text = `${a.name} bows over your seal. “${o.label}” is now their charge.`;
-    const entry=record(g, type, target, choice, text,{agent,before});
-    if(type==='project')g.queue.at(-1).decisionId=entry.id;
-    return result(true, text,entry.id);
+    const entry = record(g, type, target, choice, text, { agent, before });
+    if (type === 'project') g.queue.at(-1).decisionId = entry.id;
+    return result(true, text, entry.id);
   }
   if (type === 'expedition') {
     const p = g.parties.find((p) => p.id === agent);
@@ -1203,6 +1478,15 @@ export function enact(g, type, target, choice, agent) {
       return result(false, 'Choose a company that is rested and available.');
     g.resources.gold -= o.cost;
     p.status = 'away';
+    for (const id of p.memberIds || []) {
+      const member = findPerson(g, id);
+      if (member) {
+        member.awayUntil = g.turn + (choice === 'bold' ? 1 : 2);
+        member.travelSite = realmExpeditions(g).find(
+          (t) => t.id === target,
+        ).site;
+      }
+    }
     g.missions.push({
       task: target,
       party: agent,
@@ -1210,11 +1494,16 @@ export function enact(g, type, target, choice, agent) {
       returns: g.turn + (choice === 'bold' ? 1 : 2),
     });
     const text = `${p.name} leave with your instructions: ${o.label.toLowerCase()}.`;
-    const entry=record(g, type, target, choice, text,{agent,before});
-    if(type==='project')g.queue.at(-1).decisionId=entry.id;
-    return result(true, text,entry.id);
+    const entry = record(g, type, target, choice, text, { agent, before });
+    g.missions.at(-1).origin = entry.id;
+    if (type === 'project') g.queue.at(-1).decisionId = entry.id;
+    return result(true, text, entry.id);
   }
-  if(type==='mentorship'&&(!agent||!availableMentors(g,target).some(m=>m.id===agent)))return result(false,'Choose an available adult mentor.');
+  if (
+    type === 'mentorship' &&
+    (!agent || !availableMentors(g, target).some((m) => m.id === agent))
+  )
+    return result(false, 'Choose an available adult mentor.');
   if (type === 'heir' && choice !== 'none') {
     const h = household(g).find(
       (h) =>
@@ -1227,6 +1516,8 @@ export function enact(g, type, target, choice, agent) {
     if (!h)
       return result(false, 'Choose a living adult member of the household.');
   }
+  if (type === 'governor' && !activeCourt(g).some((p) => p.id === agent))
+    return result(false, 'Choose a serving court member.');
   g.resources.gold -= o.cost;
   effects(g, o.effects);
   diplomaticEffects(g, o.relations);
@@ -1297,6 +1588,7 @@ export function enact(g, type, target, choice, agent) {
     }
     c.lastAppointed = g.turn;
     c.role = choice;
+    c.profession = choice;
     c.location = realmSites(g).find(
       (s) => s.id === (choice === 'Ambassador' ? 'border' : 'capital'),
     ).name;
@@ -1309,7 +1601,7 @@ export function enact(g, type, target, choice, agent) {
       const key = Object.keys(c.skills).sort(
         (a, b) => c.skills[b] - c.skills[a],
       )[0];
-      practice(g,c,key,2);
+      practice(g, c, key, 2);
       c.respect = clamp(c.respect + 6);
       c.loyalty = clamp(c.loyalty + 4);
     } else if (choice === 'listen') {
@@ -1359,18 +1651,84 @@ export function enact(g, type, target, choice, agent) {
     );
     text = `${h.head} receives your answer. ${choice === 'patron' ? 'The estate will thrive, without an exception to the law.' : choice === 'charter' ? 'A new privilege binds their fortune to your rule.' : 'Service to the realm must come before favors from its ruler.'}`;
   }
-  if(type==='reward'){
-    c.lastReward=g.turn;
-    if(choice==='stipend'){c.wealth+=10;c.morale=clamp(c.morale+8);c.trust=clamp(c.trust+4);}
-    if(choice==='equipment'){c.equipment.push({kind:'professional tools',quality:60,granted:g.turn});c.morale=clamp(c.morale+5);}
-    if(choice==='honor'){c.reputation=clamp(c.reputation+8);c.connections=clamp(c.connections+4);c.ambition=clamp(c.ambition+2);}
-    text=c.name+' receives '+o.label.toLowerCase()+'. Their life and resources have changed.';
+  if (type === 'governor') {
+    const local = g.settlements[target];
+    local.lastAdministration = g.turn;
+    if (choice === 'appoint') {
+      const governor = findPerson(g, agent);
+      if (!governor?.alive)
+        return result(false, 'Choose a living court member.');
+      for (const s of Object.values(g.settlements))
+        if (s.governorId === agent) s.governorId = null;
+      local.governorId = agent;
+      governor.reputation = clamp(governor.reputation + 3);
+      text =
+        governor.name +
+        ' accepts responsibility for ' +
+        local.name +
+        '. Their administration and leadership will shape the district through coming seasons.';
+    } else {
+      local.governorId = null;
+      if (choice === 'consult') local.prosperity = clamp(local.prosperity + 3);
+      text =
+        local.name +
+        ' will be overseen through ' +
+        (choice === 'consult'
+          ? 'a local consultative council'
+          : 'the throne directly') +
+        '.';
+    }
   }
-  if(type==='institution'){
-    const i=g.institutions.find(i=>i.id===target);i.lastReviewed=g.turn;
-    if(choice==='close'){i.status='closed';i.budget=0;}
-    else {i.status='active';i.budget=choice==='expand'?Math.min(8,(i.budget||1)+2):['school','apprenticeship'].includes(i.kind)?3:1;i.condition=clamp(i.condition+10);if(choice==='expand')i.quality=clamp(i.quality+5);}
-    text=i.name+' is '+(choice==='close'?'closed until its funding can be restored':'funded for the work ahead')+'. Its earlier history remains in the chronicle.';
+  if (type === 'reward') {
+    c.lastReward = g.turn;
+    if (choice === 'stipend') {
+      c.wealth += 10;
+      c.morale = clamp(c.morale + 8);
+      c.trust = clamp(c.trust + 4);
+    }
+    if (choice === 'equipment') {
+      c.equipment.push({
+        kind: 'professional tools',
+        quality: 60,
+        granted: g.turn,
+      });
+      c.morale = clamp(c.morale + 5);
+    }
+    if (choice === 'honor') {
+      c.reputation = clamp(c.reputation + 8);
+      c.connections = clamp(c.connections + 4);
+      c.ambition = clamp(c.ambition + 2);
+    }
+    text =
+      c.name +
+      ' receives ' +
+      o.label.toLowerCase() +
+      '. Their life and resources have changed.';
+  }
+  if (type === 'institution') {
+    const i = g.institutions.find((i) => i.id === target);
+    i.lastReviewed = g.turn;
+    if (choice === 'close') {
+      i.status = 'closed';
+      i.budget = 0;
+    } else {
+      i.status = 'active';
+      i.budget =
+        choice === 'expand'
+          ? Math.min(8, (i.budget || 1) + 2)
+          : ['school', 'academy', 'apprenticeship'].includes(i.kind)
+            ? 3
+            : 1;
+      i.condition = clamp(i.condition + 10);
+      if (choice === 'expand') i.quality = clamp(i.quality + 5);
+    }
+    text =
+      i.name +
+      ' is ' +
+      (choice === 'close'
+        ? 'closed until its funding can be restored'
+        : 'funded for the work ahead') +
+      '. Its earlier history remains in the chronicle.';
   }
   if (type === 'policy') {
     g.lastEdict = g.turn;
@@ -1382,7 +1740,7 @@ export function enact(g, type, target, choice, agent) {
   }
   if (type === 'marry') {
     if (choice !== 'wait') {
-      recordMarriage(g,g.ruler,c);
+      recordMarriage(g, g.ruler, c);
       g.spouse = target;
       c.loyalty = clamp(c.loyalty + 15);
       c.affection = clamp(c.affection + 10);
@@ -1401,10 +1759,17 @@ export function enact(g, type, target, choice, agent) {
         : `${household(g).find((c) => c.id === target).name} is named heir ${choice === 'public' ? 'before the court' : 'in the sealed testament'}.`;
   }
   remember(g, c, o.label + '.');
-  const entry=record(g, type, target, choice, text,{agent,before});
-  if(type==='training'||type==='mentorship')startTraining(g,target,choice,type==='mentorship'?agent:null,entry.id);
-  if (type === 'season') advance(g,before.resources);
-  return result(true, text,entry?.id);
+  const entry = record(g, type, target, choice, text, { agent, before });
+  if (type === 'training' || type === 'mentorship')
+    startTraining(
+      g,
+      target,
+      choice,
+      type === 'mentorship' ? agent : null,
+      entry.id,
+    );
+  if (type === 'season') advance(g, before.resources);
+  return result(true, text, entry?.id);
 }
 // Compatibility entry points for existing campaigns and simulation tools.
 export const delegate = (g, id, who) =>
@@ -1417,8 +1782,10 @@ export const recruit = (g) => {
   const c = g.applicants.find((c) => !g.court.some((p) => p.id === c.id));
   return c ? enact(g, 'hire', c.id, 'retainer').ok : false;
 };
-export function succession(g,cause='an unrecorded cause') {
-  recordDeath(g,g.ruler,cause);
+export function succession(g, cause = 'an unrecorded cause') {
+  recordDeath(g, g.ruler, cause);
+  const ended = g.reigns.find((r) => r.person === g.ruler.id && r.end === null);
+  if (ended) ended.end = g.turn;
   const h = household(g).find(
     (c) =>
       c.id === g.heir &&
@@ -1438,6 +1805,7 @@ export function succession(g,cause='an unrecorded cause') {
       health: g.ruler.health,
     });
   g.ruler.alive = false;
+  const rival = competingClaim(g, h);
   if (!h) {
     g.event = {
       id: 'reign-' + g.dynasty,
@@ -1458,21 +1826,36 @@ export function succession(g,cause='an unrecorded cause') {
       type: 'succession',
       backdrop: 'hall',
       speaker: h.id,
+      rival: rival?.id || null,
       title: `The testament naming ${h.name}`,
-      text: `After ${g.ruler.name}’s death, ${g.factions.find((f) => f.id === 'nobles').name} challenge ${h.name}. ${h.story || 'The chosen heir has a life and loyalties already known to this household.'} At ${realmSites(g)[0].name}, a lawful testament and a living loyalty are not always the same thing. The next reign now depends on how this claim is defended.`,
+      text: `After ${g.ruler.name}’s death, ${g.factions.find((f) => f.id === 'nobles').name} challenge ${h.name}. ${rival ? rival.name + ' has put forward a competing claim, supported by their own history and connections. ' : ''} ${h.story || 'The chosen heir has a life and loyalties already known to this household.'} At ${realmSites(g)[0].name}, a lawful testament and a living loyalty are not always the same thing. The next reign now depends on how this claim is defended.`,
     };
     reserveEvent(g, g.event);
   } else ascend(g, h);
 }
-export function ascend(g,h) {
-  const prior=g.ruler;
-  h.status='ruler';h.alive=true;h.history='Succeeded';
+export function ascend(g, h, cause = null) {
+  const prior = g.ruler;
+  h.status = 'ruler';
+  h.alive = true;
+  h.history = 'Succeeded';
   h.values ||= 'Harmony';
-  h.reign= g.dynasty+1;
-  g.ruler=h;g.spouse=h.spouseId || null;g.heir=null;g.dynasty++;g.event=null;
-  initializeWorld(g,projects);
-  appendRecord(g,{kind:'ascension',people:[h.id,prior.id],text:h.name+' takes the crown with their own history, abilities and loyalties.'});
-  log(g,h.name+' ascends. The realm enters reign '+g.dynasty+'.');
+  h.reign = g.dynasty + 1;
+  g.ruler = h;
+  g.spouse = h.spouseId || null;
+  g.heir = null;
+  g.dynasty++;
+  g.event = null;
+  beginReign(g, prior, h);
+  initializeWorld(g, projects);
+  appendRecord(g, {
+    kind: 'ascension',
+    cause,
+    people: [h.id, prior.id],
+    text:
+      h.name +
+      ' takes the crown with their own history, abilities and loyalties.',
+  });
+  log(g, h.name + ' ascends. The realm enters reign ' + g.dynasty + '.');
 }
 function outsideNominee(g) {
   return (
@@ -1574,6 +1957,17 @@ export function eventOptions(g) {
         ];
   if (e.type === 'succession')
     return [
+      ...(e.rival && findPerson(g, e.rival)?.alive
+        ? [
+            option(
+              'rival',
+              'Recognize ' + findPerson(g, e.rival).name + ' instead',
+              'Set aside the testament. The rival inherits their own life; the displaced heir remembers the rejection.',
+              0,
+              { legitimacy: -8, justice: -3 },
+            ),
+          ]
+        : []),
       option(
         'concede',
         'Negotiate concessions',
@@ -1650,6 +2044,13 @@ export function eventOptions(g) {
 export function resolveEvent(g, choice, agent) {
   const e = g.event;
   if (!e) return result(false, 'There is no audience awaiting an answer.');
+  if (prepareAudience(g, e) === false) {
+    nextAudience(g);
+    return result(
+      true,
+      'The petition closes as its participants’ lives change.',
+    );
+  }
   const key = eventKey(e);
   if (key && g.resolvedEvents.includes(key)) {
     nextAudience(g);
@@ -1673,7 +2074,7 @@ export function resolveEvent(g, choice, agent) {
         : 'The treasury cannot support that answer.',
     );
   }
-  const before=snapshot(g);
+  const before = snapshot(g);
   if (e.action && choice !== 'decline') {
     const ruling = enact(g, e.action.type, e.action.target, choice, e.agent);
     if (!ruling.ok) {
@@ -1727,11 +2128,40 @@ export function resolveEvent(g, choice, agent) {
       g.court.push(h);
       effects(g, { legitimacy: -5, justice: 3 });
     }
-    ascend(g, h);
-    return result(true, 'The council witnesses a new ascension.');
+    initializeWorld(g, projects);
+    const entry = record(
+      g,
+      'succession',
+      e.id,
+      choice,
+      'The council names ' + h.name + ' to carry the crown.',
+      { before, speaker: h.id, site: 'capital', kind: 'decision' },
+    );
+    ascend(g, h, entry.id);
+    return result(true, 'The council witnesses a new ascension.', entry.id);
   }
   if (e.type === 'succession') {
-    const h = household(g).find((c) => c.id === g.heir && c.alive);
+    const h =
+      choice === 'rival'
+        ? findPerson(g, e.rival)
+        : household(g).find((c) => c.id === g.heir && c.alive);
+    if (!h?.alive) return result(false, 'That claimant is no longer eligible.');
+    if (choice === 'rival') {
+      const rejected = findPerson(g, g.heir);
+      if (rejected) {
+        rejected.rejectedClaim = {
+          reign: g.dynasty,
+          turn: g.turn,
+          source: null,
+        };
+        rejected.grievance = clamp(rejected.grievance + 20);
+        remember(
+          g,
+          rejected,
+          'The council set aside the testament naming them.',
+        );
+      }
+    }
     if (choice === 'concede') {
       g.resources.legitimacy = clamp(g.resources.legitimacy - 10);
       g.factions.find((f) => f.id === 'nobles').grievance = 20;
@@ -1742,7 +2172,27 @@ export function resolveEvent(g, choice, agent) {
     if (choice === 'council') {
       effects(g, { legitimacy: 6, justice: 5 });
     }
-    ascend(g, h);
+    const entry = record(
+      g,
+      'succession',
+      e.id,
+      choice,
+      h.name + ' receives the throne through ' + o.label.toLowerCase() + '.',
+      { before, speaker: h.id, site: 'capital', kind: 'decision' },
+    );
+    if (choice === 'rival') {
+      const displaced = findPerson(g, g.heir);
+      if (displaced?.rejectedClaim) {
+        displaced.rejectedClaim.source = entry.id;
+        addFact(
+          g,
+          'displaced-claim',
+          { people: [displaced.id, h.id], claimant: displaced.id },
+          entry.id,
+        );
+      }
+    }
+    ascend(g, h, entry.id);
     return result(
       true,
       'The heir takes the throne. The terms of that ascension will be remembered.',
@@ -1762,8 +2212,18 @@ export function resolveEvent(g, choice, agent) {
     );
     if (choice === 'care') p.wounds = Math.max(0, p.wounds - 1);
   }
-  if(e.engine==='emergent')resolveEmergent(g,e,choice);
-  if(e.engine==='consequence')settleConsequence(g,e,choice);
+  const reserved = e.engine
+    ? appendRecord(g, {
+        kind: 'decision',
+        people: [e.speaker],
+        site: e.site,
+        cause: e.origin || null,
+        text: 'A ruling awaits its recorded outcome.',
+      })
+    : null;
+  if (reserved) e.decisionOrigin = reserved.id;
+  if (e.engine === 'emergent') resolveEmergent(g, e, choice);
+  if (e.engine === 'consequence') settleConsequence(g, e, choice);
   const speaker = findPerson(g, e.speaker);
   if (speaker) {
     speaker.trust = clamp(
@@ -1832,8 +2292,18 @@ export function resolveEvent(g, choice, agent) {
     if (reserveEvent(g, letter)) g.scheduled.push(letter);
   }
   const text = `${e.title}: ${o.label}. ${o.note}`;
-  const entry=record(g, 'audience', e.id || e.title, choice, text,{before,speaker:e.speaker,site:e.site,cause:e.origin||null,kind:e.action?'audience-close':'decision',event:e.id||null});
-  for(const letter of g.scheduled)if(letter.id===e.id+'-aftermath'||letter.id===e.id+'-followup')letter.origin=entry.id;
+  const entry = record(g, 'audience', e.id || e.title, choice, text, {
+    before,
+    speaker: e.speaker,
+    site: e.site,
+    cause: e.origin || null,
+    kind: e.action ? 'audience-close' : 'decision',
+    event: e.id || null,
+    existing: reserved?.id,
+  });
+  for (const letter of g.scheduled)
+    if (letter.id === e.id + '-aftermath' || letter.id === e.id + '-followup')
+      letter.origin = entry.id;
   nextAudience(g);
   return result(true, text);
 }
@@ -1854,10 +2324,24 @@ function missionReturns(g) {
             ? 'commons'
             : 'goblins';
     const guide = g.factions.find((f) => f.id === local).trust >= 60 ? 8 : 0;
+    const squad = (p.memberIds || [])
+      .map((id) => findPerson(g, id))
+      .filter((person) => person?.alive);
+    const individualSkill = squad.length
+      ? squad.reduce(
+          (n, person) =>
+            n +
+            (person.skills.martial +
+              person.skills.leadership +
+              person.skills.scholarship) /
+              3,
+          0,
+        ) / squad.length
+      : p.skill;
     const chance =
       clamp(
         50 +
-          (p.skill - task.difficulty) * 0.65 +
+          (p.skill * 0.75 + individualSkill * 0.25 - task.difficulty) * 0.65 +
           p.loyalty / 10 +
           (p.caution - 50) / 10 +
           guide +
@@ -1880,6 +2364,40 @@ function missionReturns(g) {
       : m.approach === 'bold'
         ? 3
         : 2;
+    const returnRecord = appendRecord(g, {
+      kind: 'expedition-return',
+      cause: m.origin || null,
+      people: squad.map((p) => p.id),
+      site: task.site,
+      text:
+        p.name +
+        ' return from ' +
+        task.name +
+        (success
+          ? ' with a discovery.'
+          : ' bearing injuries and an unfinished undertaking.'),
+    });
+    for (const member of squad) {
+      member.awayUntil = g.turn;
+      member.travelSite = null;
+      practice(
+        g,
+        member,
+        member.profession === 'Lore keeper' ? 'scholarship' : 'martial',
+        2,
+      );
+      member.reputation = clamp(member.reputation + (success ? 4 : -2));
+      member.wealth += success ? 3 : 0;
+      if (p.wounds) {
+        member.health = clamp(member.health - p.wounds * 4);
+        member.injuries.push({
+          kind: 'expedition wound',
+          until: g.turn + p.wounds,
+          status: 'healing',
+          source: returnRecord.id,
+        });
+      }
+    }
     if (!g.completed.includes(task.id)) g.completed.push(task.id);
     g.expeditionOutcomes[task.id] = success ? 'success' : 'failure';
     if (success) effects(g, { [task.domain]: 5 });
@@ -1889,6 +2407,7 @@ function missionReturns(g) {
     queueUnique(g, {
       type: 'expedition',
       id: task.id,
+      origin: returnRecord.id,
       title: task.name,
       text: outcome,
       success,
@@ -1912,8 +2431,9 @@ function advanceCore(g) {
     const p = realmProjects(g).find((p) => p.id === q.id),
       c = g.court.find((c) => c.id === q.who);
     if (!p || !c || !living(c)) continue;
-    const forecast=professionalForecast(g,c,p,q.cost);
-    const success=random(g)<forecast.chance;
+    const assignmentBefore = snapshot(g);
+    const forecast = professionalForecast(g, c, p, q.cost);
+    const success = random(g) < forecast.chance;
     const impact = q.effects || p.effects;
     effects(
       g,
@@ -1937,9 +2457,32 @@ function advanceCore(g) {
     const text = success
       ? `${c.name} returns from “${p.name}” with a sealed report and tired satisfaction. ${(g.world?.projectReports || projectReports)[p.id]?.[q.approach || 'balanced'] || 'The work has begun to change daily life.'}`
       : `${c.name} returns from “${p.name}” with muddy boots and an unfinished promise. Resistance and misjudgment slowed the work; some progress remains.`;
-    const source=appendRecord(g,{kind:'assignment',type:'project-result',cause:q.decisionId||null,site:q.site||projectSite(g,q.id),people:[c.id],text,success,project:q.id,choice:q.approach});
-    assignmentDevelopment(g,c,p,success,forecast,source.id);
-    commissionConsequences(g,q,success,source.id);
+    const source = appendRecord(g, {
+      kind: 'assignment',
+      type: 'project-result',
+      cause: q.decisionId || null,
+      site: q.site || projectSite(g, q.id),
+      people: [c.id],
+      text,
+      success,
+      project: q.id,
+      choice: q.approach,
+    });
+    assignmentDevelopment(g, c, p, success, forecast, source.id);
+    commissionConsequences(g, q, success, source.id);
+    source.effects = delta(assignmentBefore.resources, g.resources);
+    source.assessment = {
+      skill: forecast.skill,
+      score: forecast.score,
+      chance: forecast.chance,
+      contributions: forecast.contributions,
+    };
+    source.changes = [
+      { person: c.id, field: forecast.skill, change: c.performance[0].gain },
+      ...Object.entries(delta(assignmentBefore.people[c.id], c))
+        .filter(([k]) => ['wealth', 'respect', 'health'].includes(k))
+        .map(([field, change]) => ({ person: c.id, field, change })),
+    ];
     log(g, text);
     remember(
       g,
@@ -1959,7 +2502,11 @@ function advanceCore(g) {
       if (c.alive && c.status !== 'ruler') c.age++;
     });
     g.children.forEach((c) => {
-      if (c.status !== 'ruler') {
+      if (
+        c.status !== 'ruler' &&
+        c.alive &&
+        !g.court.some((p) => p.id === c.id)
+      ) {
         c.age++;
         if (c.skills)
           for (const k of Object.keys(c.skills))
@@ -1967,9 +2514,16 @@ function advanceCore(g) {
       }
     });
     for (const relative of g.kin || [])
-      if (relative.alive && relative.status !== 'ruler') {
+      if (
+        relative.alive &&
+        relative.status !== 'ruler' &&
+        !g.court.some((p) => p.id === relative.id)
+      ) {
         relative.age++;
-        relative.health = clamp(relative.health - (relative.age > 70 ? 3 : 0));
+        relative.health = clamp(
+          relative.health -
+            (relative.age > lifeExpectancy(relative) * 0.7 ? 3 : 0),
+        );
         if (!relative.health) {
           relative.alive = false;
           relative.status = 'deceased';
@@ -2012,7 +2566,11 @@ function advanceCore(g) {
   }
   for (const p of g.parties) p.wounds = Math.max(0, p.wounds - 1);
   for (const c of activeCourt(g)) {
-    c.health = clamp(c.health - (c.age > 65 ? 4 : 0) - (r.health < 25 ? 3 : 0));
+    c.health = clamp(
+      c.health -
+        (c.age > lifeExpectancy(c) * 0.75 ? 4 : 0) -
+        (r.health < 25 ? 3 : 0),
+    );
     const people = g.factions.find((f) => f.id === c.faction);
     const conviction =
       (c.traits?.includes('Principled') && r.justice < 35 ? -1 : 0) +
@@ -2026,7 +2584,10 @@ function advanceCore(g) {
     c.grievance = clamp(
       c.grievance + (people?.grievance > 55 ? 1 : people?.trust > 65 ? -1 : 0),
     );
-    if (c.health === 0 || (c.age > 55 && random(g) < 0.015)) {
+    if (
+      c.health === 0 ||
+      (c.age > lifeExpectancy(c) * 0.85 && random(g) < 0.015)
+    ) {
       c.alive = false;
       c.status = 'deceased';
       log(
@@ -2057,10 +2618,17 @@ function advanceCore(g) {
     );
     h.cohesion = clamp(h.cohesion + (h.fortune > 50 ? 1 : -1));
   }
-  const spouse = g.court.find((c) => c.id === g.spouse && c.alive);
-  if (spouse && g.ruler.age < lifeExpectancy(g.ruler)*.6 && g.turn-(g.ruler.lastBirthTurn??-10)>=4 && random(g) < 0.18) {
+  const spouse = findPerson(g, g.spouse)?.alive
+    ? findPerson(g, g.spouse)
+    : null;
+  if (
+    spouse &&
+    g.ruler.age < lifeExpectancy(g.ruler) * 0.6 &&
+    g.turn - (g.ruler.lastBirthTurn ?? -10) >= 4 &&
+    random(g) < 0.18
+  ) {
     const n = g.children.length + 1;
-    const parent=[g.ruler,spouse][Math.floor(random(g)*2)];
+    const parent = [g.ruler, spouse][Math.floor(random(g) * 2)];
     if (parent) {
       const identityIndex = g.futurePeople?.findIndex(
         (c) =>
@@ -2068,12 +2636,22 @@ function advanceCore(g) {
           (c.race !== 'Beastfolk' || c.species === parent.species),
       );
       const identity =
-        identityIndex >= 0 ? g.futurePeople.splice(identityIndex, 1)[0] : newPerson(g,{race:parent.race,species:parent.species,age:0,role:'Royal child',site:g.ruler.siteId||'capital',parents:[g.ruler.id,spouse.id],house:g.ruler.house});
+        identityIndex >= 0
+          ? g.futurePeople.splice(identityIndex, 1)[0]
+          : newPerson(g, {
+              race: parent.race,
+              species: parent.species,
+              age: 0,
+              role: 'Royal child',
+              site: g.ruler.siteId || 'capital',
+              parents: [g.ruler.id, spouse.id],
+              house: g.ruler.house,
+            });
       g.children.push({
         ...(identity || {}),
         id: identity?.id || 'child' + n,
-      parentIds:[g.ruler.id,spouse.id],
-      role:'Royal child',
+        parentIds: [g.ruler.id, spouse.id],
+        role: 'Royal child',
         name: identity?.name || 'Child ' + n,
         story: `Born to ${g.ruler.name} and ${spouse.name}; raised among the changing loyalties of the royal household.`,
         skills: { stewardship: 15, martial: 15, diplomacy: 15, intrigue: 15 },
@@ -2094,20 +2672,27 @@ function advanceCore(g) {
   }
   g.ruler.health = clamp(
     g.ruler.health -
-      (g.ruler.age > lifeExpectancy(g.ruler)*.7 ? 3 : 0) -
+      (g.ruler.age > lifeExpectancy(g.ruler) * 0.7 ? 3 : 0) -
       (r.food === 0 ? 5 : 0) -
       (r.health < 25 ? 2 : 0),
   );
   if (
     g.ruler.health === 0 ||
-    (g.ruler.age > lifeExpectancy(g.ruler)*.85 && random(g) < 0.04) ||
+    (g.ruler.age > lifeExpectancy(g.ruler) * 0.85 && random(g) < 0.04) ||
     (r.security < 25 && random(g) < 0.05)
   ) {
     log(
       g,
       `${g.ruler.name}'s reign ends in ${g.ruler.health === 0 ? 'illness' : r.security < 25 ? 'assassination' : 'old age'}. The realm turns toward the line of succession.`,
     );
-    succession(g,g.ruler.health===0?'illness':r.security<25?'assassination':'old age');
+    succession(
+      g,
+      g.ruler.health === 0
+        ? 'illness'
+        : r.security < 25
+          ? 'assassination'
+          : 'old age',
+    );
     return true;
   }
   if (
@@ -2140,15 +2725,20 @@ function advanceCore(g) {
     g.turn % 4 === 0 &&
     g.applicants.filter((a) => !g.court.some((c) => c.id === a.id)).length <
       2 &&
-    (!g.preparedIdentities || g.futurePeople.length > 0)
+    true
   ) {
     const base = g.futurePeople?.length
         ? g.futurePeople.shift()
-        : candidates[Math.floor(random(g) * candidates.length)],
+        : newPerson(g, {
+            race: g.world.predominantRace,
+            age: 22 + Math.floor(random(g) * 15),
+            role: 'Petitioner',
+            site: 'capital',
+          }),
       id = 'petitioner-' + g.turn;
     g.applicants.push({
       ...structuredClone(base),
-      id:base.id.startsWith('arrival-')?base.id:id,
+      id: base.id,
       name: base.name,
       age: 22 + Math.floor(random(g) * 15),
       story:
@@ -2252,23 +2842,39 @@ function advanceCore(g) {
   nextAudience(g);
   return true;
 }
-export function advance(g, prior=null) {
-  if(g.event)return false;
-  const before=prior || {...g.resources},archiveStart=g.archive.length;
-  const ok=advanceCore(g);
-  if(ok){
-    initializeWorld(g,projects);
+export function advance(g, prior = null) {
+  if (g.event) return false;
+  const before = prior || { ...g.resources },
+    archiveStart = g.archive.length;
+  const ok = advanceCore(g);
+  if (ok) {
+    initializeWorld(g, projects);
     tickPeople(g);
     tickCommunities(g);
+    evolveRealm(g);
+    governDistricts(g);
     tickObligations(g);
     tickTraining(g);
     tickInstitutions(g);
-    for(const e of dueConsequences(g))queueUnique(g,e);
-    if(g.ruler.alive){const emerging=generateEmergentEvent(g);if(emerging)queueUnique(g,emerging);}
-    if(!g.event&&g.ruler.alive)nextAudience(g);
-    const report=finishSeasonReport(g,before,g.archive.slice(archiveStart).map(e=>e.id));
-    const record=appendRecord(g,{kind:'season',type:'season',text:'The realm enters '+seasons[g.season]+', Year '+g.year+'.',effects:report.changes});
-    report.entry=record.id;
+    for (const e of dueConsequences(g)) queueUnique(g, e);
+    if (g.ruler.alive) {
+      const emerging = generateEmergentEvent(g);
+      if (emerging) queueUnique(g, emerging);
+    }
+    if (!g.event && g.ruler.alive) nextAudience(g);
+    initializeWorld(g, projects);
+    const report = finishSeasonReport(
+      g,
+      before,
+      g.archive.slice(archiveStart).map((e) => e.id),
+    );
+    const record = appendRecord(g, {
+      kind: 'season',
+      type: 'season',
+      text: 'The realm enters ' + seasons[g.season] + ', Year ' + g.year + '.',
+      effects: report.changes,
+    });
+    report.entry = record.id;
   }
   return ok;
 }
@@ -2351,7 +2957,7 @@ function migrateEventHistory(g) {
 export function parseSave(text) {
   let g;
   try {
-    g = JSON.parse(text);
+    g = readSave(text);
   } catch {
     throw Error('This file is not readable as a Lineage chronicle.');
   }
@@ -2411,7 +3017,9 @@ export function parseSave(text) {
     throw Error('This chronicle is incomplete or damaged.');
   if (g.version === 1) {
     const defaults = createGame({ scale: g.scale, history: g.ruler.history });
-    defaults.families=structuredClone(familyLore);defaults.parties=structuredClone(parties);defaults.applicants=structuredClone(candidates);
+    defaults.families = structuredClone(familyLore);
+    defaults.parties = structuredClone(parties);
+    defaults.applicants = structuredClone(candidates);
     for (const k of [
       'families',
       'parties',
@@ -2566,7 +3174,8 @@ export function parseSave(text) {
     if (
       !w ||
       !Array.isArray(w.sites) ||
-      w.sites.length !== 6 ||
+      w.sites.length < 6 ||
+      w.sites.length > 16 ||
       !sites.every((base) => w.sites.some((s) => s.id === base.id)) ||
       w.sites.some(
         (s) =>
@@ -2595,7 +3204,9 @@ export function parseSave(text) {
           ].every((k) => str(w.factionLore[f.id][k])),
       ) ||
       !Array.isArray(w.projects) ||
-      !projects.filter(p=>!['school','mill','recruit'].includes(p.id)).every((base) => w.projects.some((p) => p.id === base.id)) ||
+      !projects
+        .filter((p) => !['school', 'mill', 'recruit'].includes(p.id))
+        .every((base) => w.projects.some((p) => p.id === base.id)) ||
       w.projects.some((p) => ![p.name, p.desc, p.skill].every(str)) ||
       !Array.isArray(w.expeditions) ||
       w.expeditions.length !== 4 ||
@@ -2830,7 +3441,8 @@ export function parseSave(text) {
     g.ruler.appearance ||= 'The regalia inherited with the crown.';
     g.ruler.story ||= `${g.ruler.name} has already shaped the realm through the choices recorded in its chronicle.`;
   }
-  if(oldVersion===5&&!worldStateValid(g))throw Error('This living-world chronicle is incomplete or damaged.');
-  initializeWorld(g,projects);
+  if (oldVersion === 5 && !worldStateValid(g))
+    throw Error('This living-world chronicle is incomplete or damaged.');
+  initializeWorld(g, projects);
   return g;
 }

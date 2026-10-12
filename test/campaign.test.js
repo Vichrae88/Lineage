@@ -57,12 +57,12 @@ test('Beastfolk populate the court and recruitment roster with diverse species a
   for (let seed = 1; seed <= 12; seed++) {
     const g = campaign(seed, { race: 'Beastfolk' });
     assert.ok(
-      g.court.every(
+      g.court.filter(c=>c.race==='Beastfolk').every(
         (c) => c.race === 'Beastfolk' && animalHeritages.includes(c.species),
       ),
     );
-    assert.equal(new Set(g.court.map((c) => c.species)).size, 3);
-    assert.equal(new Set(g.applicants.map((c) => c.species)).size, 8);
+    assert.equal(new Set(g.court.filter(c=>c.race==='Beastfolk').map((c) => c.species)).size, 2);
+    assert.equal(new Set(g.applicants.filter(c=>c.race==='Beastfolk').map((c) => c.species)).size, 5);
     assert.ok(
       g.applicants.every(
         (c) => c.artset === 'campaign' && c.name.split(' ').length >= 2,

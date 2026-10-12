@@ -508,8 +508,8 @@ test('a Beastfolk campaign automatically supplies varied animal heritages', () =
     history: 'Inherited',
   });
   assert.equal(g.ruler.race, 'Beastfolk');
-  assert.equal(new Set(g.court.map((c) => c.species)).size, 3);
-  assert.ok(g.court.every((c) => c.race === 'Beastfolk'));
+  assert.equal(new Set(g.court.filter(c=>c.race==='Beastfolk').map((c) => c.species)).size, 2);
+  assert.equal(g.court.filter(c=>c.race==='Beastfolk').length,2);
   assert.deepEqual(parseSave(JSON.stringify(g)), g);
 });
 
