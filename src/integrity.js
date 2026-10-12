@@ -1,5 +1,5 @@
-import { transitionsValid } from './transitions.js?v=0.5.1';
-import { idValid } from './sim-core.js?v=0.5.1';
+import { transitionsValid } from './transitions.js?v=0.5.2';
+import { idValid } from './sim-core.js?v=0.5.2';
 const unique = (rows, key = 'id') =>
   new Set(rows.map((row) => row[key])).size === rows.length;
 const objects = (value) =>

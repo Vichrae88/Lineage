@@ -2,7 +2,7 @@
 
 A seasonal fantasy roleplaying game about ruling a realm and the people who make it live. [Play the current release](https://vichrae88.github.io/Lineage/).
 
-**This branch contains the 0.5.1 enhancement pass for review. It has not been deployed.** GitHub Pages continues serving the existing `feature/living-world` version. See [the enhancement review](docs/enhancement-review.md) for phases, compatibility, balance results and review instructions. The existing [isolated preview](https://vichrae88.github.io/Lineage/?preview=1) still runs 0.5.0 and uses separate browser-save slots.
+**This branch contains the 0.5.2 portrait polish revision for review.** It removes drawn-on portrait accessories, gives the seven non-lizard Beastfolk heritages painted hair, and displays the release number in the upper-right corner. See [the portrait review](docs/portrait-polish-review.md) for screenshots and validation. The live Pages source remains `feature/immersion-economy` on 0.5.1; this revision is on `feature/portrait-polish` and has not been deployed. The [isolated preview](https://vichrae88.github.io/Lineage/?preview=1) keeps separate browser-save slots.
 
 ## Develop
 
@@ -70,7 +70,7 @@ Compact version-5 saves store each individual once and refer to that identity fr
 
 ## Review and publication
 
-The production Pages workflow publishes on `main`. The directly served branch is currently `feature/living-world`; this review branch is `feature/immersion-economy` and is not served. Keep both production sources unchanged until review. The separate pull-request workflow runs tests, builds, checks a century of play, and provides a downloadable build for review. Merge or production publication requires the user's review first.
+The production Pages workflow publishes on `main`. The directly served branch is currently `feature/immersion-economy`; this review branch is `feature/portrait-polish` and is not served. Keep both production sources unchanged until review. The separate pull-request workflow runs tests, builds, checks a century of play, and provides a downloadable build for review. Merge or production publication requires the user's review first.
 
 The current public release remains [vichrae88.github.io/Lineage](https://vichrae88.github.io/Lineage/). All assets use relative paths under `/Lineage/`.
 

@@ -3,9 +3,9 @@ import {
   skills,
   traitRules,
   professionalForecast,
-} from './characters.js?v=0.5.1';
-import { personById } from './sim-core.js?v=0.5.1';
-import { escapeText as esc } from './reports-ui.js?v=0.5.1';
+} from './characters.js?v=0.5.2';
+import { personById } from './sim-core.js?v=0.5.2';
+import { escapeText as esc } from './reports-ui.js?v=0.5.2';
 const action = (label, type, id) =>
   '<button type="button" data-action="decision" data-type="' +
   type +

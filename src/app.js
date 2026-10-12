@@ -6,13 +6,13 @@ import {
   factionCrest,
   historicLandmarks,
   mapWorks,
-} from './world-flavor-ui.js?v=0.5.1';
-import { isBusy } from './characters.js?v=0.5.1';
-import { treasuryView, commercialAdvice } from './treasury-ui.js?v=0.5.1';
-import { promisesView } from './narrative-ui.js?v=0.5.1';
-import { serializeGame } from './persistence.js?v=0.5.1';
-import { familyTreeView, reignsView, claimView } from './dynasty-ui.js?v=0.5.1';
-import { commissionCapacity, courtCapacity } from './dynasty.js?v=0.5.1';
+} from './world-flavor-ui.js?v=0.5.2';
+import { isBusy } from './characters.js?v=0.5.2';
+import { treasuryView, commercialAdvice } from './treasury-ui.js?v=0.5.2';
+import { promisesView } from './narrative-ui.js?v=0.5.2';
+import { serializeGame } from './persistence.js?v=0.5.2';
+import { familyTreeView, reignsView, claimView } from './dynasty-ui.js?v=0.5.2';
+import { commissionCapacity, courtCapacity } from './dynasty.js?v=0.5.2';
 import {
   createGame,
   seasons,
@@ -38,8 +38,8 @@ import {
   household,
   prepareAudience,
   advance,
-} from './game.js?v=0.5.1';
-import { dispositions, presentations } from './campaign.js?v=0.5.1';
+} from './game.js?v=0.5.2';
+import { dispositions, presentations } from './campaign.js?v=0.5.2';
 import {
   projectionView,
   outcomeView,
@@ -47,13 +47,13 @@ import {
   archiveView,
   entryView,
   localDevelopmentView,
-} from './reports-ui.js?v=0.5.1';
+} from './reports-ui.js?v=0.5.2';
 import {
   characterDevelopmentView,
   forecastView,
-} from './characters-ui.js?v=0.5.1';
-import { portraitMarkup } from './portraits.js?v=0.5.1';
-import { realmDemographics } from './demographics.js?v=0.5.1';
+} from './characters-ui.js?v=0.5.2';
+import { portraitMarkup, portraitDescription } from './portraits.js?v=0.5.2';
+import { realmDemographics } from './demographics.js?v=0.5.2';
 let sites, factionLore, expeditions, relics, projects;
 let returnModal = null;
 let modalStack = [];
@@ -413,7 +413,7 @@ function personProfile(c, isCandidate = false) {
     .map(([k, n]) => narrate(k, n, 'skill'))
     .join(
       '',
-    )}${!isCandidate && !isRuler ? `<h4>How they stand with you</h4>${narrate('Trust', c.trust)}${narrate('Affection', c.affection, 'affection')}${narrate('Loyalty', c.loyalty, 'loyalty')}${narrate('Ambition', c.ambition, 'ambition')}${narrate('Unspoken grievances', c.grievance, 'grievance')}${narrate('Health', c.health, 'health')}<p>${c.status === 'serving' ? esc(roles[c.role]?.purpose || 'An available voice at your council.') : c.status === 'departed' ? 'They have left your household. Their allegiances and memories remain in the archive.' : c.status === 'ruler' ? 'They now bear the crown.' : 'Their service is preserved in the court archive.'}</p>` : ''}</section></div>${characterDevelopmentView(g, c)}${c.portraitRecipe?.paintDescription ? '<p class="quiet">As painted: ' + esc(c.portraitRecipe.paintDescription) + '.</p>' : ''}${c.alive ? btn('Commission their portrait', 'decision', `data-type="portrait" data-id="${c.id}"`) : ''}${familyTreeView(g, c.id)}${claimView(g, c)}${
+    )}${!isCandidate && !isRuler ? `<h4>How they stand with you</h4>${narrate('Trust', c.trust)}${narrate('Affection', c.affection, 'affection')}${narrate('Loyalty', c.loyalty, 'loyalty')}${narrate('Ambition', c.ambition, 'ambition')}${narrate('Unspoken grievances', c.grievance, 'grievance')}${narrate('Health', c.health, 'health')}<p>${c.status === 'serving' ? esc(roles[c.role]?.purpose || 'An available voice at your council.') : c.status === 'departed' ? 'They have left your household. Their allegiances and memories remain in the archive.' : c.status === 'ruler' ? 'They now bear the crown.' : 'Their service is preserved in the court archive.'}</p>` : ''}</section></div>${characterDevelopmentView(g, c)}${portraitDescription(c) ? '<p class="quiet">As painted: ' + esc(portraitDescription(c)) + '.</p>' : ''}${c.alive ? btn('Commission their portrait', 'decision', `data-type="portrait" data-id="${c.id}"`) : ''}${familyTreeView(g, c.id)}${claimView(g, c)}${
     bonds.length
       ? `<h3>People in their life</h3>${bonds
           .map((b) => {

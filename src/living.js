@@ -1,20 +1,20 @@
-import { closeKin } from './dynasty.js?v=0.5.1';
-import { apportionPopulation } from './demographics.js?v=0.5.1';
+import { closeKin } from './dynasty.js?v=0.5.2';
+import { apportionPopulation } from './demographics.js?v=0.5.2';
 import {
   bound,
   roll,
   hash,
   personById,
   rememberPerson,
-} from './sim-core.js?v=0.5.1';
+} from './sim-core.js?v=0.5.2';
 import {
   newPerson,
   practice,
   relationship,
   isBusy,
-} from './characters.js?v=0.5.1';
-import { appendRecord, addFact } from './history.js?v=0.5.1';
-import { races } from './data.js?v=0.5.1';
+} from './characters.js?v=0.5.2';
+import { appendRecord, addFact } from './history.js?v=0.5.2';
+import { races } from './data.js?v=0.5.2';
 export const lifeExpectancy = (p) =>
   ({
     Human: 85,

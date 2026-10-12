@@ -20,10 +20,10 @@ try {
   ]) {
     const distribution = await page.evaluate(
       async ({ race, species }) => {
-        const { createGame } = await import('./src/game.js?v=0.5.1'),
-          { newPerson } = await import('./src/characters.js?v=0.5.1'),
+        const { createGame } = await import('./src/game.js?v=0.5.2'),
+          { newPerson } = await import('./src/characters.js?v=0.5.2'),
           { initializePortraits, portraitMarkup } =
-            await import('./src/portraits.js?v=0.5.1');
+            await import('./src/portraits.js?v=0.5.2');
         const g = createGame({ seed: 7186, race, species, scale: 'province' }),
           people = [];
         for (let i = 0; i < 16; i++)

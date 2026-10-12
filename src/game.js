@@ -2,18 +2,18 @@ import {
   royalAmbitions,
   declareAmbition,
   tickAmbitions,
-} from './ambitions.js?v=0.5.1';
-import { makePortraitRecipe } from './portraits.js?v=0.5.1';
+} from './ambitions.js?v=0.5.2';
+import { makePortraitRecipe } from './portraits.js?v=0.5.2';
 import {
   commercialDecision,
   startVenture,
   ventureManagement,
   manageVenture,
-} from './commerce.js?v=0.5.1';
-import { addPromise, tickPromises } from './promises.js?v=0.5.1';
-import { transitionsBetween } from './transitions.js?v=0.5.1';
-import { delta } from './sim-core.js?v=0.5.1';
-import { readSave } from './persistence.js?v=0.5.1';
+} from './commerce.js?v=0.5.2';
+import { addPromise, tickPromises } from './promises.js?v=0.5.2';
+import { transitionsBetween } from './transitions.js?v=0.5.2';
+import { delta } from './sim-core.js?v=0.5.2';
+import { readSave } from './persistence.js?v=0.5.2';
 import {
   courtCapacity,
   commissionCapacity,
@@ -22,7 +22,7 @@ import {
   beginReign,
   evolveRealm,
   governDistricts,
-} from './dynasty.js?v=0.5.1';
+} from './dynasty.js?v=0.5.2';
 import {
   roles,
   biographies,
@@ -38,20 +38,20 @@ import {
   followupReports,
   races,
   beastSpecies,
-} from './data.js?v=0.5.1';
-import { generateCampaign, freshSeed } from './campaign.js?v=0.5.1';
-import { initializeWorld, worldStateValid } from './world-state.js?v=0.5.1';
+} from './data.js?v=0.5.2';
+import { generateCampaign, freshSeed } from './campaign.js?v=0.5.2';
+import { initializeWorld, worldStateValid } from './world-state.js?v=0.5.2';
 import {
   snapshot,
   decisionRecord,
   appendRecord,
   addFact,
-} from './history.js?v=0.5.1';
+} from './history.js?v=0.5.2';
 import {
   seasonProjection,
   applyEconomy,
   finishSeasonReport,
-} from './economy.js?v=0.5.1';
+} from './economy.js?v=0.5.2';
 import {
   developmentProjects,
   developmentChoices,
@@ -60,7 +60,7 @@ import {
   tickInstitutions,
   dueConsequences,
   settleConsequence,
-} from './settlements.js?v=0.5.1';
+} from './settlements.js?v=0.5.2';
 import {
   skills,
   newPerson,
@@ -71,19 +71,19 @@ import {
   practice,
   startTraining,
   tickTraining,
-} from './characters.js?v=0.5.1';
+} from './characters.js?v=0.5.2';
 import {
   tickPeople,
   tickCommunities,
   recordDeath,
   recordMarriage,
   lifeExpectancy,
-} from './living.js?v=0.5.1';
+} from './living.js?v=0.5.2';
 import {
   generateEmergentEvent,
   resolveEmergent,
   tickObligations,
-} from './emergent.js?v=0.5.1';
+} from './emergent.js?v=0.5.2';
 export { professionalForecast, availableMentors };
 export { seasonProjection };
 export {
