@@ -780,3 +780,15 @@ textarea:focus-visible {
  .chronicle-filters { grid-template-columns:1fr 1fr; }
  .realm-map { max-height:330px; }
 }
+
+.character-development { border-top:1px solid var(--line);margin:25px 0;padding-top:20px; }
+.character-development details { padding:14px 0;border-bottom:1px solid var(--line); }
+.character-development summary,.assignment-forecast summary { cursor:pointer;font:20px var(--serif); }
+.attribute-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0; }
+.attribute-grid small,.attribute-grid strong { display:block; }
+.attribute-grid meter { width:100%;height:10px;accent-color:#727449; }
+.assignment-forecast { padding:17px;background:#fff6df;border:1px solid #b6a276;margin:18px 0; }
+.assignment-forecast ul { list-style:none;padding:0; }
+.assignment-forecast li { display:flex;justify-content:space-between;gap:15px;padding:5px 0; }
+.assignment-forecast li span { text-align:right;font-size:13px; }
+@media(max-width:550px) { .attribute-grid { grid-template-columns:repeat(2,1fr); } }

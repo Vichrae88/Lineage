@@ -12,6 +12,7 @@ import {
   parseSave,
   races,
   raceName,
+  availableMentors,professionalForecast,
   realmSites,
   realmFactions,
   realmExpeditions,
@@ -24,6 +25,7 @@ import {
 } from './game.js?v=0.5.0';
 import { dispositions, presentations } from './campaign.js?v=0.5.0';
 import {projectionView,outcomeView,seasonReportView,archiveView,entryView,localDevelopmentView} from './reports-ui.js?v=0.5.0';
+import {characterDevelopmentView,forecastView} from './characters-ui.js?v=0.5.0';
 let sites, factionLore, expeditions, relics, projects;
 let returnModal = null;
 const app = document.querySelector('#app');
@@ -306,7 +308,7 @@ function royalKin() {
   return `<section class="section-inset"><span class="eyebrow">YOUR ROYAL HOUSEHOLD</span><h3>The family you inherit</h3><p>No parent survives your accession. These relatives have their own histories, convictions, and expectations.</p><div class="kin-grid">${(g.kin || []).map((c) => `<button class="kin-card" data-action="person" data-id="${c.id}">${portrait(c)}<span><small>${esc(c.kinship)}${c.relatedTo && c.relatedTo !== g.ruler.name ? ' of ' + esc(c.relatedTo) : ''}</small><strong>${esc(c.name)}</strong><em>${c.age} years · ${esc(raceName(c))}</em><span>${esc(c.desire)}</span></span></button>`).join('') || '<p class="quiet">This earlier chronicle did not record living collateral relatives.</p>'}</div></section>`;
 }
 function dashboard() {
-  return `${header()}<div class="realm-heading"><div class="reign-title"><button class="ruler-portrait" data-action="person" data-id="sovereign" aria-label="Read your ruler’s profile">${portrait(g.ruler)}</button><div><span class="eyebrow">${esc(g.title.toUpperCase())} OF ${esc(g.name).toUpperCase()}</span><h2>${esc(g.name)}</h2><p>The reign of ${esc(g.ruler.name)}</p></div></div><div class="season"><span><small>${seasons[g.season]}</small><strong>Year ${g.year}</strong></span>${btn('Let the season turn →', 'advance', `class="primary" ${g.event ? 'disabled' : ''}`)}</div></div><div class="resource-ribbon">${['gold', 'food', 'population'].map((k) => `<button data-action="resource" data-id="${k}" title="${esc(resourceStory(g, k))}"><span class="resource-symbol" aria-hidden="true">${{ gold: '◈', food: '♧', population: '♙' }[k]}</span><span><small>${{ gold: 'Treasury', food: 'Stores', population: 'People' }[k]}</small><strong>${k === 'gold' ? g.resources.gold.toLocaleString() + ' gold' : k === 'population' ? g.resources.population.toLocaleString() + ' souls' : g.resources.food < 20 ? 'Running thin' : g.resources.food < 60 ? 'Carefully kept' : 'Well provisioned'}</strong></span></button>`).join('')}<button class="realm-mood" data-action="resource" data-id="happiness"><span><small>The common mood</small><strong>${qualitative(g.resources.happiness, 'happiness')}</strong></span><span aria-hidden="true">→</span></button></div>${message ? `<div class="notice" role="status">${esc(message)}</div>` : ''}<main class="dashboard"><section class="manuscript main-sheet"><nav aria-label="Chapters of your reign">${[
+  return `${header()}<div class="realm-heading"><div class="reign-title"><button class="ruler-portrait" data-action="person" data-id="${g.ruler.id}" aria-label="Read your ruler’s profile">${portrait(g.ruler)}</button><div><span class="eyebrow">${esc(g.title.toUpperCase())} OF ${esc(g.name).toUpperCase()}</span><h2>${esc(g.name)}</h2><p>The reign of ${esc(g.ruler.name)}</p></div></div><div class="season"><span><small>${seasons[g.season]}</small><strong>Year ${g.year}</strong></span>${btn('Let the season turn →', 'advance', `class="primary" ${g.event ? 'disabled' : ''}`)}</div></div><div class="resource-ribbon">${['gold', 'food', 'population'].map((k) => `<button data-action="resource" data-id="${k}" title="${esc(resourceStory(g, k))}"><span class="resource-symbol" aria-hidden="true">${{ gold: '◈', food: '♧', population: '♙' }[k]}</span><span><small>${{ gold: 'Treasury', food: 'Stores', population: 'People' }[k]}</small><strong>${k === 'gold' ? g.resources.gold.toLocaleString() + ' gold' : k === 'population' ? g.resources.population.toLocaleString() + ' souls' : g.resources.food < 20 ? 'Running thin' : g.resources.food < 60 ? 'Carefully kept' : 'Well provisioned'}</strong></span></button>`).join('')}<button class="realm-mood" data-action="resource" data-id="happiness"><span><small>The common mood</small><strong>${qualitative(g.resources.happiness, 'happiness')}</strong></span><span aria-hidden="true">→</span></button></div>${message ? `<div class="notice" role="status">${esc(message)}</div>` : ''}<main class="dashboard"><section class="manuscript main-sheet"><nav aria-label="Chapters of your reign">${[
     ['council', 'Council'],
     ['court', 'Court'],
     ['realm', 'Realm'],
@@ -330,7 +332,7 @@ const modalActions = (c) =>
 function personProfile(c, isCandidate = false) {
   if (!c)
     return '<h2 id="dialog-title">This person is no longer in the archive</h2>';
-  const isRuler = c.id === 'sovereign';
+  const isRuler = c.id === g.ruler.id;
   const actions = isCandidate
     ? `<div class="profile-actions">${btn('Consider their appointment →', 'decision', `data-type="hire" data-id="${c.id}" class="primary"`)}</div>`
     : modalActions(c);
@@ -341,7 +343,7 @@ function personProfile(c, isCandidate = false) {
     .map(([k, n]) => narrate(k, n, 'skill'))
     .join(
       '',
-    )}${!isCandidate && !isRuler ? `<h4>How they stand with you</h4>${narrate('Trust', c.trust)}${narrate('Affection', c.affection, 'affection')}${narrate('Loyalty', c.loyalty, 'loyalty')}${narrate('Ambition', c.ambition, 'ambition')}${narrate('Unspoken grievances', c.grievance, 'grievance')}${narrate('Health', c.health, 'health')}<p>${c.status === 'serving' ? esc(roles[c.role]?.purpose || 'An available voice at your council.') : c.status === 'departed' ? 'They have left your household. Their allegiances and memories remain in the archive.' : c.status === 'ruler' ? 'They now bear the crown.' : 'Their service is preserved in the court archive.'}</p>` : ''}</section></div>${
+    )}${!isCandidate && !isRuler ? `<h4>How they stand with you</h4>${narrate('Trust', c.trust)}${narrate('Affection', c.affection, 'affection')}${narrate('Loyalty', c.loyalty, 'loyalty')}${narrate('Ambition', c.ambition, 'ambition')}${narrate('Unspoken grievances', c.grievance, 'grievance')}${narrate('Health', c.health, 'health')}<p>${c.status === 'serving' ? esc(roles[c.role]?.purpose || 'An available voice at your council.') : c.status === 'departed' ? 'They have left your household. Their allegiances and memories remain in the archive.' : c.status === 'ruler' ? 'They now bear the crown.' : 'Their service is preserved in the court archive.'}</p>` : ''}</section></div>${characterDevelopmentView(g,c)}${
     bonds.length
       ? `<h3>People in their life</h3>${bonds
           .map((b) => {
@@ -420,8 +422,8 @@ function partyProfile(p) {
 function decisionContent() {
   const d = getDecision(g, modal.type, modal.id, modal.agent);
   if (!d) return '<h2 id="dialog-title">The matter has already passed</h2>';
-  const agents = d.requiresAgent
-    ? activeCourt(g).filter((c) => !g.queue.some((q) => q.who === c.id))
+  const agents = d.requiresMentor ? availableMentors(g,modal.id) : d.requiresAgent
+    ? activeCourt(g).filter((c) => !g.queue.some((q) => q.who === c.id)&&!g.trainingJobs.some(j=>j.status==='active'&&(j.student===c.id||j.mentor===c.id)))
     : d.requiresParty
       ? g.parties.filter((p) => p.status === 'available' && !p.wounds)
       : null;
@@ -439,7 +441,7 @@ function decisionContent() {
   if (d.requiresParty && selected) {
     advice = `${selected.name} are ${qualitative(selected.skill, 'skill').toLowerCase()} and ${selected.caution > 65 ? 'careful in their preparations' : 'willing to take difficult risks'}. Local trust can secure guides; haste makes success less certain.`;
   }
-  return `<span class="eyebrow">YOUR WORD BECOMES THEIR WORLD</span><h2 id="dialog-title">${esc(d.title)}</h2><p class="lead">${esc(d.text)}</p>${agents ? `<label class="select-label">${d.requiresAgent ? 'Whose hands will carry your decision?' : 'Which company will carry your contract?'}<select id="decision-agent">${agents.length ? agents.map((c) => `<option value="${c.id}" ${modal.agent === c.id ? 'selected' : ''}>${esc(c.name)}${c.role ? ' · ' + esc(c.role) : ''}</option>`).join('') : '<option value="">No one is available</option>'}</select></label><p class="counsel-note">${esc(advice || 'Wait for a commission to end, or invite another qualified person to serve.')}</p>` : ''}${d.blocked ? `<p class="blocked" role="status">${esc(d.blocked)}</p>` : ''}<div class="decision-options">${d.options.map((o) => choiceCard(o, 'enact', !!d.blocked || (agents && !agents.length))).join('')}</div><p class="ink-note">${d.requiresAgent ? 'The listed direction is a promise, not a guarantee. Capability, office, loyalty, and resistance affect the outcome.' : 'The court will remember the course you choose.'}</p>`;
+  return `<span class="eyebrow">YOUR WORD BECOMES THEIR WORLD</span><h2 id="dialog-title">${esc(d.title)}</h2><p class="lead">${esc(d.text)}</p>${agents ? `<label class="select-label">${d.requiresAgent ? 'Whose hands will carry your decision?' : 'Which company will carry your contract?'}<select id="decision-agent">${agents.length ? agents.map((c) => `<option value="${c.id}" ${modal.agent === c.id ? 'selected' : ''}>${esc(c.name)}${c.role ? ' · ' + esc(c.role) : ''}</option>`).join('') : '<option value="">No one is available</option>'}</select></label><p class="counsel-note">${esc(advice || 'Wait for a commission to end, or invite another qualified person to serve.')}</p>` : ''}${d.type==='project'&&selected?forecastView(g,selected,d.target):''}${d.blocked ? `<p class="blocked" role="status">${esc(d.blocked)}</p>` : ''}<div class="decision-options">${d.options.map((o) => choiceCard(o, 'enact', !!d.blocked || (agents && !agents.length))).join('')}</div><p class="ink-note">${d.requiresAgent ? 'The listed direction is a promise, not a guarantee. Capability, office, loyalty, and resistance affect the outcome.' : 'The court will remember the course you choose.'}</p>`;
 }
 function choiceCard(o, action, blocked = false) {
   const disabled = blocked || o.disabled || g.resources.gold < o.cost;
@@ -454,8 +456,8 @@ function audienceContent() {
   const d = e.action
     ? getDecision(g, e.action.type, e.action.target, e.agent)
     : null;
-  const agents = d?.requiresAgent
-    ? activeCourt(g).filter((c) => !g.queue.some((q) => q.who === c.id))
+  const agents = d?.requiresMentor ? availableMentors(g,e.action.target) : d?.requiresAgent
+    ? activeCourt(g).filter((c) => !g.queue.some((q) => q.who === c.id)&&!g.trainingJobs.some(j=>j.status==='active'&&(j.student===c.id||j.mentor===c.id)))
     : d?.requiresParty
       ? g.parties.filter((p) => p.status === 'available' && !p.wounds)
       : null;
@@ -471,7 +473,7 @@ function audienceContent() {
     .map((p) => `<p>${esc(p)}</p>`)
     .join(
       '',
-    )}</div>${agents ? `<label class="select-label">${d.requiresAgent ? 'Whose judgment will carry your seal?' : 'Which company will carry your contract?'}<select id="audience-agent">${agents.length ? agents.map((c) => `<option value="${c.id}" ${c.id === e.agent ? 'selected' : ''}>${esc(c.name)}${c.role ? ' · ' + esc(c.role) : ''}</option>`).join('') : '<option value="">No one is available</option>'}</select></label><p class="counsel-note">${esc(advice || 'No rested company or available courtier can take this charge now. You can decline without expense.')}</p>` : ''}${d?.blocked ? `<p class="blocked">${esc(d.blocked)}</p>` : ''}<div class="decision-options">${eventOptions(
+    )}</div>${agents ? `<label class="select-label">${d.requiresAgent ? 'Whose judgment will carry your seal?' : 'Which company will carry your contract?'}<select id="audience-agent">${agents.length ? agents.map((c) => `<option value="${c.id}" ${c.id === e.agent ? 'selected' : ''}>${esc(c.name)}${c.role ? ' · ' + esc(c.role) : ''}</option>`).join('') : '<option value="">No one is available</option>'}</select></label><p class="counsel-note">${esc(advice || 'No rested company or available courtier can take this charge now. You can decline without expense.')}</p>` : ''}${d?.type==='project'&&chosen?forecastView(g,chosen,d.target):''}${d?.blocked ? `<p class="blocked">${esc(d.blocked)}</p>` : ''}<div class="decision-options">${eventOptions(
     g,
   )
     .map((o) => choiceCard(o, 'event'))

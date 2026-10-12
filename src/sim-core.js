@@ -5,7 +5,7 @@ export function hash(text) {
   return n >>> 0;
 }
 export const roll = (g, salt) => hash(String(g.seed ?? 71421) + ':' + g.turn + ':' + salt) / 4294967296;
-export const personList = g => [...new Map([g.ruler, ...g.court, ...g.children, ...(g.kin || []), ...g.applicants, ...(g.notables || [])].filter(Boolean).map(p => [p.id, p])).values()];
+export const personList = g => g.people?Object.values(g.people):[...new Map([g.ruler, ...g.court, ...g.children, ...(g.kin || []), ...g.applicants, ...(g.notables || [])].filter(Boolean).map(p => [p.id, p])).values()];
 export const personById = (g, id) => g.people?.[id] || personList(g).find(p => p.id === id);
 export const placeList = g => g.world.sites;
 export const dateOf = g => ({turn:g.turn, year:g.year, season:g.season, ruler:g.ruler.id, rulerName:g.ruler.name, reign:g.dynasty});

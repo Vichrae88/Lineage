@@ -1,3 +1,4 @@
+import {practice} from './characters.js?v=0.5.0';
 import {bound, hash, personById, personList, rememberPerson} from './sim-core.js?v=0.5.0';
 import {addFact, appendRecord, schedule} from './history.js?v=0.5.0';
 export const developmentProjects=[
@@ -63,9 +64,9 @@ export function commissionConsequences(g,q,success,source) {
     schedule(g,'mill-community',source,3,{site,people:[q.who],fact:f.id,choice:q.approach});
   }
   if(q.id==='school'){
-    const pupil=g.futurePeople?.shift() || personList(g).find(p=>p.alive&&p.status==='visitor');
+    const pupil=g.futurePeople?.shift() || personList(g).find(p=>p.alive&&p.age>=12&&p.age<=22&&p.tier!=='reserve'&&p.status==='citizen');
     if(pupil){
-      pupil.age=16;pupil.status='citizen';pupil.role='Student';pupil.siteId=site;pupil.location=local.name;pupil.skills.scholarship=18;pupil.education={institution:null,seasons:0,status:'studying'};
+      pupil.age=16;pupil.status='citizen';pupil.role='Student';pupil.siteId=site;pupil.location=local.name;pupil.skills.scholarship=18;pupil.story=pupil.name+' entered the school at '+local.name+' with a talent still finding its direction. The founding decision opened a path beyond the work their household had known.';pupil.education={institution:null,seasons:0,status:'studying'};
       g.notables.push(pupil);
       const kind=q.approach==='guild'?'apprenticeship':'school';
       const i=createInstitution(g,kind,site,source,{budget:q.approach==='public'?3:q.approach==='guild'?2:1,staff:[q.who],students:[pupil.id],quality:success?65:40});
@@ -83,7 +84,7 @@ export function tickInstitutions(g) {
     if(funded&&['school','apprenticeship'].includes(i.kind)){
       for(const id of i.students){
         const p=personById(g,id);if(!p?.alive)continue;
-        p.skills.scholarship=bound((p.skills.scholarship||0)+(i.quality>=60?1.5:.75));
+        practice(g,p,'scholarship',i.quality>=60?1.5:.75);
         p.education.seasons++;
         if(p.education.seasons>=8&&p.education.status!=='graduated'){
           p.education.status='graduated';p.role=i.kind==='school'?'Apprentice scholar':'Guild apprentice';

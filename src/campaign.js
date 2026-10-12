@@ -331,6 +331,7 @@ const traits = [
   'Restless',
   'Patient',
   'Inventive',
+  'Charismatic','Scholarly','Magnetic Personality','Inspiring Leader','Greedy','Cautious','Ruthless','Loyal','Diplomatic','Secretive','Resourceful',
 ];
 const pasts = [
   'won a hearing for tenants their own patron would not defend',
@@ -1649,3 +1650,5 @@ export function generateCampaign(seed, ruler, baseProjects = []) {
     storyCursor: 0,
   };
 }
+
+export function generatePerson(seed,id,race,role="Councillor",extra={}) { return generator(seed).person(id,race,role,extra); }
