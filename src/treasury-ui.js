@@ -1,10 +1,11 @@
+import { gold as coins } from './format.js?v=0.5.3';
 import {
   commercialKinds,
   commercialForecast,
   projectedCommerce,
-} from './commerce.js?v=0.5.2';
-import { seasonProjection } from './economy.js?v=0.5.2';
-import { escapeText as esc } from './reports-ui.js?v=0.5.2';
+} from './commerce.js?v=0.5.3';
+import { seasonProjection } from './economy.js?v=0.5.3';
+import { escapeText as esc } from './reports-ui.js?v=0.5.3';
 const button = (text, kind, target) =>
   '<button data-action="decision" data-type="' +
   kind +
@@ -21,16 +22,15 @@ export function treasuryView(g, modal = false) {
     '<div class="sheet-heading"><span class="eyebrow">THE MEANS TO KEEP A PROMISE</span><h2 ' +
     (modal ? 'id="dialog-title"' : '') +
     '>The royal Treasury</h2><p class="lead">A prosperous realm needs more than a levy. A caravan risks coin on the roads; a market needs its neighbors; an estate must repay the care it receives.</p></div><div class="treasury-summary"><article><small>Coin available</small><strong>' +
-    Math.round(g.resources.gold) +
+    coins(g.resources.gold) +
     ' gold</strong></article><article><small>Expected seasonal income</small><strong>' +
-    Math.round(p.income) +
+    coins(p.income) +
     ' gold</strong></article><article><small>Expected spending</small><strong>' +
-    p.spending +
+    coins(p.spending) +
     ' gold</strong></article><article><small>Projected balance</small><strong>' +
-    (p.balance > 0 ? '+' : '') +
-    Math.round(p.balance) +
+    coins(p.balance, true) +
     ' gold</strong></article></div><p class="quiet">Commercial receipts are estimates with risk, not guaranteed returns. Journey capital is at risk until the cargo returns.</p><div class="projection-grid"><section><h3>Where the coin comes from</h3><p>Levy, customary dues and existing trade: ' +
-    Math.round(p.taxIncome ?? p.income) +
+    coins(p.taxIncome ?? p.income) +
     ' gold.</p>' +
     business
       .map(
@@ -38,18 +38,18 @@ export function treasuryView(g, modal = false) {
           '<p>' +
           esc(b.name) +
           ': about ' +
-          Math.round(b.expected) +
+          coins(b.expected) +
           ' gold; upkeep ' +
-          b.upkeep +
+          coins(b.upkeep) +
           '.</p>',
       )
       .join('') +
     '</section><section><h3>Promises already drawing on it</h3><p>Court wages: ' +
-    p.wages +
+    coins(p.wages) +
     ' gold.</p><p>Institutions, watch, governors and commercial upkeep: ' +
-    p.upkeep +
+    coins(p.upkeep) +
     ' gold.</p><p>Justice and relief administration: ' +
-    p.law +
+    coins(p.law) +
     ' gold.</p><button data-action="promises" class="text-button">Review promises and debts →</button></section></div><section class="section-inset"><h3>Undertakings of the crown</h3><div class="venture-grid">' +
     g.ventures
       .filter((v) => !['closed', 'completed', 'failed'].includes(v.status))
@@ -77,9 +77,9 @@ export function treasuryView(g, modal = false) {
               ' seasons.'
             : '') +
           '</p><details><summary>The investment ledger</summary><p>Original royal capital ' +
-          v.capital +
+          coins(v.capital) +
           ' gold · net return after investment and upkeep ' +
-          v.profit +
+          coins(v.profit) +
           ' gold so far · condition ' +
           Math.round(v.condition) +
           '/100 · scale ' +
@@ -114,9 +114,9 @@ export function treasuryView(g, modal = false) {
           '</h4><p>' +
           esc(c.description) +
           '</p><p class="quiet">Plans begin at ' +
-          (c.cost - 6) +
+          coins(c.cost - 6) +
           ' gold, with ' +
-          c.upkeep +
+          coins(c.upkeep) +
           ' gold of seasonal upkeep.</p>' +
           (kind === 'agreement'
             ? '<div class="trading-partners">' +
@@ -214,7 +214,7 @@ export function commercialAdvice(g, d, p) {
     d.faction,
   );
   return (
-    '<details class="assignment-forecast" open><summary>' +
+    '<details class="assignment-forecast"><summary>' +
     esc(f.description) +
     '</summary><p>' +
     esc(p.name) +

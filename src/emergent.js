@@ -1,10 +1,10 @@
 import {
   commerceProposals,
   resolveCommerceEvent,
-} from './commerce-events.js?v=0.5.2';
-import { personById, bound } from './sim-core.js?v=0.5.2';
-import { appendRecord, addFact } from './history.js?v=0.5.2';
-import { createInstitution } from './settlements.js?v=0.5.2';
+} from './commerce-events.js?v=0.5.3';
+import { personById, bound } from './sim-core.js?v=0.5.3';
+import { appendRecord, addFact } from './history.js?v=0.5.3';
+import { createInstitution } from './settlements.js?v=0.5.3';
 const option = (id, label, note, cost, effects = {}) => ({
   id,
   label,
@@ -37,6 +37,13 @@ function proposals(g) {
         shortage.name +
         ' is short of food. Households have begun dividing meals and changing their work. Their speaker asks what protection should mean before the next harvest.',
       options: [
+        option(
+          'work-relief',
+          'Buy grain for a paid repair-and-relief scheme',
+          '10 gold buys emergency grain and tools. Public repairs improve the settlement, but exhausted households bear the labor and lose some health.',
+          10,
+          { food: 18, infrastructure: 4, health: -2 },
+        ),
         option(
           'import',
           'Buy grain without a private privilege',
@@ -80,6 +87,13 @@ function proposals(g) {
           Math.round(i.condition) +
           ' condition. Its staff can no longer deliver the work promised at its founding. The choices concern who will carry that obligation next.',
         options: [
+          option(
+            'stabilize',
+            'Repair the roof and keep a reduced service open',
+            '8 gold restores half as much condition as a full repair. Its existing purpose and upkeep remain; deeper repairs will still be needed.',
+            8,
+            { infrastructure: 1 },
+          ),
           option(
             'repair',
             'Repair it and protect the original purpose',
@@ -190,6 +204,13 @@ function proposals(g) {
         g.settlements.border.name +
         '. Caravans hesitate at the boundary; families on both sides ask whether an earlier promise still protects them.',
       options: [
+        option(
+          'escorted-trade',
+          'Reopen an escorted route with a joint merchant guarantee',
+          '7 gold restores commerce without settling every old grievance. The watch diverts patrols to the crossing; the foreign delegation gains a limited guarantee.',
+          7,
+          { trade: 6, military: -2 },
+        ),
         option(
           'reparation',
           'Offer practical restitution and a new hearing',
@@ -548,7 +569,7 @@ export function resolveEmergent(g, e, choice) {
   const p = personById(g, e.speaker),
     local = g.settlements[e.site];
   if (e.template === 'shortage') {
-    local.health = bound(local.health + 2);
+    local.health = bound(local.health + (choice === 'work-relief' ? -2 : 2));
     if (choice === 'guild') {
       const debt = appendRecord(g, {
         kind: 'obligation',
@@ -571,6 +592,7 @@ export function resolveEmergent(g, e, choice) {
   if (e.template === 'institution') {
     const i = g.institutions.find((i) => i.id === e.institution);
     if (choice === 'repair') i.condition = bound(i.condition + 30);
+    if (choice === 'stabilize') i.condition = bound(i.condition + 15);
     if (choice === 'guild') {
       i.owner = 'guild';
       i.budget = 0;
@@ -595,11 +617,24 @@ export function resolveEmergent(g, e, choice) {
   if (e.template === 'frontier') {
     const f = g.factions.find((f) => f.id === e.faction);
     f.trust = bound(
-      f.trust + (choice === 'reparation' ? 14 : choice === 'mediate' ? 8 : -6),
+      f.trust +
+        (choice === 'reparation'
+          ? 14
+          : choice === 'mediate'
+            ? 8
+            : choice === 'escorted-trade'
+              ? 5
+              : -6),
     );
     f.grievance = bound(
       f.grievance +
-        (choice === 'firm' ? 6 : choice === 'reparation' ? -18 : -10),
+        (choice === 'firm'
+          ? 6
+          : choice === 'reparation'
+            ? -18
+            : choice === 'escorted-trade'
+              ? -6
+              : -10),
     );
     local.trade = bound(local.trade + (choice === 'firm' ? -5 : 4));
   }

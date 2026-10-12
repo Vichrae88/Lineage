@@ -1,19 +1,19 @@
-import { transitionsBetween } from './transitions.js?v=0.5.2';
-import { addPromise } from './promises.js?v=0.5.2';
-import { practice, newPerson } from './characters.js?v=0.5.2';
+import { transitionsBetween } from './transitions.js?v=0.5.3';
+import { addPromise } from './promises.js?v=0.5.3';
+import { practice, newPerson } from './characters.js?v=0.5.3';
 import {
   bound,
   hash,
   personById,
   personList,
   rememberPerson,
-} from './sim-core.js?v=0.5.2';
+} from './sim-core.js?v=0.5.3';
 import {
   addFact,
   appendRecord,
   schedule,
   snapshot,
-} from './history.js?v=0.5.2';
+} from './history.js?v=0.5.3';
 export const developmentProjects = [
   {
     id: 'mill',

@@ -21,3 +21,40 @@ jobs:
           name: lineage-review-build
           path: dist
           retention-days: 14
+
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm run build
+      - name: Install isolated browser tooling
+        run: |
+          npm install --prefix "${RUNNER_TEMP}/lineage-browser" --no-save --package-lock=false playwright@1.64.0
+          "${RUNNER_TEMP}/lineage-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Check the built game's screens and council decisions
+        env:
+          LINEAGE_URL: http://localhost:3002
+          LINEAGE_PLAYWRIGHT_MODULE: ${{ runner.temp }}/lineage-browser/node_modules/playwright/index.mjs
+          LINEAGE_GALLERY_DIR: ${{ runner.temp }}/lineage-review-images
+        run: |
+          (cd dist && PORT=3002 node ../server.js) > "${RUNNER_TEMP}/lineage-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent http://localhost:3002/ > /dev/null; then break; fi
+            sleep 0.2
+          done
+          curl --fail --silent http://localhost:3002/ > /dev/null
+          node scripts/council-visual-check.mjs
+          node scripts/browser-check.mjs
+          node scripts/enhancement-browser-check.mjs
+          node scripts/portrait-polish-check.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lineage-visual-review
+          path: ${{ runner.temp }}/lineage-review-images
+          retention-days: 14

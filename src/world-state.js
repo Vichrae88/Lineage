@@ -1,20 +1,20 @@
-import { initAmbitions, ambitionsValid } from './ambitions.js?v=0.5.2';
-import { initCommerce, commerceValid } from './commerce.js?v=0.5.2';
-import { initPromises, promisesValid } from './promises.js?v=0.5.2';
-import { worldReferencesValid } from './integrity.js?v=0.5.2';
-import { initDynasty, dynastyValid } from './dynasty.js?v=0.5.2';
+import { initAmbitions, ambitionsValid } from './ambitions.js?v=0.5.3';
+import { initCommerce, commerceValid } from './commerce.js?v=0.5.3';
+import { initPromises, promisesValid } from './promises.js?v=0.5.3';
+import { worldReferencesValid } from './integrity.js?v=0.5.3';
+import { initDynasty, dynastyValid } from './dynasty.js?v=0.5.3';
 import {
   initializeDemographics,
   demographicValid,
-} from './demographics.js?v=0.5.2';
-import { initializePortraits, portraitsValid } from './portraits.js?v=0.5.2';
-import { initEmergent } from './emergent.js?v=0.5.2';
-import { initializeKnownFigures } from './living.js?v=0.5.2';
-import { canonicalizePeople, charactersValid } from './characters.js?v=0.5.2';
-import { sites, factionLore, expeditions, relics } from './data.js?v=0.5.2';
-import { initHistory, historyValid } from './history.js?v=0.5.2';
-import { initSettlements, developmentProjects } from './settlements.js?v=0.5.2';
-import { personList, hash, idValid } from './sim-core.js?v=0.5.2';
+} from './demographics.js?v=0.5.3';
+import { initializePortraits, portraitsValid } from './portraits.js?v=0.5.3';
+import { initEmergent } from './emergent.js?v=0.5.3';
+import { initializeKnownFigures } from './living.js?v=0.5.3';
+import { canonicalizePeople, charactersValid } from './characters.js?v=0.5.3';
+import { sites, factionLore, expeditions, relics } from './data.js?v=0.5.3';
+import { initHistory, historyValid } from './history.js?v=0.5.3';
+import { initSettlements, developmentProjects } from './settlements.js?v=0.5.3';
+import { personList, hash, idValid } from './sim-core.js?v=0.5.3';
 export function initializeWorld(g, projects) {
   g.preparedIdentities ??= Boolean(g.storyDeck);
   g.world ||= {

@@ -1,3 +1,5 @@
+import { advisorView } from './advisors-ui.js?v=0.5.3';
+import { gold as coins } from './format.js?v=0.5.3';
 import {
   ambitionView,
   achievementView,
@@ -6,13 +8,13 @@ import {
   factionCrest,
   historicLandmarks,
   mapWorks,
-} from './world-flavor-ui.js?v=0.5.2';
-import { isBusy } from './characters.js?v=0.5.2';
-import { treasuryView, commercialAdvice } from './treasury-ui.js?v=0.5.2';
-import { promisesView } from './narrative-ui.js?v=0.5.2';
-import { serializeGame } from './persistence.js?v=0.5.2';
-import { familyTreeView, reignsView, claimView } from './dynasty-ui.js?v=0.5.2';
-import { commissionCapacity, courtCapacity } from './dynasty.js?v=0.5.2';
+} from './world-flavor-ui.js?v=0.5.3';
+import { isBusy } from './characters.js?v=0.5.3';
+import { treasuryView, commercialAdvice } from './treasury-ui.js?v=0.5.3';
+import { promisesView } from './narrative-ui.js?v=0.5.3';
+import { serializeGame } from './persistence.js?v=0.5.3';
+import { familyTreeView, reignsView, claimView } from './dynasty-ui.js?v=0.5.3';
+import { commissionCapacity, courtCapacity } from './dynasty.js?v=0.5.3';
 import {
   createGame,
   seasons,
@@ -38,8 +40,8 @@ import {
   household,
   prepareAudience,
   advance,
-} from './game.js?v=0.5.2';
-import { dispositions, presentations } from './campaign.js?v=0.5.2';
+} from './game.js?v=0.5.3';
+import { dispositions, presentations } from './campaign.js?v=0.5.3';
 import {
   projectionView,
   outcomeView,
@@ -47,13 +49,13 @@ import {
   archiveView,
   entryView,
   localDevelopmentView,
-} from './reports-ui.js?v=0.5.2';
+} from './reports-ui.js?v=0.5.3';
 import {
   characterDevelopmentView,
   forecastView,
-} from './characters-ui.js?v=0.5.2';
-import { portraitMarkup, portraitDescription } from './portraits.js?v=0.5.2';
-import { realmDemographics } from './demographics.js?v=0.5.2';
+} from './characters-ui.js?v=0.5.3';
+import { portraitMarkup, portraitDescription } from './portraits.js?v=0.5.3';
+import { realmDemographics } from './demographics.js?v=0.5.3';
 let sites, factionLore, expeditions, relics, projects;
 let returnModal = null;
 let modalStack = [];
@@ -375,7 +377,7 @@ function royalKin() {
   return `<section class="section-inset"><span class="eyebrow">YOUR ROYAL HOUSEHOLD</span><h3>The family you inherit</h3><p>No parent survives your accession. These relatives have their own histories, convictions, and expectations.</p><div class="kin-grid">${(g.kin || []).map((c) => `<button class="kin-card" data-action="person" data-id="${c.id}">${portrait(c)}<span><small>${esc(c.kinship)}${c.relatedTo && c.relatedTo !== g.ruler.name ? ' of ' + esc(c.relatedTo) : ''}</small><strong>${esc(c.name)}</strong><em>${c.age} years · ${esc(raceName(c))}</em><span>${esc(c.desire)}</span></span></button>`).join('') || '<p class="quiet">This earlier chronicle did not record living collateral relatives.</p>'}</div></section>`;
 }
 function dashboard() {
-  return `${header()}<div class="realm-heading"><div class="reign-title"><button class="ruler-portrait" data-action="person" data-id="${g.ruler.id}" aria-label="Read your ruler’s profile">${portrait(g.ruler)}</button><div><span class="eyebrow">${esc(g.title.toUpperCase())} OF ${esc(g.name).toUpperCase()}</span><h2>${esc(g.name)}</h2><p>The reign of ${esc(g.ruler.name)}</p></div></div><div class="season"><span><small>${seasons[g.season]}</small><strong>Year ${g.year}</strong></span>${btn('Let the season turn →', 'advance', `class="primary" ${g.event ? 'disabled' : ''}`)}</div></div><div class="resource-ribbon">${['gold', 'food', 'population'].map((k) => `<button data-action="resource" data-id="${k}" title="${esc(resourceStory(g, k))}"><span class="resource-symbol" aria-hidden="true">${{ gold: '◈', food: '♧', population: '♙' }[k]}</span><span><small>${{ gold: 'Treasury', food: 'Stores', population: 'People' }[k]}</small><strong>${k === 'gold' ? g.resources.gold.toLocaleString() + ' gold' : k === 'population' ? g.resources.population.toLocaleString() + ' souls' : g.resources.food < 20 ? 'Running thin' : g.resources.food < 60 ? 'Carefully kept' : 'Well provisioned'}</strong></span></button>`).join('')}<button class="realm-mood" data-action="resource" data-id="happiness"><span><small>The common mood</small><strong>${qualitative(g.resources.happiness, 'happiness')}</strong></span><span aria-hidden="true">→</span></button></div>${message ? `<div class="notice" role="status">${esc(message)}</div>` : ''}<main class="dashboard"><section class="manuscript main-sheet"><nav aria-label="Chapters of your reign">${[
+  return `${header()}<div class="realm-heading"><div class="reign-title"><button class="ruler-portrait" data-action="person" data-id="${g.ruler.id}" aria-label="Read your ruler’s profile">${portrait(g.ruler)}</button><div><span class="eyebrow">${esc(g.title.toUpperCase())} OF ${esc(g.name).toUpperCase()}</span><h2>${esc(g.name)}</h2><p>The reign of ${esc(g.ruler.name)}</p></div></div><div class="season"><span><small>${seasons[g.season]}</small><strong>Year ${g.year}</strong></span>${btn('Let the season turn →', 'advance', `class="primary" ${g.event ? 'disabled' : ''}`)}</div></div><div class="resource-ribbon">${['gold', 'food', 'population'].map((k) => `<button data-action="resource" data-id="${k}" title="${esc(resourceStory(g, k))}"><span class="resource-symbol" aria-hidden="true">${{ gold: '◈', food: '♧', population: '♙' }[k]}</span><span><small>${{ gold: 'Treasury', food: 'Stores', population: 'People' }[k]}</small><strong>${k === 'gold' ? coins(g.resources.gold) + ' gold' : k === 'population' ? g.resources.population.toLocaleString() + ' souls' : g.resources.food < 20 ? 'Running thin' : g.resources.food < 60 ? 'Carefully kept' : 'Well provisioned'}</strong></span></button>`).join('')}<button class="realm-mood" data-action="resource" data-id="happiness"><span><small>The common mood</small><strong>${qualitative(g.resources.happiness, 'happiness')}</strong></span><span aria-hidden="true">→</span></button></div>${message ? `<div class="notice" role="status">${esc(message)}</div>` : ''}<main class="dashboard"><section class="manuscript main-sheet"><nav aria-label="Chapters of your reign">${[
     ['council', 'Council'],
     ['court', 'Court'],
     ['treasury', 'Treasury'],
@@ -487,7 +489,7 @@ function siteProfile(s) {
 }
 function partyProfile(p) {
   const mission = g.missions.find((m) => m.party === p.id);
-  return `<div class="profile-head">${portrait(findPerson(g, p.leaderId) || { name: p.leader, portrait: p.portrait, artset: p.artset }, 'large')}<div><span class="eyebrow">A COMPANY OF ADVENTURERS</span><h2 id="dialog-title">${esc(p.name)}</h2><p>Led by ${esc(p.leader)}</p><p>${p.status === 'away' ? 'Beyond the safe roads' : p.wounds ? 'Tending their wounded' : 'Ready to hear a contract'}</p></div></div><p class="lead dropcap">${esc(p.story)}</p><h3>The companions</h3><p>${esc(p.members)}</p><div class="profile-columns"><section><h3>Reputation & readiness</h3>${narrate('Capability', p.skill, 'skill')}${narrate('Trust in your patronage', p.loyalty)}${narrate('Reputation', p.reputation)}${narrate('Care in preparation', p.caution, 'skill')}</section><section><h3>The terms of their work</h3><p>The company asks a base fee of ${p.fee} gold. A careful or respectful journey needs additional supplies and two seasons. A daring contract returns sooner, with greater risk.</p><p>${p.wounds ? `They need ${p.wounds} more season${p.wounds === 1 ? '' : 's'} to recover before taking another contract.` : mission ? `${expeditions.find((t) => t.id === mission.task).name} will test their resolve. They are expected in ${mission.returns - g.turn} season(s).` : 'They are rested and ready. Choose a task from the rumors in the Adventures chapter.'}</p></section></div>`;
+  return `<div class="profile-head">${portrait(findPerson(g, p.leaderId) || { name: p.leader, portrait: p.portrait, artset: p.artset }, 'large')}<div><span class="eyebrow">A COMPANY OF ADVENTURERS</span><h2 id="dialog-title">${esc(p.name)}</h2><p>Led by ${esc(p.leader)}</p><p>${p.status === 'away' ? 'Beyond the safe roads' : p.wounds ? 'Tending their wounded' : 'Ready to hear a contract'}</p></div></div><p class="lead dropcap">${esc(p.story)}</p><h3>The companions</h3><p>${esc(p.members)}</p><div class="profile-columns"><section><h3>Reputation & readiness</h3>${narrate('Capability', p.skill, 'skill')}${narrate('Trust in your patronage', p.loyalty)}${narrate('Reputation', p.reputation)}${narrate('Care in preparation', p.caution, 'skill')}</section><section><h3>The terms of their work</h3><p>The company asks a base fee of ${coins(p.fee)} gold. A careful or respectful journey needs additional supplies and two seasons. A daring contract returns sooner, with greater risk.</p><p>${p.wounds ? `They need ${p.wounds} more season${p.wounds === 1 ? '' : 's'} to recover before taking another contract.` : mission ? `${expeditions.find((t) => t.id === mission.task).name} will test their resolve. They are expected in ${mission.returns - g.turn} season(s).` : 'They are rested and ready. Choose a task from the rumors in the Adventures chapter.'}</p></section></div>`;
 }
 function decisionContent() {
   const d = getDecision(g, modal.type, modal.id, modal.agent);
@@ -513,11 +515,11 @@ function decisionContent() {
   if (d.requiresParty && selected) {
     advice = `${selected.name} are ${qualitative(selected.skill, 'skill').toLowerCase()} and ${selected.caution > 65 ? 'careful in their preparations' : 'willing to take difficult risks'}. Local trust can secure guides; haste makes success less certain.`;
   }
-  return `<span class="eyebrow">YOUR WORD BECOMES THEIR WORLD</span><h2 id="dialog-title">${esc(d.title)}</h2><p class="lead">${esc(d.text)}</p>${agents ? `<label class="select-label">${d.requiresAgent ? 'Whose hands will carry your decision?' : 'Which company will carry your contract?'}<select id="decision-agent">${agents.length ? agents.map((c) => `<option value="${c.id}" ${modal.agent === c.id ? 'selected' : ''}>${esc(c.name)}${c.role ? ' · ' + esc(c.role) : ''}</option>`).join('') : '<option value="">No one is available</option>'}</select></label><p class="counsel-note">${esc(advice || 'Wait for a commission to end, or invite another qualified person to serve.')}</p>` : ''}${d.type === 'project' && selected ? forecastView(g, selected, d.target) : d.type === 'commercial' ? commercialAdvice(g, d, selected) : ''}${d.blocked ? `<p class="blocked" role="status">${esc(d.blocked)}</p>` : ''}<div class="decision-options">${d.options.map((o) => choiceCard(o, 'enact', !!d.blocked || (agents && !agents.length))).join('')}</div><p class="ink-note">${d.requiresAgent ? 'The listed direction is a promise, not a guarantee. Capability, office, loyalty, and resistance affect the outcome.' : 'The court will remember the course you choose.'}</p>`;
+  return `<span class="eyebrow">YOUR WORD BECOMES THEIR WORLD</span><h2 id="dialog-title">${esc(d.title)}</h2><p class="lead">${esc(d.text)}</p>${agents ? `<label class="select-label">${d.requiresAgent ? 'Whose hands will carry your decision?' : 'Which company will carry your contract?'}<select id="decision-agent">${agents.length ? agents.map((c) => `<option value="${c.id}" ${modal.agent === c.id ? 'selected' : ''}>${esc(c.name)}${c.role ? ' · ' + esc(c.role) : ''}</option>`).join('') : '<option value="">No one is available</option>'}</select></label><p class="counsel-note">${esc(advice || 'Wait for a commission to end, or invite another qualified person to serve.')}</p>` : ''}${d.type === 'project' && selected ? forecastView(g, selected, d.target) : d.type === 'commercial' ? commercialAdvice(g, d, selected) : ''}${advisorView(g, d, d.options, selected)}${d.blocked ? `<p class="blocked" role="status">${esc(d.blocked)}</p>` : ''}<div class="decision-options">${d.options.map((o) => choiceCard(o, 'enact', !!d.blocked || (agents && !agents.length))).join('')}</div><p class="ink-note">${d.requiresAgent ? 'The listed direction is a promise, not a guarantee. Capability, office, loyalty, and resistance affect the outcome.' : 'The court will remember the course you choose.'}</p>`;
 }
 function choiceCard(o, action, blocked = false) {
   const disabled = blocked || o.disabled || g.resources.gold < o.cost;
-  return `<button class="decision-option" data-action="${action}" data-choice="${o.id}" ${disabled ? 'disabled' : ''} title="${esc(o.reason || '')}"><span class="option-ornament" aria-hidden="true">❧</span><span><strong>${esc(o.label)}</strong><span>${esc(o.note)}</span><small>${o.cost ? o.cost + ' gold from the treasury' : 'No treasury expense'}${g.resources.gold < o.cost ? ' · Not enough coin' : ''}${o.disabled ? ' · ' + esc(o.reason) : ''}</small></span><b aria-hidden="true">→</b></button>`;
+  return `<button class="decision-option" data-action="${action}" data-choice="${o.id}" ${disabled ? 'disabled' : ''} title="${esc(o.reason || '')}"><span class="option-ornament" aria-hidden="true">❧</span><span><strong>${esc(o.label)}</strong><span>${esc(o.note)}</span><small>${o.cost ? coins(o.cost) + ' gold from the treasury' : 'No treasury expense'}${g.resources.gold < o.cost ? (Math.round(g.resources.gold) >= o.cost ? ' · Balance is rounded; a little more coin is needed' : ' · Not enough coin') : ''}${o.disabled ? ' · ' + esc(o.reason) : ''}</small></span><b aria-hidden="true">→</b></button>`;
 }
 function audienceContent() {
   const e = g.event;
@@ -555,7 +557,7 @@ function audienceContent() {
     .map((p) => `<p>${esc(p)}</p>`)
     .join(
       '',
-    )}</div>${agents ? `<label class="select-label">${d.requiresAgent ? 'Whose judgment will carry your seal?' : 'Which company will carry your contract?'}<select id="audience-agent">${agents.length ? agents.map((c) => `<option value="${c.id}" ${c.id === e.agent ? 'selected' : ''}>${esc(c.name)}${c.role ? ' · ' + esc(c.role) : ''}</option>`).join('') : '<option value="">No one is available</option>'}</select></label><p class="counsel-note">${esc(advice || 'No rested company or available courtier can take this charge now. You can decline without expense.')}</p>` : ''}${d?.type === 'project' && chosen ? forecastView(g, chosen, d.target) : ''}${d?.blocked ? `<p class="blocked">${esc(d.blocked)}</p>` : ''}<div class="decision-options">${eventOptions(
+    )}</div>${agents ? `<label class="select-label">${d.requiresAgent ? 'Whose judgment will carry your seal?' : 'Which company will carry your contract?'}<select id="audience-agent">${agents.length ? agents.map((c) => `<option value="${c.id}" ${c.id === e.agent ? 'selected' : ''}>${esc(c.name)}${c.role ? ' · ' + esc(c.role) : ''}</option>`).join('') : '<option value="">No one is available</option>'}</select></label><p class="counsel-note">${esc(advice || 'No rested company or available courtier can take this charge now. You can decline without expense.')}</p>` : ''}${d?.type === 'project' && chosen ? forecastView(g, chosen, d.target) : ''}${advisorView(g, d ? { ...d, adviser: e.adviser, origin: e.origin, faction: e.faction } : e, eventOptions(g), chosen)}${d?.blocked ? `<p class="blocked">${esc(d.blocked)}</p>` : ''}<div class="decision-options">${eventOptions(
     g,
   )
     .map((o) => choiceCard(o, 'event'))

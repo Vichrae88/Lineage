@@ -2,7 +2,7 @@
 
 A seasonal fantasy roleplaying game about ruling a realm and the people who make it live. [Play the current release](https://vichrae88.github.io/Lineage/).
 
-**This branch contains the 0.5.2 portrait polish revision for review.** It removes drawn-on portrait accessories, gives the seven non-lizard Beastfolk heritages painted hair, and displays the release number in the upper-right corner. See [the portrait review](docs/portrait-polish-review.md) for screenshots and validation. The live Pages source remains `feature/immersion-economy` on 0.5.1; this revision is on `feature/portrait-polish` and has not been deployed. The [isolated preview](https://vichrae88.github.io/Lineage/?preview=1) keeps separate browser-save slots.
+**This branch contains Lineage 0.5.3 for review.** Reading surfaces now use illuminated parchment against a wood-toned backdrop, gold displays as whole coins, advisors give contextual recommendations, and petitions offer more issue-specific approaches. See [the visual and council review](docs/council-visual-review.md) for screenshots, tests, and compatibility details. The public Pages source remains `feature/immersion-economy` on 0.5.1; `feature/council-and-parchment` is an unserved review branch. The [isolated preview](https://vichrae88.github.io/Lineage/?preview=1) keeps separate browser-save slots, but still runs the public release.
 
 ## Develop
 
@@ -18,7 +18,7 @@ node scripts/simulate-commerce-century.mjs
 
 The development server uses port 3000 (`PORT` overrides it). The build creates a clean static game in `dist/`, including every browser module and the local artwork. The simulation tests include production saves from versions 1–5 and full/compact version-5 round trips. The century script uses ordinary starting resources and actual decisions; it prints population, finances, reigns, petition counts, save size, and elapsed time.
 
-Browser checks are optional and require Playwright and a Chromium installation. They do not add a runtime dependency to the game:
+Browser checks require Playwright and a Chromium installation and run in the pull-request review workflow. They do not add a runtime dependency to the game:
 
 ```sh
 # Install browser tooling separately, then run with the development server running.
@@ -26,6 +26,10 @@ npm install --prefix /tmp/lineage-browser --no-save playwright
 LINEAGE_PLAYWRIGHT_MODULE=/tmp/lineage-browser/node_modules/playwright/index.mjs \
 LINEAGE_CHROMIUM=/usr/bin/chromium \
 node scripts/browser-check.mjs
+# With the same environment settings, also run:
+node scripts/council-visual-check.mjs
+node scripts/enhancement-browser-check.mjs
+node scripts/portrait-polish-check.mjs
 ```
 
 Set `LINEAGE_URL` for a different server or built-game address. Alternatively, an existing local Playwright installation can be used without the module-path override; Playwright's own browser can be used without `LINEAGE_CHROMIUM`.
@@ -34,9 +38,11 @@ Set `LINEAGE_URL` for a different server or built-game address. Alternatively, a
 
 Seven questions establish realm size, identity, race, gender, age, disposition, appearance, values, and the claim to the throne. Names may be generated. Choose a town for gentler pressures or a province for a larger administration. No parent survives the accession, but family records can include remembered ancestors and surviving siblings, aunts, uncles, and cousins.
 
-The predominant people form a majority alongside real minorities. Regional censuses vary, and welcoming migrations change them. Beastfolk include fox, wolf, cat, owl, bear, rabbit, otter, and lizard heritages. The ruler may choose their own heritage without making the court uniform. Each person has a saved portrait recipe: painted faces, individual proportions and facial features, clothing, adornments, age, and inherited family features.
+The predominant people form a majority alongside real minorities. Regional censuses vary, and welcoming migrations change them. Beastfolk include fox, wolf, cat, owl, bear, rabbit, otter, and lizard heritages. The ruler may choose their own heritage without making the court uniform. Each person has a saved portrait recipe: painted faces, individual proportions, apparent age, and inherited family features. Clothing and hair belong to the paintings rather than added overlays.
 
 A skippable guide introduces audiences, delegation, the calendar, the dynasty, and saving. Court members and other visitors bring illustrated petitions to the throne. A pending ruling pauses the season and offers an affordable course. Direct commissions and edicts are also available through the council desk. Six main chapters, including Treasury, the resource bar, and an interactive map keep the realm within reach, including on mobile.
+
+Living, serving advisors offer recommendations grounded in affordable choices, current needs, professional expertise, convictions, and faction ties. They can disagree, and their advice never consumes a simulation roll. Gold is displayed to the nearest whole coin; saved accounts retain their precision. Optional strategic forecasts and detailed ledgers remain available.
 
 The opening deck has 52 unique issues and their aftermaths. After those stories, new petitions arise from actual shortages, deteriorating buildings, rivalries, careers, workshops, graduates, family grievances, foreign disputes, displaced claimants, and local initiatives. Each instance has a unique identity; template and participant cooldowns prevent immediate repetition. Completed instances and rewards stay completed after loading or succession. A historical letter can be delivered by a living representative; an individual's career petition closes if they die.
 
@@ -70,7 +76,7 @@ Compact version-5 saves store each individual once and refer to that identity fr
 
 ## Review and publication
 
-The production Pages workflow publishes on `main`. The directly served branch is currently `feature/immersion-economy`; this review branch is `feature/portrait-polish` and is not served. Keep both production sources unchanged until review. The separate pull-request workflow runs tests, builds, checks a century of play, and provides a downloadable build for review. Merge or production publication requires the user's review first.
+The production Pages workflow publishes on `main`. The directly served branch is currently `feature/immersion-economy`; this review branch is `feature/council-and-parchment` and is not served. Keep both production sources unchanged until review. The separate pull-request workflow runs tests, builds, checks a century of play, and provides a downloadable build for review. Merge or production publication requires the user's review first.
 
 The current public release remains [vichrae88.github.io/Lineage](https://vichrae88.github.io/Lineage/). All assets use relative paths under `/Lineage/`.
 
