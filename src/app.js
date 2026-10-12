@@ -46,7 +46,9 @@ let sites, factionLore, expeditions, relics, projects;
 let returnModal = null;
 let modalStack = [];
 const app = document.querySelector('#app');
-const isPreview = location.pathname.split('/').includes('preview');
+const isPreview =
+  location.pathname.split('/').includes('preview') ||
+  new URL(location.href).searchParams.get('preview') === '1';
 const SAVE_KEY = isPreview ? 'lineage-preview-save' : 'lineage-save';
 const PREVIOUS_KEY = isPreview
   ? 'lineage-preview-previous'

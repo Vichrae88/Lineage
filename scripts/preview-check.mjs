@@ -4,7 +4,7 @@ const { chromium } = await import(
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 const url =
-  process.env.LINEAGE_URL || 'https://vichrae88.github.io/Lineage/preview/';
+  process.env.LINEAGE_URL || 'https://vichrae88.github.io/Lineage/?preview=1';
 const browser = await chromium.launch({
   executablePath: process.env.LINEAGE_CHROMIUM || undefined,
   args: ['--no-sandbox'],
