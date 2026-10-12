@@ -1,4 +1,4 @@
-import { narrativeForRecord, recordTransitions } from './narrative.js?v=0.5.1';
+import { narrativeForRecord, recordTransitions } from './narrative.js?v=0.5.2';
 const esc = (s) =>
   String(s ?? '').replace(
     /[&<>"']/g,

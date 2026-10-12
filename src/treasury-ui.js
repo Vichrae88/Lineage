@@ -2,9 +2,9 @@ import {
   commercialKinds,
   commercialForecast,
   projectedCommerce,
-} from './commerce.js?v=0.5.1';
-import { seasonProjection } from './economy.js?v=0.5.1';
-import { escapeText as esc } from './reports-ui.js?v=0.5.1';
+} from './commerce.js?v=0.5.2';
+import { seasonProjection } from './economy.js?v=0.5.2';
+import { escapeText as esc } from './reports-ui.js?v=0.5.2';
 const button = (text, kind, target) =>
   '<button data-action="decision" data-type="' +
   kind +

@@ -1,6 +1,6 @@
-import { narrativeView, exactLedger } from './narrative-ui.js?v=0.5.1';
-import { seasonProjection } from './economy.js?v=0.5.1';
-import { personById } from './sim-core.js?v=0.5.1';
+import { narrativeView, exactLedger } from './narrative-ui.js?v=0.5.2';
+import { seasonProjection } from './economy.js?v=0.5.2';
+import { personById } from './sim-core.js?v=0.5.2';
 export const escapeText = (s) =>
   String(s ?? '').replace(
     /[&<>"']/g,

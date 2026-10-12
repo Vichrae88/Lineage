@@ -5,10 +5,10 @@ import {
   rememberPerson,
   roll,
   idValid,
-} from './sim-core.js?v=0.5.1';
-import { transitionsBetween } from './transitions.js?v=0.5.1';
-import { appendRecord, addFact, snapshot } from './history.js?v=0.5.1';
-import { generatePerson, animalHeritages } from './campaign.js?v=0.5.1';
+} from './sim-core.js?v=0.5.2';
+import { transitionsBetween } from './transitions.js?v=0.5.2';
+import { appendRecord, addFact, snapshot } from './history.js?v=0.5.2';
+import { generatePerson, animalHeritages } from './campaign.js?v=0.5.2';
 export const attributes = [
   'strength',
   'dexterity',

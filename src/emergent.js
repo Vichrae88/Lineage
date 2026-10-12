@@ -1,10 +1,10 @@
 import {
   commerceProposals,
   resolveCommerceEvent,
-} from './commerce-events.js?v=0.5.1';
-import { personById, bound } from './sim-core.js?v=0.5.1';
-import { appendRecord, addFact } from './history.js?v=0.5.1';
-import { createInstitution } from './settlements.js?v=0.5.1';
+} from './commerce-events.js?v=0.5.2';
+import { personById, bound } from './sim-core.js?v=0.5.2';
+import { appendRecord, addFact } from './history.js?v=0.5.2';
+import { createInstitution } from './settlements.js?v=0.5.2';
 const option = (id, label, note, cost, effects = {}) => ({
   id,
   label,
