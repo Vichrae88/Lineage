@@ -837,3 +837,8 @@ textarea:focus-visible {
 .chronicle-moment { float:right; padding:.6rem; margin:0 0 1rem 1rem; width:86px; border:1px solid #a1844880; background:#c4a86d20; text-align:center; }
 .chronicle-moment i { display:block; font-style:normal; font-size:2.4rem; color:#827047; }
 .chronicle-moment small { font-size:.68rem; line-height:1.2; }
+/* Release label belongs to the page, independent of the save's schema version. */
+.app-version { position:absolute; top:7px; right:20px; z-index:5; font:10px/1.4 var(--ui); letter-spacing:.6px; color:#d1bd94; }
+.individual-portrait.portrait-aged svg { filter:saturate(.86); }
+.individual-portrait.portrait-aged.treatment-chronicle svg { filter:sepia(.65) saturate(.45) contrast(.92); }
+@media(max-width:600px) { .app-version { right:14px; top:5px; font-size:10px; } }

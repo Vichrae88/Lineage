@@ -1,6 +1,6 @@
-import { royalAmbitions } from './ambitions.js?v=0.5.1';
-import { escapeText as esc } from './reports-ui.js?v=0.5.1';
-import { hash } from './sim-core.js?v=0.5.1';
+import { royalAmbitions } from './ambitions.js?v=0.5.2';
+import { escapeText as esc } from './reports-ui.js?v=0.5.2';
+import { hash } from './sim-core.js?v=0.5.2';
 const link = (g, id, label) =>
   g.archive.some((e) => e.id === id)
     ? '<button class="text-button" data-action="entry" data-id="' +

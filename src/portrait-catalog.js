@@ -392,3 +392,23 @@ add(
   ['elder', 'young', 'young', 'elder'],
   ['Man', 'Woman', 'Man', 'Woman'],
 );
+
+// These styles are part of the painted source, never drawn as accessories over it.
+const beastHair = [
+  'a short swept hairstyle with a forelock',
+  'a medium tousled or pulled-back hairstyle',
+  'long flowing or braided hair',
+  'long soft waves or braids',
+];
+for (const face of portraitCatalog) {
+  if (face.race === 'Beastfolk' && face.species !== 'Lizard') {
+    face.hair = beastHair[face.index % 4];
+    face.description =
+      face.description.replace(
+        /, (?:formal )?(?:dark |ivory |cloth )?(?:headwrap|hood)\b/g,
+        '',
+      ) +
+      ', ' +
+      face.hair;
+  }
+}

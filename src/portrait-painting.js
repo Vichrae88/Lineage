@@ -1,5 +1,5 @@
-import { hash, bound } from './sim-core.js?v=0.5.1';
-import { portraitCatalog, paintedFace } from './portrait-catalog.js?v=0.5.1';
+import { hash, bound } from './sim-core.js?v=0.5.2';
+import { portraitCatalog, paintedFace } from './portrait-catalog.js?v=0.5.2';
 const esc = (s) =>
   String(s ?? '').replace(
     /[&<>"']/g,
@@ -152,17 +152,25 @@ export function paintingMarkup(p, cls = '', style = null) {
     Otter: 14,
     Lizard: 15,
   };
-  const index = young ? (children[p.species || p.race] ?? 0) : face.index,
-    atlas = young ? 'child-portraits' : face.atlas;
+  const index = young
+      ? (children[p.species || p.race] ?? (p.race === 'Beastfolk' ? 10 : 0))
+      : face.index,
+    atlas = young
+      ? p.race === 'Beastfolk' && p.species !== 'Lizard'
+        ? 'child-portraits-hair'
+        : 'child-portraits'
+      : face.race === 'Beastfolk' && face.species !== 'Lizard'
+        ? face.atlas + '-hair'
+        : face.atlas;
   const image =
-    '<image href="assets/' +
+    '<svg x="0" y="0" width="240" height="240" viewBox="0 0 240 240" overflow="hidden"><image href="assets/' +
     atlas +
-    (young ? '.png' : '.webp') +
+    (young && atlas === 'child-portraits' ? '.png' : '.webp') +
     '" x="' +
     -(index % 4) * 240 +
     '" y="' +
     -Math.floor(index / 4) * 240 +
-    '" width="960" height="960" preserveAspectRatio="none"/>';
+    '" width="960" height="960" preserveAspectRatio="none"/></svg>';
   const formal = treatment === 'formal',
     chronicle = treatment === 'chronicle';
   const scale = formal ? 0.94 : treatment === 'natural' ? 1.05 : 1;
@@ -171,12 +179,6 @@ export function paintingMarkup(p, cls = '', style = null) {
     : chronicle
       ? '<path d="M4 5l232 1-2 229-229-2z" fill="none" stroke="#887052" stroke-width="2"/><path d="M10 225q40-4 60 2M170 228q30-6 60-4" fill="none" stroke="#897152" opacity=".6"/>'
       : '<path d="M3 3h234v234H3z" stroke="#ad966a" fill="none" opacity=".5"/>';
-  const gray = old
-    ? '<path d="M64 50q-14 29-10 80M176 44q14 40 7 91" fill="none" stroke="#c7c8b7" stroke-width="3" opacity=".35"/><path d="M80 98l12-3M149 96l12 4M92 132l-7 9M146 130l8 11" stroke="#b9a594" fill="none" opacity=".3"/>'
-    : '';
-  const scar = r.visibleScar
-    ? '<path d="M145 86l-12 40" stroke="#d1b2a0" stroke-width="2" opacity=".65"/><path d="M142 97l-5-2m2 13l-5-2" stroke="#644237" stroke-width="1"/>'
-    : '';
   const features =
     '<g mask="url(#' +
     id +
@@ -191,6 +193,7 @@ export function paintingMarkup(p, cls = '', style = null) {
     '<span class="portrait individual-portrait painted-portrait treatment-' +
     esc(treatment) +
     ' ' +
+    (old ? 'portrait-aged ' : '') +
     cls +
     '" role="img" aria-label="Portrait of ' +
     esc(p.name) +
@@ -213,8 +216,6 @@ export function paintingMarkup(p, cls = '', style = null) {
     ') translate(-120 -98)">' +
     image +
     features +
-    scar +
-    gray +
     '</g></g>' +
     framing +
     '</svg></span>'
