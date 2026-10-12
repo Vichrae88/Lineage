@@ -21,8 +21,9 @@ import {
   household,
   prepareAudience,
   advance,
-} from './game.js?v=0.4.0';
-import { dispositions, presentations } from './campaign.js?v=0.4.0';
+} from './game.js?v=0.5.0';
+import { dispositions, presentations } from './campaign.js?v=0.5.0';
+import {projectionView,outcomeView,seasonReportView,archiveView,entryView,localDevelopmentView} from './reports-ui.js?v=0.5.0';
 let sites, factionLore, expeditions, relics, projects;
 let returnModal = null;
 const app = document.querySelector('#app');
@@ -232,7 +233,7 @@ function sidebar() {
     )}</div></div><div class="sidebar-section"><span class="eyebrow">THIS SEASON</span>${g.queue.length ? g.queue.map((q) => `<p class="charge"><strong>${esc(projects.find((p) => p.id === q.id)?.name)}</strong><span>${esc(g.court.find((c) => c.id === q.who)?.name)} · entrusted</span></p>`).join('') : '<p class="quiet">Your court awaits instructions.</p>'}${g.missions.map((m) => `<p class="charge"><strong>${esc(g.parties.find((p) => p.id === m.party)?.name)}</strong><span>Expected in ${Math.max(0, m.returns - g.turn)} season(s)</span></p>`).join('')}</div><div class="sidebar-section"><span class="eyebrow">WORD FROM THE VILLAGES</span><p>${resourceStory(g, 'happiness')}.</p>${btn('Read the latest chronicle →', 'chronicle', 'class="text-button"')}</div></section></aside>`;
 }
 function commissionCards() {
-  return `<div class="commission-grid">${projects.map((p, i) => `<button class="commission" data-action="decision" data-type="project" data-id="${p.id}" ${g.event || g.queue.length >= 3 ? 'disabled' : ''}><span class="commission-icon" aria-hidden="true">${['⌁', '♧', '♜', '⚑', '✧', '◈'][i]}</span><span class="commission-copy"><small>${{ stewardship: 'Works & welfare', martial: 'Duty & defense', diplomacy: 'Neighbors & belonging', intrigue: 'Secrets & justice' }[p.skill]}</small><strong>${esc(p.name)}</strong><span>${esc(p.desc)}</span></span><span class="commission-arrow" aria-hidden="true">→</span></button>`).join('')}</div>`;
+  return `<div class="commission-grid">${projects.map((p, i) => `<button class="commission" data-action="decision" data-type="project" data-id="${p.id}" ${g.event || g.queue.length >= 3 ? 'disabled' : ''}><span class="commission-icon" aria-hidden="true">${['⌁', '♧', '♜', '⚑', '✧', '◈','⚙','✎','⚑'][i]||'❧'}</span><span class="commission-copy"><small>${{ stewardship: 'Works & welfare', martial: 'Duty & defense', diplomacy: 'Neighbors & belonging', intrigue: 'Secrets & justice' }[p.skill]}</small><strong>${esc(p.name)}</strong><span>${esc(p.desc)}</span></span><span class="commission-arrow" aria-hidden="true">→</span></button>`).join('')}</div>`;
 }
 function council() {
   const speaker = g.event && findPerson(g, g.event.speaker);
@@ -410,7 +411,7 @@ function resourceProfile(key) {
 }
 function siteProfile(s) {
   const task = expeditions.find((t) => t.site === s.id);
-  return `${landscape(s.scene, s.name, 'dialog-landscape')}<span class="eyebrow">${s.kind.toUpperCase()}</span><h2 id="dialog-title">${s.name}</h2><p class="lead dropcap">${s.story}</p><div class="profile-columns"><section><h3>Gifts & vulnerabilities</h3><p>${s.strength}</p><p>${s.risk}</p></section><section><h3>A story told at the hearth</h3><blockquote>${s.rumor}</blockquote></section></div>${task ? `<div class="profile-actions">${btn('Consider an expedition →', 'decision', `data-type="expedition" data-id="${task.id}" class="primary"`)}</div>` : ''}`;
+  return `${landscape(s.scene, s.name, 'dialog-landscape')}<span class="eyebrow">${s.kind.toUpperCase()}</span><h2 id="dialog-title">${s.name}</h2><p class="lead dropcap">${s.story}</p><div class="profile-columns"><section><h3>Gifts & vulnerabilities</h3><p>${s.strength}</p><p>${s.risk}</p></section><section><h3>A story told at the hearth</h3><blockquote>${s.rumor}</blockquote></section></div>${localDevelopmentView(g,s.id)}${task ? `<div class="profile-actions">${btn('Consider an expedition →', 'decision', `data-type="expedition" data-id="${task.id}" class="primary"`)}</div>` : ''}`;
 }
 function partyProfile(p) {
   const mission = g.missions.find((m) => m.party === p.id);
@@ -528,6 +529,11 @@ function continuingModal() {
       : null;
 }
 function modalContent() {
+  if(modal.kind==='season')return projectionView(g,getDecision(g,'season').options);
+  if(modal.kind==='outcome')return outcomeView(g);
+  if(modal.kind==='season-report')return seasonReportView(g);
+  if(modal.kind==='entry')return entryView(g,modal.id);
+  if(modal.kind==='chronicle')return archiveView(g,modal.filters||{});
   if (modal.kind === 'person') return personProfile(findPerson(g, modal.id));
   if (modal.kind === 'candidate')
     return personProfile(
@@ -778,17 +784,12 @@ app.addEventListener('click', (e) => {
     render();
     return;
   }
-  if (a === 'advance') {
-    if (advance(g)) {
-      message = 'A new season opens. Your court brings word from the realm.';
-      save(true);
-      modal = continuingModal();
-      render();
-    }
-    return;
-  }
-  if (a === 'decision') {
-    open('decision', id, t.dataset.type);
+  if(a==='entry'){returnModal=modal?{...modal}:null;modal={kind:'entry',id};render();return;}
+  if(a==='continue-court'){returnModal=null;modal=continuingModal();render();return;}
+  if(a==='advance'){open('season');return;}
+  if(a==='season-counsel'){
+    const r=enact(g,'season',null,t.dataset.choice);message=r.text;
+    if(r.ok){save(true);modal={kind:'season-report'};returnModal=null;render();}
     return;
   }
   if (a === 'heir') {
@@ -801,7 +802,7 @@ app.addEventListener('click', (e) => {
     if (r.ok) {
       save(true);
       returnModal = null;
-      modal = continuingModal();
+      modal = {kind:'outcome'};
       render();
     } else {
       const node = document.createElement('p');
@@ -819,7 +820,7 @@ app.addEventListener('click', (e) => {
       if (!g.tutorial?.complete && g.tutorial.step === 2) g.tutorial.step = 3;
       save(true);
       returnModal = null;
-      modal = continuingModal();
+      modal = {kind:'outcome'};
       render();
     }
     return;
@@ -831,6 +832,7 @@ app.addEventListener('click', (e) => {
   if (a === 'export') exportGame();
 });
 app.addEventListener('change', async (e) => {
+  if(e.target.dataset.chronicleFilter){const focusId=e.target.id;modal.filters||={};modal.filters[e.target.dataset.chronicleFilter]=e.target.value;render();document.getElementById(focusId)?.focus();return;}
   if (e.target.id === 'import') {
     try {
       const file = e.target.files[0];

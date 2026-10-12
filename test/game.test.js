@@ -251,7 +251,7 @@ test('legacy version-one saves gain new systems without losing progress or pendi
     delete c.status;
   });
   const g = parseSave(JSON.stringify(old));
-  assert.equal(g.version, 4);
+  assert.equal(g.version, 5);
   assert.equal(g.year, 8);
   assert.equal(g.resources.gold, 47);
   assert.equal(g.queue.length, 1);

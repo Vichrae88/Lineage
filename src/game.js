@@ -13,8 +13,13 @@ import {
   followupReports,
   races,
   beastSpecies,
-} from './data.js?v=0.4.0';
-import { generateCampaign, freshSeed } from './campaign.js?v=0.4.0';
+} from './data.js?v=0.5.0';
+import { generateCampaign, freshSeed } from './campaign.js?v=0.5.0';
+import {initializeWorld,worldStateValid} from './world-state.js?v=0.5.0';
+import {snapshot,decisionRecord,appendRecord} from './history.js?v=0.5.0';
+import {seasonProjection,applyEconomy,finishSeasonReport} from './economy.js?v=0.5.0';
+import {developmentProjects,developmentChoices,projectSite,commissionConsequences,tickInstitutions,dueConsequences,settleConsequence} from './settlements.js?v=0.5.0';
+export {seasonProjection};
 export {
   roles,
   candidates,
@@ -95,6 +100,7 @@ export const projects = [
     faction: 'nobles',
   },
 ];
+projects.push(...developmentProjects);
 const living = (c) =>
   c.alive && c.status !== 'departed' && c.status !== 'ruler';
 export const activeCourt = (g) => g.court.filter(living);
@@ -385,6 +391,7 @@ export function createGame(o) {
   g.log = [
     `${g.ruler.name} takes the throne at ${realmSites(g)[0].name}. ${g.ruler.family}`,
   ];
+  initializeWorld(g,projects);
   bringForward(g, 1);
   nextAudience(g);
   return g;
@@ -665,7 +672,7 @@ function projectOptions(p) {
       ),
     ],
   };
-  return [base, ...opts[p.id]];
+  return developmentChoices[p.id] || [base, ...opts[p.id]];
 }
 export function getDecision(g, type, target, agent) {
   let d = {
@@ -685,10 +692,12 @@ export function getDecision(g, type, target, agent) {
     d.options = projectOptions(p);
     d.requiresAgent = true;
     d.skill = p.skill;
+    if(target==='school'&&g.institutions?.some(i=>['school','apprenticeship'].includes(i.kind)&&i.site==='capital'&&i.status==='active'))d.existingSchool=true;
     d.blocked =
       g.event &&
       (g.event.action?.type !== type || g.event.action?.target !== target)
         ? 'Hear the waiting audience before issuing a new commission.'
+        : d.existingSchool ? 'A school already operates here. Its students and upkeep continue through the seasons.'
         : g.queue.length >= 3
           ? 'Your court has capacity for three commissions each season.'
           : null;
@@ -1065,6 +1074,12 @@ export function getDecision(g, type, target, agent) {
       ),
     ];
   }
+  if(type==='institution'){
+    const i=g.institutions.find(i=>i.id===target);if(!i)return null;
+    d.title='The future of '+i.name;d.text='Funding pays for real work each season. Closing it ends that work; its founding history remains.';
+    d.options=[option('fund','Restore and maintain the institution','12 gold now, then its normal upkeep. Work and education can resume.',12),option('expand','Increase its grant and quality','10 gold; upkeep rises by 2, to a maximum of 8. The staff can improve its work.',10),option('close','Suspend royal funding','No new cost. Work and classes pause, while the building and its history remain.',0,{happiness:-2})];
+    d.blocked=i.lastReviewed===g.turn?'This institution’s funding has already been reviewed this season.':null;
+  }
   if (type === 'season') {
     d.title = 'Close this season’s council';
     d.text =
@@ -1121,12 +1136,15 @@ function remember(g, c, text) {
   c.memories.unshift(`${seasons[g.season]}, Year ${g.year}: ${text}`);
   c.memories = c.memories.slice(0, 15);
 }
-function record(g, type, target, choice, text) {
+function record(g, type, target, choice, text, context={}) {
   g.history.unshift({ turn: g.turn, type, target, choice, text });
   g.history = g.history.slice(0, 100);
   log(g, text);
+  const {before,...details}=context;
+  initializeWorld(g,projects);
+  return decisionRecord(g,{type,target,choice,people:[context.agent,context.speaker,target].filter(id=>findPerson(g,id)),families:type==='family'?[target]:[],factions:[],site:context.site || (type==='project'?projectSite(g,target):null),...details},before,text);
 }
-const result = (ok, text) => ({ ok, text });
+const result = (ok, text, entry=null) => ({ ok, text, entry });
 export function enact(g, type, target, choice, agent) {
   const d = getDecision(g, type, target, agent);
   if (!d) return result(false, 'That decision is no longer available.');
@@ -1138,6 +1156,7 @@ export function enact(g, type, target, choice, agent) {
     );
   if (g.resources.gold < o.cost)
     return result(false, 'The treasury cannot yet support that promise.');
+  const before=snapshot(g);
   let c = household(g).find((c) => c.id === target);
   if (type === 'project') {
     const a = g.court.find((c) => c.id === agent);
@@ -1154,6 +1173,7 @@ export function enact(g, type, target, choice, agent) {
       effects: o.effects,
       relations: o.relations,
       cost: o.cost,
+      site:projectSite(g,target),
     });
     remember(
       g,
@@ -1161,8 +1181,9 @@ export function enact(g, type, target, choice, agent) {
       `You entrusted them with “${d.title}”: ${o.label.toLowerCase()}.`,
     );
     const text = `${a.name} bows over your seal. “${o.label}” is now their charge.`;
-    record(g, type, target, choice, text);
-    return result(true, text);
+    const entry=record(g, type, target, choice, text,{agent,before});
+    if(type==='project')g.queue.at(-1).decisionId=entry.id;
+    return result(true, text,entry.id);
   }
   if (type === 'expedition') {
     const p = g.parties.find((p) => p.id === agent);
@@ -1177,8 +1198,9 @@ export function enact(g, type, target, choice, agent) {
       returns: g.turn + (choice === 'bold' ? 1 : 2),
     });
     const text = `${p.name} leave with your instructions: ${o.label.toLowerCase()}.`;
-    record(g, type, target, choice, text);
-    return result(true, text);
+    const entry=record(g, type, target, choice, text,{agent,before});
+    if(type==='project')g.queue.at(-1).decisionId=entry.id;
+    return result(true, text,entry.id);
   }
   if (type === 'heir' && choice !== 'none') {
     const h = household(g).find(
@@ -1324,6 +1346,12 @@ export function enact(g, type, target, choice, agent) {
     );
     text = `${h.head} receives your answer. ${choice === 'patron' ? 'The estate will thrive, without an exception to the law.' : choice === 'charter' ? 'A new privilege binds their fortune to your rule.' : 'Service to the realm must come before favors from its ruler.'}`;
   }
+  if(type==='institution'){
+    const i=g.institutions.find(i=>i.id===target);i.lastReviewed=g.turn;
+    if(choice==='close'){i.status='closed';i.budget=0;}
+    else {i.status='active';i.budget=choice==='expand'?Math.min(8,(i.budget||1)+2):['school','apprenticeship'].includes(i.kind)?3:1;i.condition=clamp(i.condition+10);if(choice==='expand')i.quality=clamp(i.quality+5);}
+    text=i.name+' is '+(choice==='close'?'closed until its funding can be restored':'funded for the work ahead')+'. Its earlier history remains in the chronicle.';
+  }
   if (type === 'policy') {
     g.lastEdict = g.turn;
     if (['gentle', 'balanced', 'heavy'].includes(choice))
@@ -1352,9 +1380,9 @@ export function enact(g, type, target, choice, agent) {
         : `${household(g).find((c) => c.id === target).name} is named heir ${choice === 'public' ? 'before the court' : 'in the sealed testament'}.`;
   }
   remember(g, c, o.label + '.');
-  record(g, type, target, choice, text);
-  if (type === 'season') advance(g);
-  return result(true, text);
+  const entry=record(g, type, target, choice, text,{agent,before});
+  if (type === 'season') advance(g,before.resources);
+  return result(true, text,entry?.id);
 }
 // Compatibility entry points for existing campaigns and simulation tools.
 export const delegate = (g, id, who) =>
@@ -1435,12 +1463,13 @@ export function ascend(g, h) {
   g.heir = null;
   g.dynasty++;
   g.event = null;
+  initializeWorld(g,projects);
   log(g, `${h.name} ascends. The realm enters reign ${g.dynasty}.`);
 }
 function outsideNominee(g) {
   return (
     g.futurePeople?.[0] ||
-    (g.world
+    (g.preparedIdentities
       ? [...g.applicants, ...g.notables].find(
           (p) => p.alive && p.age >= 18 && !g.court.some((c) => c.id === p.id),
         )
@@ -1572,7 +1601,7 @@ export function eventOptions(g) {
         ),
       )
       .concat(
-        !g.world || outsideNominee(g)
+        !g.preparedIdentities || outsideNominee(g)
           ? [
               option(
                 'council-nominee',
@@ -1636,6 +1665,7 @@ export function resolveEvent(g, choice, agent) {
         : 'The treasury cannot support that answer.',
     );
   }
+  const before=snapshot(g);
   if (e.action && choice !== 'decline') {
     const ruling = enact(g, e.action.type, e.action.target, choice, e.agent);
     if (!ruling.ok) {
@@ -1724,6 +1754,7 @@ export function resolveEvent(g, choice, agent) {
     );
     if (choice === 'care') p.wounds = Math.max(0, p.wounds - 1);
   }
+  if(e.engine==='consequence')settleConsequence(g,e,choice);
   const speaker = findPerson(g, e.speaker);
   if (speaker) {
     speaker.trust = clamp(
@@ -1792,7 +1823,8 @@ export function resolveEvent(g, choice, agent) {
     if (reserveEvent(g, letter)) g.scheduled.push(letter);
   }
   const text = `${e.title}: ${o.label}. ${o.note}`;
-  record(g, 'audience', e.id || e.title, choice, text);
+  const entry=record(g, 'audience', e.id || e.title, choice, text,{before,speaker:e.speaker,site:e.site,cause:e.origin||null,kind:e.action?'audience-close':'decision',event:e.id||null});
+  for(const letter of g.scheduled)if(letter.id===e.id+'-aftermath'||letter.id===e.id+'-followup')letter.origin=entry.id;
   nextAudience(g);
   return result(true, text);
 }
@@ -1865,7 +1897,7 @@ function missionReturns(g) {
   }
   g.missions = g.missions.filter((m) => m.returns > g.turn);
 }
-export function advance(g) {
+function advanceCore(g) {
   if (g.event) return false;
   for (const q of g.queue) {
     const p = realmProjects(g).find((p) => p.id === q.id),
@@ -1909,6 +1941,8 @@ export function advance(g) {
     const text = success
       ? `${c.name} returns from “${p.name}” with a sealed report and tired satisfaction. ${(g.world?.projectReports || projectReports)[p.id]?.[q.approach || 'balanced'] || 'The work has begun to change daily life.'}`
       : `${c.name} returns from “${p.name}” with muddy boots and an unfinished promise. Resistance and misjudgment slowed the work; some progress remains.`;
+    const source=appendRecord(g,{kind:'assignment',type:'project-result',cause:q.decisionId||null,site:q.site||projectSite(g,q.id),people:[c.id],text,success,project:q.id,choice:q.approach});
+    commissionConsequences(g,q,success,source.id);
     log(g, text);
     remember(
       g,
@@ -1950,18 +1984,7 @@ export function advance(g) {
       }
   }
   const r = g.resources;
-  const income =
-    Math.round(8 + r.trade / 8 + r.infrastructure / 12) *
-    (g.scale === 'province' ? 1.4 : 1);
-  r.gold = Math.max(
-    0,
-    r.gold +
-      Math.round(income) -
-      activeCourt(g).length * 2 +
-      (g.policies.tax === 'heavy' ? 9 : g.policies.tax === 'gentle' ? -5 : 0),
-  );
-  const harvest = g.season === 2 ? Math.round(25 + r.ecology / 6) : 0;
-  r.food = Math.max(0, r.food - (g.scale === 'province' ? 18 : 10) + harvest);
+  applyEconomy(g);
   effects(g, {
     happiness:
       r.food === 0
@@ -1977,7 +2000,7 @@ export function advance(g) {
     faith: g.policies.rites === 'traditional' ? 2 : 1,
     health: r.food === 0 ? -3 : r.health < 40 ? -1 : 0,
   });
-  if (g.policies.law === 'restorative') r.gold = Math.max(0, r.gold - 2);
+
   if (g.policies.rites === 'plural')
     diplomaticEffects(g, {
       goblins: { affection: 1 },
@@ -2046,7 +2069,7 @@ export function advance(g) {
   const spouse = g.court.find((c) => c.id === g.spouse && c.alive);
   if (spouse && g.ruler.age < 55 && random(g) < 0.18) {
     const n = g.children.length + 1;
-    const eligible = g.world
+    const eligible = g.preparedIdentities
       ? [g.ruler, spouse].filter((parent) =>
           g.futurePeople.some(
             (c) =>
@@ -2133,7 +2156,7 @@ export function advance(g) {
     g.turn % 4 === 0 &&
     g.applicants.filter((a) => !g.court.some((c) => c.id === a.id)).length <
       2 &&
-    (!g.world || g.futurePeople.length > 0)
+    (!g.preparedIdentities || g.futurePeople.length > 0)
   ) {
     const base = g.futurePeople?.length
         ? g.futurePeople.shift()
@@ -2245,6 +2268,21 @@ export function advance(g) {
   nextAudience(g);
   return true;
 }
+export function advance(g, prior=null) {
+  if(g.event)return false;
+  const before=prior || {...g.resources},archiveStart=g.archive.length;
+  const ok=advanceCore(g);
+  if(ok){
+    initializeWorld(g,projects);
+    tickInstitutions(g);
+    for(const e of dueConsequences(g))queueUnique(g,e);
+    if(!g.event&&g.ruler.alive)nextAudience(g);
+    const report=finishSeasonReport(g,before,g.archive.slice(archiveStart).map(e=>e.id));
+    const record=appendRecord(g,{kind:'season',type:'season',text:'The realm enters '+seasons[g.season]+', Year '+g.year+'.',effects:report.changes});
+    report.entry=record.id;
+  }
+  return ok;
+}
 function migrateEventHistory(g) {
   const seen = new Set(g.seenEvents),
     resolved = new Set(g.resolvedEvents);
@@ -2330,7 +2368,7 @@ export function parseSave(text) {
   }
   if (
     !g ||
-    ![1, 2, 3, 4].includes(g.version) ||
+    ![1, 2, 3, 4, 5].includes(g.version) ||
     !g.resources ||
     !Array.isArray(g.court) ||
     !Array.isArray(g.factions) ||
@@ -2567,7 +2605,7 @@ export function parseSave(text) {
           ].every((k) => str(w.factionLore[f.id][k])),
       ) ||
       !Array.isArray(w.projects) ||
-      !projects.every((base) => w.projects.some((p) => p.id === base.id)) ||
+      !projects.filter(p=>!['school','mill','recruit'].includes(p.id)).every((base) => w.projects.some((p) => p.id === base.id)) ||
       w.projects.some((p) => ![p.name, p.desc, p.skill].every(str)) ||
       !Array.isArray(w.expeditions) ||
       w.expeditions.length !== 4 ||
@@ -2593,7 +2631,7 @@ export function parseSave(text) {
       throw Error('This generated world is incomplete or damaged.');
   }
   if (
-    oldVersion === 4 &&
+    oldVersion >= 4 &&
     (!Array.isArray(g.kin) ||
       !Array.isArray(g.notables) ||
       !Array.isArray(g.futurePeople) ||
@@ -2802,6 +2840,7 @@ export function parseSave(text) {
     g.ruler.appearance ||= 'The regalia inherited with the crown.';
     g.ruler.story ||= `${g.ruler.name} has already shaped the realm through the choices recorded in its chronicle.`;
   }
-  g.version = 4;
+  if(oldVersion===5&&!worldStateValid(g))throw Error('This living-world chronicle is incomplete or damaged.');
+  initializeWorld(g,projects);
   return g;
 }

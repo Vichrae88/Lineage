@@ -756,3 +756,27 @@ textarea:focus-visible {
 .portrait {
   align-self: flex-start;
 }
+
+/* Accounts and the permanent Chronicle. */
+.projection-grid { display:grid;grid-template-columns:1fr 1fr;gap:28px; }
+.projection-grid dl { display:grid;grid-template-columns:1fr auto;gap:8px 18px; }
+.projection-grid dd { margin:0;text-align:right; }
+.change-grid { display:flex;flex-wrap:wrap;gap:10px;margin:20px 0; }
+.change-grid>div { border:1px solid var(--line);padding:12px 16px;min-width:105px; }
+.change-grid small,.change-grid strong { display:block; }
+.change-grid strong { font:24px var(--serif); }
+.chronicle-filters { display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0; }
+.chronicle-filters label { font-size:13px; }
+.chronicle-filters select { margin-top:5px; }
+.archive-entry,.institution-card { padding:18px 0;border-bottom:1px solid var(--line); }
+.archive-entry small { color:var(--muted); }
+.local-development { border-top:1px solid var(--line);margin-top:25px;padding-top:20px; }
+.dossier select { color:#382f23;background:#f6efd9;border-color:#ab9870; }
+.decision-option>strong,.decision-option>span { display:block; }
+@media(max-width:800px) {
+ .realm-sidebar { display:block; }
+ .resource-ribbon .realm-mood { display:flex; }
+ .projection-grid { grid-template-columns:1fr; }
+ .chronicle-filters { grid-template-columns:1fr 1fr; }
+ .realm-map { max-height:330px; }
+}
