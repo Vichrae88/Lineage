@@ -1,5 +1,19 @@
-import { delta } from './sim-core.js?v=0.5.0';
-import { readSave } from './persistence.js?v=0.5.0';
+import {
+  royalAmbitions,
+  declareAmbition,
+  tickAmbitions,
+} from './ambitions.js?v=0.5.1';
+import { makePortraitRecipe } from './portraits.js?v=0.5.1';
+import {
+  commercialDecision,
+  startVenture,
+  ventureManagement,
+  manageVenture,
+} from './commerce.js?v=0.5.1';
+import { addPromise, tickPromises } from './promises.js?v=0.5.1';
+import { transitionsBetween } from './transitions.js?v=0.5.1';
+import { delta } from './sim-core.js?v=0.5.1';
+import { readSave } from './persistence.js?v=0.5.1';
 import {
   courtCapacity,
   commissionCapacity,
@@ -8,7 +22,7 @@ import {
   beginReign,
   evolveRealm,
   governDistricts,
-} from './dynasty.js?v=0.5.0';
+} from './dynasty.js?v=0.5.1';
 import {
   roles,
   biographies,
@@ -24,20 +38,20 @@ import {
   followupReports,
   races,
   beastSpecies,
-} from './data.js?v=0.5.0';
-import { generateCampaign, freshSeed } from './campaign.js?v=0.5.0';
-import { initializeWorld, worldStateValid } from './world-state.js?v=0.5.0';
+} from './data.js?v=0.5.1';
+import { generateCampaign, freshSeed } from './campaign.js?v=0.5.1';
+import { initializeWorld, worldStateValid } from './world-state.js?v=0.5.1';
 import {
   snapshot,
   decisionRecord,
   appendRecord,
   addFact,
-} from './history.js?v=0.5.0';
+} from './history.js?v=0.5.1';
 import {
   seasonProjection,
   applyEconomy,
   finishSeasonReport,
-} from './economy.js?v=0.5.0';
+} from './economy.js?v=0.5.1';
 import {
   developmentProjects,
   developmentChoices,
@@ -46,7 +60,7 @@ import {
   tickInstitutions,
   dueConsequences,
   settleConsequence,
-} from './settlements.js?v=0.5.0';
+} from './settlements.js?v=0.5.1';
 import {
   skills,
   newPerson,
@@ -57,19 +71,19 @@ import {
   practice,
   startTraining,
   tickTraining,
-} from './characters.js?v=0.5.0';
+} from './characters.js?v=0.5.1';
 import {
   tickPeople,
   tickCommunities,
   recordDeath,
   recordMarriage,
   lifeExpectancy,
-} from './living.js?v=0.5.0';
+} from './living.js?v=0.5.1';
 import {
   generateEmergentEvent,
   resolveEmergent,
   tickObligations,
-} from './emergent.js?v=0.5.0';
+} from './emergent.js?v=0.5.1';
 export { professionalForecast, availableMentors };
 export { seasonProjection };
 export {
@@ -268,7 +282,15 @@ export function prepareAudience(g, e = g.event) {
     e.engine
   ) {
     if (
-      ['enterprise', 'talent', 'graduate', 'claimant'].includes(e.template) ||
+      [
+        'enterprise',
+        'talent',
+        'graduate',
+        'claimant',
+        'commercial-concern',
+        'commercial-legacy',
+        'royal-legacy',
+      ].includes(e.template) ||
       (e.engine === 'consequence' &&
         g.consequences.find((c) => c.id === e.arc)?.kind === 'school-maturity')
     )
@@ -822,6 +844,87 @@ export function getDecision(g, type, target, agent) {
   const c = findPerson(g, target);
   const f = g.factions.find((f) => f.id === target);
   const p = realmProjects(g).find((p) => p.id === target);
+  if (type === 'ambition') {
+    d.title = 'The work I hope will outlive me';
+    d.text =
+      'A personal ambition gives a reign direction without ending its story or binding a successor. Its progress follows actual people, works and relationships.';
+    d.options = Object.entries(royalAmbitions).map(([id, a]) =>
+      option(id, a.name, a.description, 0),
+    );
+    d.blocked = g.ambitions.some((a) => a.person === g.ruler.id)
+      ? 'This ruler’s chosen ambition is already part of their history.'
+      : null;
+  }
+  if (type === 'portrait' && c) {
+    d.title = 'A new portrait of ' + c.name;
+    d.text =
+      'A court painter works from the person’s appearance and heritage. This commission changes the painting, while preserving their identity, family, history and abilities.';
+    d.options = [
+      option(
+        'formal',
+        'Commission a formal court painting',
+        '8 gold. An illuminated formal frame holds a naturalistic painted likeness.',
+        8,
+      ),
+      option(
+        'natural',
+        'Ask for an unadorned naturalistic likeness',
+        '5 gold. The portrait concentrates on face, bearing and ordinary clothing.',
+        5,
+      ),
+      option(
+        'chronicle',
+        'Set their likeness into the illustrated Chronicle',
+        '4 gold. A drawn treatment preserves the same painted features.',
+        4,
+      ),
+    ];
+    d.blocked =
+      c.lastPortrait === g.turn
+        ? 'Their portrait has already been commissioned this season.'
+        : null;
+  }
+  if (type === 'commercial') {
+    const [kind, context] = String(target).split(':');
+    const business = commercialDecision(g, kind, context, agent);
+    if (!business) return null;
+    Object.assign(d, business, { target, commercialKind: kind });
+  }
+  if (type === 'venture') {
+    const business = ventureManagement(g, target, agent);
+    if (!business) return null;
+    Object.assign(d, business);
+  }
+  if (type === 'operator') {
+    const v = g.ventures.find((v) => v.id === target);
+    if (!v) return null;
+    d.title = 'A living delegate for ' + v.name;
+    d.text =
+      'The new delegate inherits responsibility for an existing undertaking. Its original capital, ownership and history remain.';
+    d.requiresAgent = true;
+    d.skill = 'trade';
+    d.options = [
+      option(
+        'appoint',
+        'Entrust them with the ongoing bargain',
+        '4 gold changes the delegate and resumes a viable paused operation.',
+        4,
+      ),
+    ];
+    d.blocked = ['completed', 'failed', 'closed'].includes(v.status)
+      ? 'This undertaking has already closed.'
+      : v.lastReviewed === g.turn
+        ? 'This undertaking has already been reviewed this season.'
+        : g.ventures.filter(
+              (x) =>
+                x.actor === agent &&
+                ['forming', 'outbound', 'operating', 'paused'].includes(
+                  x.status,
+                ),
+            ).length >= 2
+          ? 'This delegate already carries two continuing undertakings.'
+          : null;
+  }
   if (type === 'project' && p) {
     d.title = p.name;
     d.text = p.desc;
@@ -1445,6 +1548,44 @@ export function enact(g, type, target, choice, agent) {
     return result(false, 'The treasury cannot yet support that promise.');
   const before = snapshot(g);
   let c = findPerson(g, target);
+  if (type === 'commercial') {
+    const actor = findPerson(g, agent);
+    if (!actor?.alive || actor.status !== 'serving' || isBusy(g, agent))
+      return result(false, 'Choose an available serving delegate.');
+    g.resources.gold -= o.cost;
+    const root = appendRecord(g, {
+      kind: 'decision',
+      type: 'commercial',
+      site: d.site,
+      people: [agent],
+      text: 'The crown settles a new commercial undertaking.',
+    });
+    const venture = startVenture(
+      g,
+      { ...d, target: d.commercialKind },
+      choice,
+      root.id,
+    );
+    const text =
+      actor.name +
+      ' receives the seal for ' +
+      venture.name +
+      '. The investment, ownership and promise of a return are entered in the Treasury.';
+    const entry = record(g, type, target, choice, text, {
+      before,
+      agent,
+      site: d.site,
+      existing: root.id,
+    });
+    return result(true, text, entry.id);
+  }
+  if (
+    type === 'operator' &&
+    (!findPerson(g, agent)?.alive ||
+      findPerson(g, agent).status !== 'serving' ||
+      isBusy(g, agent))
+  )
+    return result(false, 'Choose an available living delegate.');
   if (type === 'project') {
     const a = g.court.find((c) => c.id === agent);
     if (!a || !living(a) || isBusy(g, agent))
@@ -1468,8 +1609,23 @@ export function enact(g, type, target, choice, agent) {
       `You entrusted them with “${d.title}”: ${o.label.toLowerCase()}.`,
     );
     const text = `${a.name} bows over your seal. “${o.label}” is now their charge.`;
-    const entry = record(g, type, target, choice, text, { agent, before });
-    if (type === 'project') g.queue.at(-1).decisionId = entry.id;
+    const entry = record(g, type, target, choice, text, {
+      agent,
+      before,
+      expected: { realm: o.effects, person: o.person, personId: target },
+    });
+    if (type === 'project') {
+      g.queue.at(-1).decisionId = entry.id;
+      addPromise(g, {
+        kind: 'commission',
+        title: realmProjects(g).find((p) => p.id === target).name,
+        source: entry.id,
+        due: g.turn + 1,
+        person: agent,
+        site: projectSite(g, target),
+        project: target,
+      });
+    }
     return result(true, text, entry.id);
   }
   if (type === 'expedition') {
@@ -1494,7 +1650,11 @@ export function enact(g, type, target, choice, agent) {
       returns: g.turn + (choice === 'bold' ? 1 : 2),
     });
     const text = `${p.name} leave with your instructions: ${o.label.toLowerCase()}.`;
-    const entry = record(g, type, target, choice, text, { agent, before });
+    const entry = record(g, type, target, choice, text, {
+      agent,
+      before,
+      expected: { realm: o.effects, person: o.person, personId: target },
+    });
     g.missions.at(-1).origin = entry.id;
     if (type === 'project') g.queue.at(-1).decisionId = entry.id;
     return result(true, text, entry.id);
@@ -1688,6 +1848,47 @@ export function enact(g, type, target, choice, agent) {
         '.';
     }
   }
+  if (type === 'portrait') {
+    if (c.portraitRecipe.version !== 2)
+      c.portraitRecipe = makePortraitRecipe(g, c);
+    c.portraitRecipe.treatment = choice;
+    c.lastPortrait = g.turn;
+    text =
+      'The painter completes a ' +
+      choice +
+      ' likeness of ' +
+      c.name +
+      '. Their life and history remain their own.';
+  }
+  if (type === 'venture') {
+    const v = g.ventures.find((v) => v.id === target);
+    manageVenture(g, v, choice);
+    text =
+      v.name + ' receives a new settlement: ' + o.label.toLowerCase() + '.';
+  }
+  if (type === 'operator') {
+    const v = g.ventures.find((v) => v.id === target);
+    v.actor = agent;
+    v.lastReviewed = g.turn;
+    v.profit -= 4;
+    v.invested += 4;
+    if (
+      v.status === 'paused' &&
+      v.condition >= 20 &&
+      (!v.expires || v.expires > g.turn)
+    )
+      v.status =
+        g.turn < v.due
+          ? 'forming'
+          : ['caravan', 'expedition'].includes(v.kind)
+            ? 'outbound'
+            : 'operating';
+    text =
+      findPerson(g, agent).name +
+      ' now carries the crown’s responsibilities at ' +
+      v.name +
+      '.';
+  }
   if (type === 'reward') {
     c.lastReward = g.turn;
     if (choice === 'stipend') {
@@ -1768,7 +1969,12 @@ export function enact(g, type, target, choice, agent) {
         : `${household(g).find((c) => c.id === target).name} is named heir ${choice === 'public' ? 'before the court' : 'in the sealed testament'}.`;
   }
   remember(g, c, o.label + '.');
-  const entry = record(g, type, target, choice, text, { agent, before });
+  const entry = record(g, type, target, choice, text, {
+    agent,
+    before,
+    expected: { realm: o.effects, person: o.person, personId: target },
+  });
+  if (type === 'ambition') declareAmbition(g, choice, entry.id);
   if (type === 'training' || type === 'mentorship')
     startTraining(
       g,
@@ -1777,7 +1983,7 @@ export function enact(g, type, target, choice, agent) {
       type === 'mentorship' ? agent : null,
       entry.id,
     );
-  if (type === 'season') advance(g, before.resources);
+  if (type === 'season') advance(g, before);
   return result(true, text, entry?.id);
 }
 // Compatibility entry points for existing campaigns and simulation tools.
@@ -2309,6 +2515,7 @@ export function resolveEvent(g, choice, agent) {
     kind: e.action ? 'audience-close' : 'decision',
     event: e.id || null,
     existing: reserved?.id,
+    expected: { realm: o.effects, person: o.person, personId: e.speaker },
   });
   for (const letter of g.scheduled)
     if (letter.id === e.id + '-aftermath' || letter.id === e.id + '-followup')
@@ -2480,6 +2687,7 @@ function advanceCore(g) {
     assignmentDevelopment(g, c, p, success, forecast, source.id);
     commissionConsequences(g, q, success, source.id);
     source.effects = delta(assignmentBefore.resources, g.resources);
+    source.transitions = transitionsBetween(assignmentBefore, g);
     source.assessment = {
       skill: forecast.skill,
       score: forecast.score,
@@ -2853,7 +3061,8 @@ function advanceCore(g) {
 }
 export function advance(g, prior = null) {
   if (g.event) return false;
-  const before = prior || { ...g.resources },
+  const wholeBefore = prior?.people ? prior : snapshot(g);
+  const before = prior?.resources || prior || { ...g.resources },
     archiveStart = g.archive.length;
   const ok = advanceCore(g);
   if (ok) {
@@ -2865,6 +3074,8 @@ export function advance(g, prior = null) {
     tickObligations(g);
     tickTraining(g);
     tickInstitutions(g);
+    tickPromises(g);
+    tickAmbitions(g);
     for (const e of dueConsequences(g)) queueUnique(g, e);
     if (g.ruler.alive) {
       const emerging = generateEmergentEvent(g);
@@ -2876,12 +3087,14 @@ export function advance(g, prior = null) {
       g,
       before,
       g.archive.slice(archiveStart).map((e) => e.id),
+      wholeBefore,
     );
     const record = appendRecord(g, {
       kind: 'season',
       type: 'season',
       text: 'The realm enters ' + seasons[g.season] + ', Year ' + g.year + '.',
       effects: report.changes,
+      transitions: report.transitions.filter((t) => t.scope === 'realm'),
     });
     report.entry = record.id;
   }

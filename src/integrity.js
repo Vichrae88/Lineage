@@ -1,4 +1,5 @@
-import { idValid } from './sim-core.js?v=0.5.0';
+import { transitionsValid } from './transitions.js?v=0.5.1';
+import { idValid } from './sim-core.js?v=0.5.1';
 const unique = (rows, key = 'id') =>
   new Set(rows.map((row) => row[key])).size === rows.length;
 const objects = (value) =>
@@ -6,6 +7,13 @@ const objects = (value) =>
 const numeric = (value) =>
   objects(value) && Object.values(value).every(Number.isFinite);
 export function worldReferencesValid(g) {
+  if (
+    g.archive.some(
+      (e) => e.transitions && !transitionsValid(e.transitions, g),
+    ) ||
+    g.reports.some((r) => r.transitions && !transitionsValid(r.transitions, g))
+  )
+    return false;
   const people = g.people,
     records = new Set(g.archive.map((e) => e.id)),
     institutions = new Set(g.institutions.map((i) => i.id)),
@@ -110,6 +118,9 @@ export function worldReferencesValid(g) {
     )
       return false;
   const templates = [
+    'commercial-concern',
+    'commercial-legacy',
+    'royal-legacy',
     'shortage',
     'institution',
     'family-memory',
@@ -142,6 +153,10 @@ export function worldReferencesValid(g) {
           (!Array.isArray(e.relation) ||
             e.relation.length !== 2 ||
             !g.relationships[e.relation.slice().sort().join('|')])) ||
+        (['commercial-concern', 'commercial-legacy'].includes(e.template) &&
+          !g.ventures.some((v) => v.id === e.venture)) ||
+        (e.template === 'royal-legacy' &&
+          !g.ambitions.some((a) => a.id === e.ambition)) ||
         (e.template === 'frontier' && !factions.has(e.faction)))
     )
       return false;
@@ -180,6 +195,8 @@ export function worldReferencesValid(g) {
     ['arc', 'arc-', g.consequences],
     ['arc', 'training-', g.trainingJobs],
     ['arc', 'debt-', g.obligations],
+    ['arc', 'promise-', g.promises || []],
+    ['arc', 'ambition-', g.ambitions || []],
   ]) {
     const max = Math.max(
       -1,

@@ -1,4 +1,9 @@
 import {
+  personMetrics,
+  factionMetrics,
+  transitionsBetween,
+} from './transitions.js?v=0.5.1';
+import {
   dateOf,
   delta,
   personList,
@@ -6,7 +11,7 @@ import {
   idValid,
   bound,
   rememberPerson,
-} from './sim-core.js?v=0.5.0';
+} from './sim-core.js?v=0.5.1';
 export function initHistory(g) {
   g.serial ||= {
     record: 0,
@@ -81,19 +86,30 @@ export function snapshot(g) {
       personList(g).map((p) => [
         p.id,
         {
-          wealth: p.wealth || 0,
-          health: p.health,
-          trust: p.trust,
-          loyalty: p.loyalty,
-          respect: p.respect,
+          ...Object.fromEntries(personMetrics.map((k) => [k, p[k] || 0])),
           skills: { ...p.skills },
         },
       ]),
     ),
+    relationships: structuredClone(g.relationships),
+    families: Object.fromEntries(
+      g.families.map((f) => [
+        f.id,
+        {
+          power: f.power,
+          cohesion: f.cohesion,
+          fortune: f.fortune,
+          standing: f.standing,
+        },
+      ]),
+    ),
+    settlements: Object.fromEntries(
+      Object.values(g.settlements).map((s) => [s.id, { ...s }]),
+    ),
     factions: Object.fromEntries(
       g.factions.map((f) => [
         f.id,
-        { trust: f.trust, grievance: f.grievance, trade: f.trade },
+        Object.fromEntries(factionMetrics.map((k) => [k, f[k]])),
       ]),
     ),
   };
@@ -113,7 +129,7 @@ export function decisionRecord(g, meta, before, text) {
     ))
       changes.push({ person: p.id, field: skill, change });
   }
-  const { existing: existingId, ...details } = meta;
+  const { existing: existingId, expected, ...details } = meta;
   const data = {
     kind: meta.kind || 'decision',
     ...details,
@@ -231,6 +247,10 @@ export function decisionRecord(g, meta, before, text) {
   }
   for (const p of changes.filter((c) => c.person))
     if (!e.people.includes(p.person)) e.people.push(p.person);
+  if (before) {
+    e.transitions = transitionsBetween(before, g, meta.expected);
+    g.lastOutcome.transitions = e.transitions;
+  }
   return e;
 }
 export function schedule(g, kind, source, delay, details = {}) {

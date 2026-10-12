@@ -1,6 +1,18 @@
-import { serializeGame } from './persistence.js?v=0.5.0';
-import { familyTreeView, reignsView, claimView } from './dynasty-ui.js?v=0.5.0';
-import { commissionCapacity, courtCapacity } from './dynasty.js?v=0.5.0';
+import {
+  ambitionView,
+  achievementView,
+  placePainting,
+  developmentScene,
+  factionCrest,
+  historicLandmarks,
+  mapWorks,
+} from './world-flavor-ui.js?v=0.5.1';
+import { isBusy } from './characters.js?v=0.5.1';
+import { treasuryView, commercialAdvice } from './treasury-ui.js?v=0.5.1';
+import { promisesView } from './narrative-ui.js?v=0.5.1';
+import { serializeGame } from './persistence.js?v=0.5.1';
+import { familyTreeView, reignsView, claimView } from './dynasty-ui.js?v=0.5.1';
+import { commissionCapacity, courtCapacity } from './dynasty.js?v=0.5.1';
 import {
   createGame,
   seasons,
@@ -26,8 +38,8 @@ import {
   household,
   prepareAudience,
   advance,
-} from './game.js?v=0.5.0';
-import { dispositions, presentations } from './campaign.js?v=0.5.0';
+} from './game.js?v=0.5.1';
+import { dispositions, presentations } from './campaign.js?v=0.5.1';
 import {
   projectionView,
   outcomeView,
@@ -35,13 +47,13 @@ import {
   archiveView,
   entryView,
   localDevelopmentView,
-} from './reports-ui.js?v=0.5.0';
+} from './reports-ui.js?v=0.5.1';
 import {
   characterDevelopmentView,
   forecastView,
-} from './characters-ui.js?v=0.5.0';
-import { portraitMarkup } from './portraits.js?v=0.5.0';
-import { realmDemographics } from './demographics.js?v=0.5.0';
+} from './characters-ui.js?v=0.5.1';
+import { portraitMarkup } from './portraits.js?v=0.5.1';
+import { realmDemographics } from './demographics.js?v=0.5.1';
 let sites, factionLore, expeditions, relics, projects;
 let returnModal = null;
 let modalStack = [];
@@ -98,7 +110,8 @@ const portraitIds = [
   'ivo',
 ];
 const portrait = (c, cls = '') => {
-  if (c.portraitRecipe) return portraitMarkup(c, cls);
+  if (c.portraitRecipe)
+    return portraitMarkup(c, cls, g.portraitPresentation || null);
   if (c.artset === 'campaign' && /^generated-\d+$/.test(c.portrait || '')) {
     const i = Number(c.portrait.split('-')[1]);
     const row = Math.floor(i / 4),
@@ -126,7 +139,7 @@ const contextArt = (kind = 'hall', label = '') =>
 const narrate = (label, value, kind = 'trust') =>
   `<span class="narrative-stat" title="${esc(label)}: ${Math.round(value)} of 100"><small>${esc(label)}</small><strong>${qualitative(value, kind)}</strong></span>`;
 function header() {
-  return `<header class="masthead"><div class="brand"><span class="sigil" aria-hidden="true">♜</span><div><h1>LINEAGE</h1><span>${isPreview ? 'Living world · Test version' : 'A realm to inherit. A story to leave.'}</span></div></div><details class="save-menu"><summary>Chronicle <span aria-hidden="true">⌄</span></summary><div class="save-options">${g ? btn('Save in this browser', 'save') : ''}${btn('Load saved game', 'load')}${g ? btn('Export a backup', 'export') + btn('Read the chronicle', 'chronicle') + btn('The ruler’s guide', 'guide') + btn('Start a new campaign', 'new') : ''}<label class="button file-button" tabindex="0">Import a chronicle<input id="import" type="file" accept="application/json,.json" hidden></label>${previousAvailable() ? btn('Restore previous campaign', 'previous') : ''}<small>${g ? 'Decisions save automatically.' : 'Continue a previous reign.'}</small></div></details></header>`;
+  return `<header class="masthead"><div class="brand"><span class="sigil" aria-hidden="true">♜</span><div><h1>LINEAGE</h1><span>${isPreview ? 'Living world · Test version' : 'A realm to inherit. A story to leave.'}</span></div></div><details class="save-menu"><summary>Chronicle <span aria-hidden="true">⌄</span></summary><div class="save-options">${g ? btn('Save in this browser', 'save') : ''}${btn('Load saved game', 'load')}${g ? btn('Export a backup', 'export') + btn('Read the chronicle', 'chronicle') + btn('Promises & obligations', 'promises') + btn('The ruler’s guide', 'guide') + btn('Start a new campaign', 'new') : ''}<label class="button file-button" tabindex="0">Import a chronicle<input id="import" type="file" accept="application/json,.json" hidden></label>${previousAvailable() ? btn('Restore previous campaign', 'previous') : ''}<small>${g ? 'Decisions save automatically.' : 'Continue a previous reign.'}</small></div></details></header>`;
 }
 const questions = [
   [
@@ -272,7 +285,7 @@ function map() {
     [300, 176],
     [278, 148],
   ];
-  return `<svg class="realm-map" viewBox="0 0 390 350" role="group" aria-label="Map of the realm; select a place to read its story"><defs><linearGradient id="terrain" x2=".8" y2="1"><stop stop-color="#50604a"/><stop offset=".5" stop-color="#304b3b"/><stop offset="1" stop-color="#253c31"/></linearGradient><pattern id="map-grain" width="13" height="13" patternUnits="userSpaceOnUse"><path d="M2 4h3M8 10h2" stroke="#b7bc8940" stroke-width=".6"/></pattern><radialGradient id="highland"><stop stop-color="#9b9971" stop-opacity=".5"/><stop offset="1" stop-color="#273d31" stop-opacity="0"/></radialGradient></defs><path class="land" d="M34 153Q29 121 50 89L68 58Q112 28 153 37L207 49Q248 28 288 48L323 83Q350 112 340 153L351 212Q346 240 314 261L282 281Q244 307 204 303L160 287Q112 303 78 284L57 248Q29 217 34 153Z" style="fill:url(#terrain)"/><path d="M34 153Q29 121 50 89L68 58Q112 28 153 37L207 49Q248 28 288 48L323 83Q350 112 340 153L351 212Q346 240 314 261L282 281Q244 307 204 303L160 287Q112 303 78 284L57 248Q29 217 34 153Z" fill="url(#map-grain)"/><ellipse cx="103" cy="77" rx="94" ry="58" fill="url(#highland)"/><g class="map-relief" aria-hidden="true">${mountains.map(([x, y, h]) => `<path d="M${x - 18} ${y + h}l18 -${h} 22 ${h}z" fill="#596450" stroke="#9da184" stroke-width=".7"/><path d="M${x} ${y}l-4 ${h / 2} 8 -3z" fill="#b7bba0" opacity=".6"/>`).join('')}${trees.map(([x, y]) => `<path d="M${x} ${y + 12}v8" stroke="#889079" stroke-width="1"/><path d="M${x - 7} ${y + 13}l7 -16 7 16z" fill="#263e2b" stroke="#738c65" stroke-width=".7"/>`).join('')}</g><path class="river" d="M187 55C158 87 140 105 152 140S207 191 200 225 224 261 215 295"/><path d="M186 56C158 87 140 105 152 140S207 191 200 225 224 261 215 295" fill="none" stroke="#a9c5ba" stroke-width="1" opacity=".5"/><path class="road" d="${roads}"/><g class="map-decoration" aria-hidden="true"><text x="86" y="174" font-size="9" letter-spacing="2">${esc(g.world?.river || 'Alder River').toUpperCase()}</text><path d="M343 303v28M330 316h26M343 303l-4 8h8z"/><text x="343" y="296" text-anchor="middle">N</text></g>${sites.map((site) => `<g class="map-node ${g.selected === site.id ? 'active' : ''}" tabindex="0" role="button" aria-label="Read about ${esc(site.name)}" data-location="${site.id}"><rect x="${site.x - 30}" y="${site.y - 18}" width="60" height="44" fill="transparent"/><circle cx="${site.x}" cy="${site.y}" r="${site.id === 'capital' ? 9 : 4}"/>${site.id === 'capital' ? `<path d="M${site.x - 4} ${site.y + 4}v-7h2v2h4v-2h2v7z" fill="#66542e" aria-hidden="true"/>` : ''}<text x="${site.x}" y="${site.y + 19}" text-anchor="middle">${esc(site.name)}</text></g>`).join('')}</svg>`;
+  return `<svg class="realm-map" viewBox="0 0 390 350" role="group" aria-label="Map of the realm; select a place to read its story"><defs><linearGradient id="terrain" x2=".8" y2="1"><stop stop-color="#50604a"/><stop offset=".5" stop-color="#304b3b"/><stop offset="1" stop-color="#253c31"/></linearGradient><pattern id="map-grain" width="13" height="13" patternUnits="userSpaceOnUse"><path d="M2 4h3M8 10h2" stroke="#b7bc8940" stroke-width=".6"/></pattern><radialGradient id="highland"><stop stop-color="#9b9971" stop-opacity=".5"/><stop offset="1" stop-color="#273d31" stop-opacity="0"/></radialGradient></defs><path class="land" d="M34 153Q29 121 50 89L68 58Q112 28 153 37L207 49Q248 28 288 48L323 83Q350 112 340 153L351 212Q346 240 314 261L282 281Q244 307 204 303L160 287Q112 303 78 284L57 248Q29 217 34 153Z" style="fill:url(#terrain)"/><path d="M34 153Q29 121 50 89L68 58Q112 28 153 37L207 49Q248 28 288 48L323 83Q350 112 340 153L351 212Q346 240 314 261L282 281Q244 307 204 303L160 287Q112 303 78 284L57 248Q29 217 34 153Z" fill="url(#map-grain)"/><ellipse cx="103" cy="77" rx="94" ry="58" fill="url(#highland)"/><g class="map-relief" aria-hidden="true">${mountains.map(([x, y, h]) => `<path d="M${x - 18} ${y + h}l18 -${h} 22 ${h}z" fill="#596450" stroke="#9da184" stroke-width=".7"/><path d="M${x} ${y}l-4 ${h / 2} 8 -3z" fill="#b7bba0" opacity=".6"/>`).join('')}${trees.map(([x, y]) => `<path d="M${x} ${y + 12}v8" stroke="#889079" stroke-width="1"/><path d="M${x - 7} ${y + 13}l7 -16 7 16z" fill="#263e2b" stroke="#738c65" stroke-width=".7"/>`).join('')}</g><path class="river" d="M187 55C158 87 140 105 152 140S207 191 200 225 224 261 215 295"/><path d="M186 56C158 87 140 105 152 140S207 191 200 225 224 261 215 295" fill="none" stroke="#a9c5ba" stroke-width="1" opacity=".5"/><path class="road" d="${roads}"/><g class="map-decoration" aria-hidden="true"><text x="86" y="174" font-size="9" letter-spacing="2">${esc(g.world?.river || 'Alder River').toUpperCase()}</text><path d="M343 303v28M330 316h26M343 303l-4 8h8z"/><text x="343" y="296" text-anchor="middle">N</text></g>${sites.map((site) => `<g class="map-node ${g.selected === site.id ? 'active' : ''}" tabindex="0" role="button" aria-label="Read about ${esc(site.name)}" data-location="${site.id}"><rect x="${site.x - 30}" y="${site.y - 18}" width="60" height="44" fill="transparent"/><circle cx="${site.x}" cy="${site.y}" r="${site.id === 'capital' ? 9 : 4}"/>${site.id === 'capital' ? `<path d="M${site.x - 4} ${site.y + 4}v-7h2v2h4v-2h2v7z" fill="#66542e" aria-hidden="true"/>` : ''}${mapWorks(g, site.id, site.x, site.y)}<text x="${site.x}" y="${site.y + 19}" text-anchor="middle">${esc(site.name)}</text></g>`).join('')}</svg>`;
 }
 function sidebar() {
   const site = sites.find((s) => s.id === g.selected) || sites[0];
@@ -289,7 +302,7 @@ function sidebar() {
     )}</div></div><div class="sidebar-section"><span class="eyebrow">THIS SEASON</span>${g.queue.length ? g.queue.map((q) => `<p class="charge"><strong>${esc(projects.find((p) => p.id === q.id)?.name)}</strong><span>${esc(g.court.find((c) => c.id === q.who)?.name)} · entrusted</span></p>`).join('') : '<p class="quiet">Your court awaits instructions.</p>'}${g.missions.map((m) => `<p class="charge"><strong>${esc(g.parties.find((p) => p.id === m.party)?.name)}</strong><span>Expected in ${Math.max(0, m.returns - g.turn)} season(s)</span></p>`).join('')}</div><div class="sidebar-section"><span class="eyebrow">WORD FROM THE VILLAGES</span><p>${resourceStory(g, 'happiness')}.</p>${btn('Read the latest chronicle →', 'chronicle', 'class="text-button"')}</div></section></aside>`;
 }
 function commissionCards() {
-  return `<div class="commission-grid">${projects.map((p, i) => `<button class="commission" data-action="decision" data-type="project" data-id="${p.id}" ${g.event || g.queue.length >= 3 ? 'disabled' : ''}><span class="commission-icon" aria-hidden="true">${['⌁', '♧', '♜', '⚑', '✧', '◈', '⚙', '✎', '⚑'][i] || '❧'}</span><span class="commission-copy"><small>${{ stewardship: 'Works & welfare', martial: 'Duty & defense', diplomacy: 'Neighbors & belonging', intrigue: 'Secrets & justice' }[p.skill]}</small><strong>${esc(p.name)}</strong><span>${esc(p.desc)}</span></span><span class="commission-arrow" aria-hidden="true">→</span></button>`).join('')}</div>`;
+  return `<div class="commission-grid">${projects.map((p, i) => `<button class="commission" data-action="decision" data-type="project" data-id="${p.id}" ${g.event || g.queue.length >= commissionCapacity(g) ? 'disabled' : ''}><span class="commission-icon" aria-hidden="true">${['⌁', '♧', '♜', '⚑', '✧', '◈', '⚙', '✎', '⚑'][i] || '❧'}</span><span class="commission-copy"><small>${{ stewardship: 'Works & welfare', martial: 'Duty & defense', diplomacy: 'Neighbors & belonging', intrigue: 'Secrets & justice' }[p.skill]}</small><strong>${esc(p.name)}</strong><span>${esc(p.desc)}</span></span><span class="commission-arrow" aria-hidden="true">→</span></button>`).join('')}</div>`;
 }
 function council() {
   const speaker = g.event && findPerson(g, g.event.speaker);
@@ -310,7 +323,7 @@ function memberCard(c) {
   return `<button class="member-card ${gone ? 'departed' : ''}" data-action="person" data-id="${c.id}" title="${esc(c.story)}"><span class="portrait-frame">${portrait(c)}</span><span class="member-copy"><small>${c.alive ? (c.status === 'departed' ? 'Former retainer' : c.status === 'ruler' ? 'Now sovereign' : c.role) : 'Remembered in service'}</small><strong>${esc(c.name)}</strong><span>${esc(raceName(c))} · ${esc(c.house || 'Independent')}</span><em>${esc((c.traits || []).join(' · '))}</em><span class="quiet">${qualitative(c.loyalty, 'loyalty')} in service · ${qualitative(c.affection, 'affection')} toward you</span><span class="read-profile">Open their story →</span></span></button>`;
 }
 function court() {
-  return `<div class="sheet-heading"><span class="eyebrow">THE PEOPLE BEHIND THE SEAL</span><h2>A court is a gathering of stories</h2><p class="lead">Talent matters. So do the promises they remember, the people they love, and the office you ask them to carry.</p></div><div class="member-grid">${g.court.map(memberCard).join('')}</div><section class="section-inset"><div class="section-title"><div><span class="eyebrow">PETITIONERS FOR SERVICE</span><h2>Who deserves a place?</h2></div><span>${activeCourt(g).length} of ${courtCapacity(g)} seats filled</span></div><div class="candidate-list">${
+  return `<div class="sheet-heading"><span class="eyebrow">THE PEOPLE BEHIND THE SEAL</span><h2>A court is a gathering of stories</h2><label class="portrait-style-label">How the court is pictured<select id="portrait-presentation">${['natural', 'formal', 'chronicle'].map((p) => '<option value="' + p + '" ' + (g.portraitPresentation === p ? 'selected' : '') + '>' + { natural: 'Naturalistic portraits', formal: 'Formal court paintings', chronicle: 'Illustrated chronicle' }[p] + '</option>').join('')}</select></label><p class="lead">Talent matters. So do the promises they remember, the people they love, and the office you ask them to carry.</p></div><div class="member-grid">${g.court.map(memberCard).join('')}</div><section class="section-inset"><div class="section-title"><div><span class="eyebrow">PETITIONERS FOR SERVICE</span><h2>Who deserves a place?</h2></div><span>${activeCourt(g).length} of ${courtCapacity(g)} seats filled</span></div><div class="candidate-list">${
     g.applicants
       .filter((c) => c.alive && !g.court.some((p) => p.id === c.id))
       .map(
@@ -332,7 +345,7 @@ function court() {
     .join('')}</section>`;
 }
 function realm() {
-  return `<div class="sheet-heading"><span class="eyebrow">A REALM BEYOND ITS LEDGERS</span><h2>Hearths, houses & distant banners</h2><p class="lead">Every border encloses a history. Every treaty touches people who remember the last one.</p></div><div class="realm-sections"><h3>The condition of your realm</h3><div class="condition-grid">${['infrastructure', 'trade', 'military', 'health', 'learning', 'ecology', 'justice', 'faith'].map((k) => `<button class="condition-card" data-action="resource" data-id="${k}" title="${esc(resourceStory(g, k))}"><small>${k}</small><span>${resourceStory(g, k)}</span><em>Read the report →</em></button>`).join('')}</div><h3>Prominent families</h3><div class="family-grid">${g.families.map((h) => `<button class="family-card" data-action="family" data-id="${h.id}"><span class="heraldry" aria-hidden="true">${h.crest === 'sun' ? '☼' : h.crest === 'leaf' ? '❧' : '♜'}</span><small>${esc(h.motto)}</small><strong>${esc(h.name)}</strong><span>${esc(h.estate)}</span><em>Enter the family archive →</em></button>`).join('')}</div><h3>Factions & neighboring realms</h3><div class="faction-grid">${g.factions.map((f) => `<button class="faction-card" data-action="faction" data-id="${f.id}" title="${esc(factionLore[f.id].goal)}"><small>${esc(f.kind)}${f.alliance ? ' · Sworn ally' : ''}</small><strong>${esc(f.name)}</strong><span>${qualitative(f.trust)} toward your throne</span><p>${factionLore[f.id].goal}</p><em>Read their history & intentions →</em></button>`).join('')}</div><h3>Places worth knowing</h3><div class="site-grid">${sites.map((s) => `<button class="site-card" data-action="site" data-id="${s.id}">${landscape(s.scene, s.name)}<span><small>${esc(s.kind)}</small><strong>${esc(s.name)}</strong><em>${esc(s.rumor)}</em></span></button>`).join('')}</div></div>`;
+  return `<div class="sheet-heading"><span class="eyebrow">A REALM BEYOND ITS LEDGERS</span><h2>Hearths, houses & distant banners</h2><p class="lead">Every border encloses a history. Every treaty touches people who remember the last one.</p></div><div class="realm-sections"><h3>The condition of your realm</h3><div class="condition-grid">${['infrastructure', 'trade', 'military', 'health', 'learning', 'ecology', 'justice', 'faith'].map((k) => `<button class="condition-card" data-action="resource" data-id="${k}" title="${esc(resourceStory(g, k))}"><small>${k}</small><span>${resourceStory(g, k)}</span><em>Read the report →</em></button>`).join('')}</div><h3>Prominent families</h3><div class="family-grid">${g.families.map((h) => `<button class="family-card" data-action="family" data-id="${h.id}"><span class="heraldry" aria-hidden="true">${h.crest === 'sun' ? '☼' : h.crest === 'leaf' ? '❧' : '♜'}</span><small>${esc(h.motto)}</small><strong>${esc(h.name)}</strong><span>${esc(h.estate)}</span><em>Enter the family archive →</em></button>`).join('')}</div><h3>Factions & neighboring realms</h3><div class="faction-grid">${g.factions.map((f) => `<button class="faction-card" data-action="faction" data-id="${f.id}" title="${esc(factionLore[f.id].goal)}">${factionCrest(g, f)}<small>${esc(f.kind)}${f.alliance ? ' · Sworn ally' : ''}</small><strong>${esc(f.name)}</strong><span>${qualitative(f.trust)} toward your throne</span><p>${factionLore[f.id].goal}</p><em>Read their history & intentions →</em></button>`).join('')}</div><h3>Places worth knowing</h3><div class="site-grid">${sites.map((s) => `<button class="site-card" data-action="site" data-id="${s.id}">${placePainting(g, s)}<span><small>${esc(s.kind)}</small><strong>${esc(s.name)}</strong><em>${esc(s.rumor)}</em></span></button>`).join('')}</div></div>`;
 }
 function adventures() {
   return `<div class="hero">${landscape('ruins', 'An ancient sanctuary above a misty valley')}<div class="hero-caption"><span class="eyebrow">BEYOND THE SAFE ROAD</span><h2>Some doors need a different key</h2></div></div><div class="council-copy"><p class="lead dropcap">Your watch protects the living roads. For buried temples, restless ruins, and dangers without a banner, hire those who know how to return with a story.</p><h3>Companies seeking a patron</h3>${g.parties.map((p) => `<button class="party-card" data-action="party" data-id="${p.id}">${portrait(findPerson(g, p.leaderId) || { name: p.leader, portrait: p.portrait, artset: p.artset })}<span><small>${p.status === 'away' ? 'On an expedition' : p.wounds ? 'Recovering from wounds' : 'Available for a contract'}</small><strong>${esc(p.name)}</strong><span>${esc(p.members)}</span><em>${esc(p.story)}</em></span></button>`).join('')}<h3>Rumors worth following</h3><div class="quest-grid">${expeditions.map((t) => `<article class="quest">${landscape(sites.find((s) => s.id === t.site).scene, sites.find((s) => s.id === t.site).name)}<div><small>${g.completed.includes(t.id) ? (g.expeditionOutcomes[t.id] === 'failure' ? 'An expedition remembered · chapter closed' : 'A discovery remembered · chapter closed') : g.missions.some((m) => m.task === t.id) ? 'A company is seeking an answer' : 'An unresolved rumor'}</small><h3>${t.name}</h3><p>${t.story}</p>${btn('Consider a contract →', 'decision', `data-type="expedition" data-id="${t.id}" class="text-button" ${g.completed.includes(t.id) || g.missions.some((m) => m.task === t.id) ? 'disabled' : ''}`)}</div></article>`).join('')}</div><h3>The realm’s reliquary</h3>${g.treasures.length ? g.treasures.map((t) => `<article class="relic"><span aria-hidden="true">✧</span><div><h4>${relics[t.id].name}</h4><p>${relics[t.id].story}</p><em>${relics[t.id].effect}</em></div></article>`).join('') : '<p class="quiet">No relic yet rests in the hall. What you recover may become a gift, a bargain, or a responsibility.</p>'}</div>`;
@@ -346,7 +359,7 @@ function lineage() {
   ];
   const spouse = findPerson(g, g.spouse),
     heir = household(g).find((c) => c.id === g.heir);
-  return `<div class="sheet-heading"><span class="eyebrow">THE CROWN OUTLIVES ITS WEARER</span><h2>The story that follows yours</h2><p class="lead">Inheritance is a name in a testament, a promise in a family, and a question the realm must answer together.</p></div><div class="household-record">${portrait(g.ruler)}<div><h3>${esc(g.ruler.name)}, ${esc(raceName(g.ruler))}</h3><p>${esc(g.ruler.gender || 'Nonbinary')} · ${esc(g.ruler.disposition || 'Patient')} · In the ${g.ruler.age}th year of life · ${qualitative(g.ruler.health, 'health')} · Reign ${g.dynasty}</p><p>${esc(g.ruler.values)} guides your rule. Your ascension was ${esc(g.ruler.history).toLowerCase()}.</p><p>${spouse ? `Married to ${esc(spouse.name)}${spouse.alive ? '' : ', whose memory remains in the household'}.` : 'No marriage binds your household yet.'}</p><p>${heir ? `${esc(heir.name)} is named to follow you.` : 'The testament names no successor. The court will choose if your reign ends.'}</p></div></div>${familyTreeView(g)}${reignsView(g)}${royalKin()}<section class="section-inset"><h3>The sealed testament</h3><p>Any living adult member of the household may be named. A public declaration earns recognition, but offended families and weak legitimacy can still challenge it.</p><label class="select-label">The person whose name you wish to record<select id="heir-selection"><option value="">Select a successor</option>${adults.map((c) => `<option value="${c.id}" ${g.heir === c.id ? 'selected' : ''}>${esc(c.name)} · age ${c.age}</option>`).join('')}</select></label>${btn('Consider the succession', 'heir', 'class="primary"')}</section><section class="section-inset"><h3>Companionship & courtship</h3><p>Private time can become affection. Affection and trust can become a marriage. A close relationship is needed before a proposal is welcome.</p><div class="suitor-grid">${activeCourt(
+  return `<div class="sheet-heading"><span class="eyebrow">THE CROWN OUTLIVES ITS WEARER</span><h2>The story that follows yours</h2><p class="lead">Inheritance is a name in a testament, a promise in a family, and a question the realm must answer together.</p></div><div class="household-record">${portrait(g.ruler)}<div><h3>${esc(g.ruler.name)}, ${esc(raceName(g.ruler))}</h3><p>${esc(g.ruler.gender || 'Nonbinary')} · ${esc(g.ruler.disposition || 'Patient')} · In the ${g.ruler.age}th year of life · ${qualitative(g.ruler.health, 'health')} · Reign ${g.dynasty}</p><p>${esc(g.ruler.values)} guides your rule. Your ascension was ${esc(g.ruler.history).toLowerCase()}.</p><p>${spouse ? `Married to ${esc(spouse.name)}${spouse.alive ? '' : ', whose memory remains in the household'}.` : 'No marriage binds your household yet.'}</p><p>${heir ? `${esc(heir.name)} is named to follow you.` : 'The testament names no successor. The court will choose if your reign ends.'}</p></div></div>${ambitionView(g)}${familyTreeView(g)}${reignsView(g)}${royalKin()}<section class="section-inset"><h3>The sealed testament</h3><p>Any living adult member of the household may be named. A public declaration earns recognition, but offended families and weak legitimacy can still challenge it.</p><label class="select-label">The person whose name you wish to record<select id="heir-selection"><option value="">Select a successor</option>${adults.map((c) => `<option value="${c.id}" ${g.heir === c.id ? 'selected' : ''}>${esc(c.name)} · age ${c.age}</option>`).join('')}</select></label>${btn('Consider the succession', 'heir', 'class="primary"')}</section><section class="section-inset"><h3>Companionship & courtship</h3><p>Private time can become affection. Affection and trust can become a marriage. A close relationship is needed before a proposal is welcome.</p><div class="suitor-grid">${activeCourt(
     g,
   )
     .filter((c) => c.id !== g.spouse)
@@ -365,6 +378,7 @@ function dashboard() {
   return `${header()}<div class="realm-heading"><div class="reign-title"><button class="ruler-portrait" data-action="person" data-id="${g.ruler.id}" aria-label="Read your ruler’s profile">${portrait(g.ruler)}</button><div><span class="eyebrow">${esc(g.title.toUpperCase())} OF ${esc(g.name).toUpperCase()}</span><h2>${esc(g.name)}</h2><p>The reign of ${esc(g.ruler.name)}</p></div></div><div class="season"><span><small>${seasons[g.season]}</small><strong>Year ${g.year}</strong></span>${btn('Let the season turn →', 'advance', `class="primary" ${g.event ? 'disabled' : ''}`)}</div></div><div class="resource-ribbon">${['gold', 'food', 'population'].map((k) => `<button data-action="resource" data-id="${k}" title="${esc(resourceStory(g, k))}"><span class="resource-symbol" aria-hidden="true">${{ gold: '◈', food: '♧', population: '♙' }[k]}</span><span><small>${{ gold: 'Treasury', food: 'Stores', population: 'People' }[k]}</small><strong>${k === 'gold' ? g.resources.gold.toLocaleString() + ' gold' : k === 'population' ? g.resources.population.toLocaleString() + ' souls' : g.resources.food < 20 ? 'Running thin' : g.resources.food < 60 ? 'Carefully kept' : 'Well provisioned'}</strong></span></button>`).join('')}<button class="realm-mood" data-action="resource" data-id="happiness"><span><small>The common mood</small><strong>${qualitative(g.resources.happiness, 'happiness')}</strong></span><span aria-hidden="true">→</span></button></div>${message ? `<div class="notice" role="status">${esc(message)}</div>` : ''}<main class="dashboard"><section class="manuscript main-sheet"><nav aria-label="Chapters of your reign">${[
     ['council', 'Council'],
     ['court', 'Court'],
+    ['treasury', 'Treasury'],
     ['realm', 'Realm'],
     ['adventures', 'Adventures'],
     ['lineage', 'Lineage'],
@@ -375,7 +389,7 @@ function dashboard() {
     )
     .join(
       '',
-    )}</nav>${{ council, court, realm, adventures, lineage }[tab]()}</section>${sidebar()}</main><footer>LINEAGE <span>·</span> THE CROWN PASSES. THE STORY REMAINS.</footer>`;
+    )}</nav>${{ council, court, realm, adventures, lineage, treasury: () => treasuryView(g) }[tab]()}</section>${sidebar()}</main><footer>LINEAGE <span>·</span> THE CROWN PASSES. THE STORY REMAINS.</footer>`;
 }
 const modalActions = (c) =>
   c.alive && c.status === 'serving'
@@ -393,13 +407,13 @@ function personProfile(c, isCandidate = false) {
   const bonds = Object.values(g.relationships).filter(
     (b) => b.a === c.id || b.b === c.id,
   );
-  return `<div class="profile-head">${portrait(c, 'large')}<div><span class="eyebrow">${isCandidate ? 'A PETITIONER FOR SERVICE' : c.status === 'departed' ? 'A FORMER MEMBER OF YOUR COURT' : 'THE COURT ARCHIVE'}</span><h2 id="dialog-title">${esc(c.name)}</h2><p>${esc(raceName(c))} · ${esc(c.gender || 'Nonbinary')} · ${c.age} years · ${esc(c.house || 'Independent')}${c.role ? ' · ' + esc(c.role) : ''}</p><p class="traits">${(c.traits || []).map((t) => `<span>${esc(t)}</span>`).join('')}</p><blockquote>${esc(c.voice || '“A life in service is still a life of one’s own.”')}</blockquote></div></div>${actions}<p class="lead dropcap">${esc(c.story)}</p><div class="profile-columns"><section><h3>The person beneath the office</h3><dl><dt>Disposition & appearance</dt><dd>${esc(c.disposition || c.traits?.[0] || 'Reserved')}. ${esc(c.appearance || 'A familiar presence at court.')}</dd><dt>Origins</dt><dd>${esc(c.origin || 'The settlements of your realm')}</dd><dt>What they hope for</dt><dd>${esc(c.desire)}</dd><dt>What they fear</dt><dd>${esc(c.fear || 'That their voice will go unheard.')}</dd><dt>Family & hearth</dt><dd>${esc(c.family || 'Their kin at home follow their fortunes with interest.')}</dd><dt>Faith & custom</dt><dd>${esc(c.faith || 'They keep the customs of their home hearth.')}</dd>${!isCandidate ? `<dt>In confidence</dt><dd>${c.trust >= 70 ? esc(c.secret || 'They have entrusted no further private matters to the record.') : 'There are parts of their story they do not yet trust you to hear.'}</dd>` : ''}</dl></section><section><h3>Their craft & convictions</h3>${Object.entries(
+  return `<div class="profile-head">${portrait(c, 'large')}<div><span class="eyebrow">${isCandidate ? 'A PETITIONER FOR SERVICE' : c.status === 'departed' ? 'A FORMER MEMBER OF YOUR COURT' : 'THE COURT ARCHIVE'}</span><h2 id="dialog-title">${esc(c.name)}</h2><p>${esc(raceName(c))} · ${esc(c.gender || 'Nonbinary')} · ${c.age} years · ${esc(c.house || 'Independent')}${c.role ? ' · ' + esc(c.role) : ''}</p><p class="traits">${(c.traits || []).map((t) => `<span>${esc(t)}</span>`).join('')}</p><blockquote>${esc(c.voice || '“A life in service is still a life of one’s own.”')}</blockquote></div></div>${actions}${achievementView(g, c)}<p class="lead dropcap">${esc(c.story)}</p><div class="profile-columns"><section><h3>The person beneath the office</h3><dl><dt>Disposition & appearance</dt><dd>${esc(c.disposition || c.traits?.[0] || 'Reserved')}. ${esc(c.appearance || 'A familiar presence at court.')}</dd><dt>Origins</dt><dd>${esc(c.origin || 'The settlements of your realm')}</dd><dt>What they hope for</dt><dd>${esc(c.desire)}</dd><dt>What they fear</dt><dd>${esc(c.fear || 'That their voice will go unheard.')}</dd><dt>Family & hearth</dt><dd>${esc(c.family || 'Their kin at home follow their fortunes with interest.')}</dd><dt>Faith & custom</dt><dd>${esc(c.faith || 'They keep the customs of their home hearth.')}</dd>${!isCandidate ? `<dt>In confidence</dt><dd>${c.trust >= 70 ? esc(c.secret || 'They have entrusted no further private matters to the record.') : 'There are parts of their story they do not yet trust you to hear.'}</dd>` : ''}</dl></section><section><h3>Their craft & convictions</h3>${Object.entries(
     c.skills || {},
   )
     .map(([k, n]) => narrate(k, n, 'skill'))
     .join(
       '',
-    )}${!isCandidate && !isRuler ? `<h4>How they stand with you</h4>${narrate('Trust', c.trust)}${narrate('Affection', c.affection, 'affection')}${narrate('Loyalty', c.loyalty, 'loyalty')}${narrate('Ambition', c.ambition, 'ambition')}${narrate('Unspoken grievances', c.grievance, 'grievance')}${narrate('Health', c.health, 'health')}<p>${c.status === 'serving' ? esc(roles[c.role]?.purpose || 'An available voice at your council.') : c.status === 'departed' ? 'They have left your household. Their allegiances and memories remain in the archive.' : c.status === 'ruler' ? 'They now bear the crown.' : 'Their service is preserved in the court archive.'}</p>` : ''}</section></div>${characterDevelopmentView(g, c)}${familyTreeView(g, c.id)}${claimView(g, c)}${
+    )}${!isCandidate && !isRuler ? `<h4>How they stand with you</h4>${narrate('Trust', c.trust)}${narrate('Affection', c.affection, 'affection')}${narrate('Loyalty', c.loyalty, 'loyalty')}${narrate('Ambition', c.ambition, 'ambition')}${narrate('Unspoken grievances', c.grievance, 'grievance')}${narrate('Health', c.health, 'health')}<p>${c.status === 'serving' ? esc(roles[c.role]?.purpose || 'An available voice at your council.') : c.status === 'departed' ? 'They have left your household. Their allegiances and memories remain in the archive.' : c.status === 'ruler' ? 'They now bear the crown.' : 'Their service is preserved in the court archive.'}</p>` : ''}</section></div>${characterDevelopmentView(g, c)}${c.portraitRecipe?.paintDescription ? '<p class="quiet">As painted: ' + esc(c.portraitRecipe.paintDescription) + '.</p>' : ''}${c.alive ? btn('Commission their portrait', 'decision', `data-type="portrait" data-id="${c.id}"`) : ''}${familyTreeView(g, c.id)}${claimView(g, c)}${
     bonds.length
       ? `<h3>People in their life</h3>${bonds
           .map((b) => {
@@ -412,7 +426,7 @@ function personProfile(c, isCandidate = false) {
 }
 function factionProfile(f) {
   const lore = factionLore[f.id];
-  return `<span class="eyebrow">${esc(f.kind.toUpperCase())}${f.alliance ? ' · A SWORN ALLY' : ''}</span><h2 id="dialog-title">${esc(f.name)}</h2><p class="lead dropcap">${esc(lore.story)}</p><blockquote>“${esc(lore.custom)}”</blockquote><div class="profile-columns"><section><h3>Their place in the world</h3><dl><dt>Who speaks for them</dt><dd>${lore.leaderId ? btn(esc(lore.leader), 'person', `data-id="${lore.leaderId}" class="text-button"`) : esc(lore.leader)}</dd><dt>What they want</dt><dd>${esc(lore.goal)}</dd><dt>Their strength</dt><dd>${esc(lore.strength)}</dd><dt>Their vulnerability</dt><dd>${esc(lore.weakness)}</dd><dt>Ties that matter</dt><dd>${esc(lore.ties)}</dd></dl></section><section><h3>How they see your throne</h3>${['trust', 'respect', 'affection', 'fear', 'trade', 'grievance'].map((k) => narrate(k, f[k], k)).join('')}<p>${f.grievance > 60 ? 'Their patience is thinning. Another slight could turn discontent into open opposition.' : f.trust > 65 ? 'They increasingly speak of the throne as a partner rather than a power to endure.' : 'Their support is conditional, shaped by promises kept and promises postponed.'}</p></section></div><h3>Relations beyond your throne</h3>${
+  return `${factionCrest(g, f)}<span class="eyebrow">${esc(f.kind.toUpperCase())}${f.alliance ? ' · A SWORN ALLY' : ''}</span><h2 id="dialog-title">${esc(f.name)}</h2><p class="lead dropcap">${esc(lore.story)}</p><blockquote>“${esc(lore.custom)}”</blockquote><div class="profile-columns"><section><h3>Their place in the world</h3><dl><dt>Who speaks for them</dt><dd>${lore.leaderId ? btn(esc(lore.leader), 'person', `data-id="${lore.leaderId}" class="text-button"`) : esc(lore.leader)}</dd><dt>What they want</dt><dd>${esc(lore.goal)}</dd><dt>Their strength</dt><dd>${esc(lore.strength)}</dd><dt>Their vulnerability</dt><dd>${esc(lore.weakness)}</dd><dt>Ties that matter</dt><dd>${esc(lore.ties)}</dd></dl></section><section><h3>How they see your throne</h3>${['trust', 'respect', 'affection', 'fear', 'trade', 'grievance'].map((k) => narrate(k, f[k], k)).join('')}<p>${f.grievance > 60 ? 'Their patience is thinning. Another slight could turn discontent into open opposition.' : f.trust > 65 ? 'They increasingly speak of the throne as a partner rather than a power to endure.' : 'Their support is conditional, shaped by promises kept and promises postponed.'}</p></section></div><h3>Relations beyond your throne</h3>${
     g.diplomaticBonds
       .filter((b) => b.a === f.id || b.b === f.id)
       .map(
@@ -469,7 +483,7 @@ function resourceProfile(key) {
 }
 function siteProfile(s) {
   const task = expeditions.find((t) => t.site === s.id);
-  return `${landscape(s.scene, s.name, 'dialog-landscape')}<span class="eyebrow">${esc(s.kind.toUpperCase())}</span><h2 id="dialog-title">${esc(s.name)}</h2><p class="lead dropcap">${esc(s.story)}</p><div class="profile-columns"><section><h3>Gifts & vulnerabilities</h3><p>${esc(s.strength)}</p><p>${esc(s.risk)}</p></section><section><h3>A story told at the hearth</h3><blockquote>${esc(s.rumor)}</blockquote></section></div>${localDevelopmentView(g, s.id)}${s.id !== 'capital' ? btn('Consider district administration', 'decision', `data-type="governor" data-id="${s.id}"`) : ''}${task ? `<div class="profile-actions">${btn('Consider an expedition →', 'decision', `data-type="expedition" data-id="${task.id}" class="primary"`)}</div>` : ''}`;
+  return `${placePainting(g, s, 'dialog-landscape')}<span class="eyebrow">${esc(s.kind.toUpperCase())}</span><h2 id="dialog-title">${esc(s.name)}</h2><p class="lead dropcap">${esc(s.story)}</p><div class="profile-columns"><section><h3>Gifts & vulnerabilities</h3><p>${esc(s.strength)}</p><p>${esc(s.risk)}</p></section><section><h3>A story told at the hearth</h3><blockquote>${esc(s.rumor)}</blockquote></section></div>${developmentScene(g, s.id)}${historicLandmarks(g, s.id)}${localDevelopmentView(g, s.id)}${s.id !== 'capital' ? btn('Consider district administration', 'decision', `data-type="governor" data-id="${s.id}"`) : ''}${task ? `<div class="profile-actions">${btn('Consider an expedition →', 'decision', `data-type="expedition" data-id="${task.id}" class="primary"`)}</div>` : ''}`;
 }
 function partyProfile(p) {
   const mission = g.missions.find((m) => m.party === p.id);
@@ -481,15 +495,7 @@ function decisionContent() {
   const agents = d.requiresMentor
     ? availableMentors(g, modal.id)
     : d.requiresAgent
-      ? activeCourt(g).filter(
-          (c) =>
-            !g.queue.some((q) => q.who === c.id) &&
-            !g.trainingJobs.some(
-              (j) =>
-                j.status === 'active' &&
-                (j.student === c.id || j.mentor === c.id),
-            ),
-        )
+      ? activeCourt(g).filter((c) => !isBusy(g, c.id))
       : d.requiresParty
         ? g.parties.filter((p) => p.status === 'available' && !p.wounds)
         : null;
@@ -507,7 +513,7 @@ function decisionContent() {
   if (d.requiresParty && selected) {
     advice = `${selected.name} are ${qualitative(selected.skill, 'skill').toLowerCase()} and ${selected.caution > 65 ? 'careful in their preparations' : 'willing to take difficult risks'}. Local trust can secure guides; haste makes success less certain.`;
   }
-  return `<span class="eyebrow">YOUR WORD BECOMES THEIR WORLD</span><h2 id="dialog-title">${esc(d.title)}</h2><p class="lead">${esc(d.text)}</p>${agents ? `<label class="select-label">${d.requiresAgent ? 'Whose hands will carry your decision?' : 'Which company will carry your contract?'}<select id="decision-agent">${agents.length ? agents.map((c) => `<option value="${c.id}" ${modal.agent === c.id ? 'selected' : ''}>${esc(c.name)}${c.role ? ' · ' + esc(c.role) : ''}</option>`).join('') : '<option value="">No one is available</option>'}</select></label><p class="counsel-note">${esc(advice || 'Wait for a commission to end, or invite another qualified person to serve.')}</p>` : ''}${d.type === 'project' && selected ? forecastView(g, selected, d.target) : ''}${d.blocked ? `<p class="blocked" role="status">${esc(d.blocked)}</p>` : ''}<div class="decision-options">${d.options.map((o) => choiceCard(o, 'enact', !!d.blocked || (agents && !agents.length))).join('')}</div><p class="ink-note">${d.requiresAgent ? 'The listed direction is a promise, not a guarantee. Capability, office, loyalty, and resistance affect the outcome.' : 'The court will remember the course you choose.'}</p>`;
+  return `<span class="eyebrow">YOUR WORD BECOMES THEIR WORLD</span><h2 id="dialog-title">${esc(d.title)}</h2><p class="lead">${esc(d.text)}</p>${agents ? `<label class="select-label">${d.requiresAgent ? 'Whose hands will carry your decision?' : 'Which company will carry your contract?'}<select id="decision-agent">${agents.length ? agents.map((c) => `<option value="${c.id}" ${modal.agent === c.id ? 'selected' : ''}>${esc(c.name)}${c.role ? ' · ' + esc(c.role) : ''}</option>`).join('') : '<option value="">No one is available</option>'}</select></label><p class="counsel-note">${esc(advice || 'Wait for a commission to end, or invite another qualified person to serve.')}</p>` : ''}${d.type === 'project' && selected ? forecastView(g, selected, d.target) : d.type === 'commercial' ? commercialAdvice(g, d, selected) : ''}${d.blocked ? `<p class="blocked" role="status">${esc(d.blocked)}</p>` : ''}<div class="decision-options">${d.options.map((o) => choiceCard(o, 'enact', !!d.blocked || (agents && !agents.length))).join('')}</div><p class="ink-note">${d.requiresAgent ? 'The listed direction is a promise, not a guarantee. Capability, office, loyalty, and resistance affect the outcome.' : 'The court will remember the course you choose.'}</p>`;
 }
 function choiceCard(o, action, blocked = false) {
   const disabled = blocked || o.disabled || g.resources.gold < o.cost;
@@ -607,6 +613,12 @@ function continuingModal() {
       : null;
 }
 function modalContent() {
+  if (
+    modal.kind === 'treasury' ||
+    (modal.kind === 'resource' && modal.id === 'gold')
+  )
+    return treasuryView(g, true);
+  if (modal.kind === 'promises') return promisesView(g);
   if (modal.kind === 'season')
     return projectionView(g, getDecision(g, 'season').options);
   if (modal.kind === 'outcome') return outcomeView(g);
@@ -820,6 +832,8 @@ app.addEventListener('click', (e) => {
       'resource',
       'party',
       'chronicle',
+      'promises',
+      'treasury',
       'audience',
     ].includes(a)
   ) {
@@ -963,6 +977,13 @@ app.addEventListener('click', (e) => {
   if (a === 'export') exportGame();
 });
 app.addEventListener('change', async (e) => {
+  if (e.target.id === 'portrait-presentation') {
+    g.portraitPresentation = e.target.value;
+    save(true);
+    render();
+    document.getElementById('portrait-presentation')?.focus();
+    return;
+  }
   if (e.target.dataset.chronicleFilter) {
     const focusId = e.target.id;
     modal.filters ||= {};
