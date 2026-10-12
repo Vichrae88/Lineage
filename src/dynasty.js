@@ -1,7 +1,7 @@
-import { newPerson, relationship } from './characters.js?v=0.5.2';
-import { personById, bound } from './sim-core.js?v=0.5.2';
-import { appendRecord, addFact } from './history.js?v=0.5.2';
-import { apportionPopulation } from './demographics.js?v=0.5.2';
+import { newPerson, relationship } from './characters.js?v=0.5.3';
+import { personById, bound } from './sim-core.js?v=0.5.3';
+import { appendRecord, addFact } from './history.js?v=0.5.3';
+import { apportionPopulation } from './demographics.js?v=0.5.3';
 export const courtCapacity = (g) =>
   g.title === 'Kingdom' ? 12 : g.title === 'City' ? 10 : 8;
 export const commissionCapacity = (g) =>

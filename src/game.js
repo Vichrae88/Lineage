@@ -1,19 +1,24 @@
 import {
+  issueChoices,
+  projectStrategies,
+  projectStrategyReport,
+} from './decision-strategies.js?v=0.5.3';
+import {
   royalAmbitions,
   declareAmbition,
   tickAmbitions,
-} from './ambitions.js?v=0.5.2';
-import { makePortraitRecipe } from './portraits.js?v=0.5.2';
+} from './ambitions.js?v=0.5.3';
+import { makePortraitRecipe } from './portraits.js?v=0.5.3';
 import {
   commercialDecision,
   startVenture,
   ventureManagement,
   manageVenture,
-} from './commerce.js?v=0.5.2';
-import { addPromise, tickPromises } from './promises.js?v=0.5.2';
-import { transitionsBetween } from './transitions.js?v=0.5.2';
-import { delta } from './sim-core.js?v=0.5.2';
-import { readSave } from './persistence.js?v=0.5.2';
+} from './commerce.js?v=0.5.3';
+import { addPromise, tickPromises } from './promises.js?v=0.5.3';
+import { transitionsBetween } from './transitions.js?v=0.5.3';
+import { delta } from './sim-core.js?v=0.5.3';
+import { readSave } from './persistence.js?v=0.5.3';
 import {
   courtCapacity,
   commissionCapacity,
@@ -22,7 +27,7 @@ import {
   beginReign,
   evolveRealm,
   governDistricts,
-} from './dynasty.js?v=0.5.2';
+} from './dynasty.js?v=0.5.3';
 import {
   roles,
   biographies,
@@ -38,20 +43,20 @@ import {
   followupReports,
   races,
   beastSpecies,
-} from './data.js?v=0.5.2';
-import { generateCampaign, freshSeed } from './campaign.js?v=0.5.2';
-import { initializeWorld, worldStateValid } from './world-state.js?v=0.5.2';
+} from './data.js?v=0.5.3';
+import { generateCampaign, freshSeed } from './campaign.js?v=0.5.3';
+import { initializeWorld, worldStateValid } from './world-state.js?v=0.5.3';
 import {
   snapshot,
   decisionRecord,
   appendRecord,
   addFact,
-} from './history.js?v=0.5.2';
+} from './history.js?v=0.5.3';
 import {
   seasonProjection,
   applyEconomy,
   finishSeasonReport,
-} from './economy.js?v=0.5.2';
+} from './economy.js?v=0.5.3';
 import {
   developmentProjects,
   developmentChoices,
@@ -60,7 +65,7 @@ import {
   tickInstitutions,
   dueConsequences,
   settleConsequence,
-} from './settlements.js?v=0.5.2';
+} from './settlements.js?v=0.5.3';
 import {
   skills,
   newPerson,
@@ -71,19 +76,19 @@ import {
   practice,
   startTraining,
   tickTraining,
-} from './characters.js?v=0.5.2';
+} from './characters.js?v=0.5.3';
 import {
   tickPeople,
   tickCommunities,
   recordDeath,
   recordMarriage,
   lifeExpectancy,
-} from './living.js?v=0.5.2';
+} from './living.js?v=0.5.3';
 import {
   generateEmergentEvent,
   resolveEmergent,
   tickObligations,
-} from './emergent.js?v=0.5.2';
+} from './emergent.js?v=0.5.3';
 export { professionalForecast, availableMentors };
 export { seasonProjection };
 export {
@@ -830,7 +835,15 @@ function projectOptions(p) {
       ),
     ],
   };
-  return developmentChoices[p.id] || [base, ...opts[p.id]];
+  return (
+    developmentChoices[p.id] || [
+      base,
+      ...(opts[p.id] || []),
+      ...(projectStrategies[p.id]
+        ? [structuredClone(projectStrategies[p.id])]
+        : []),
+    ]
+  );
 }
 export function getDecision(g, type, target, agent) {
   let d = {
@@ -2112,7 +2125,7 @@ export function eventOptions(g) {
   }
   if (e.type === 'audience' || e.type === 'followup' || e.type === 'personal')
     return [
-      ...e.options,
+      ...issueChoices(e, e.options),
       option(
         'postpone',
         'Record their testimony without a new promise',
@@ -2671,7 +2684,7 @@ function advanceCore(g) {
     c.respect = clamp(c.respect + (success ? 4 : -2));
     c.ambition = clamp(c.ambition + 2);
     const text = success
-      ? `${c.name} returns from “${p.name}” with a sealed report and tired satisfaction. ${(g.world?.projectReports || projectReports)[p.id]?.[q.approach || 'balanced'] || 'The work has begun to change daily life.'}`
+      ? `${c.name} returns from “${p.name}” with a sealed report and tired satisfaction. ${(g.world?.projectReports || projectReports)[p.id]?.[q.approach || 'balanced'] || projectStrategyReport(p.id, q.approach) || 'The work has begun to change daily life.'}`
       : `${c.name} returns from “${p.name}” with muddy boots and an unfinished promise. Resistance and misjudgment slowed the work; some progress remains.`;
     const source = appendRecord(g, {
       kind: 'assignment',
