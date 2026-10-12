@@ -1,6 +1,6 @@
 # Living-world iteration: 0.5.0 review
 
-Implementation is on `feature/living-world`. The public site and `main` remain at 0.4.0. This report describes working features and measured checks, rather than promising every possible extension in the master brief.
+Implementation is on `feature/living-world`. The main public game and `main` remain at 0.4.0. A separate [test preview](https://vichrae88.github.io/Lineage/preview/) is available with isolated browser-save slots. This report describes working features and measured checks, rather than promising every possible extension in the master brief.
 
 ## Phase checkpoints
 

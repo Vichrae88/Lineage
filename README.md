@@ -2,7 +2,7 @@
 
 A seasonal fantasy roleplaying game about ruling a realm and the people who make it live. [Play the current release](https://vichrae88.github.io/Lineage/).
 
-**This branch contains the 0.5.0 living-world iteration for review. It has not been merged or deployed.** See [the implementation report](docs/living-world-review.md) for scope, evidence, and limitations.
+**This branch contains the 0.5.0 living-world iteration for review. It has not been merged or deployed to the main game. [Test the isolated preview](https://vichrae88.github.io/Lineage/preview/); it uses separate browser-save slots.** See [the implementation report](docs/living-world-review.md) for scope, evidence, and limitations.
 
 ## Develop
 
