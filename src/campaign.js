@@ -3,7 +3,7 @@ import {
   sites as oldSites,
   expeditions as oldExpeditions,
   relics as oldRelics,
-} from './data.js?v=0.4.0';
+} from './data.js?v=0.5.0';
 
 export const dispositions = [
   'Patient',
@@ -331,6 +331,17 @@ const traits = [
   'Restless',
   'Patient',
   'Inventive',
+  'Charismatic',
+  'Scholarly',
+  'Magnetic Personality',
+  'Inspiring Leader',
+  'Greedy',
+  'Cautious',
+  'Ruthless',
+  'Loyal',
+  'Diplomatic',
+  'Secretive',
+  'Resourceful',
 ];
 const pasts = [
   'won a hearing for tenants their own patron would not defend',
@@ -1076,12 +1087,11 @@ export function generateCampaign(seed, ruler, baseProjects = []) {
   const realm = ruler.realm?.trim() || place();
   const predominantRace = races.includes(ruler.race) ? ruler.race : 'Human';
   const courtSpecies = shuffle(animalHeritages);
+  const minorities = shuffle(races.filter((r) => r !== predominantRace));
   const realmRace = () =>
-    predominantRace === 'Beastfolk'
-      ? 'Beastfolk'
-      : gen.random() < 0.78
-        ? predominantRace
-        : pick(races.filter((r) => r !== predominantRace));
+    gen.random() < (ruler.scale === 'province' ? 0.64 : 0.72)
+      ? predominantRace
+      : pick(minorities);
   const generatedSites = oldSites.map((s, i) => ({
     ...s,
     name:
@@ -1123,22 +1133,23 @@ export function generateCampaign(seed, ruler, baseProjects = []) {
       `An old map shows a path from ${s.name} to a place the local wardens refuse to name.`,
     ]);
   });
-  const court = ['Steward', 'Marshal', 'Ambassador'].map((role, i) =>
-    person('court-' + i, realmRace(), role, {
+  const court = ['Steward', 'Marshal', 'Ambassador'].map((role, i) => {
+    const race = i < 2 ? predominantRace : minorities[0];
+    return person('court-' + i, race, role, {
       origin: generatedSites[i + 1].name,
       location: at('capital').name,
-      ...(predominantRace === 'Beastfolk' ? { species: courtSpecies[i] } : {}),
-    }),
-  );
-  const applicants = Array.from({ length: 8 }, (_, i) =>
-    person('candidate-' + i, realmRace(), 'Councillor', {
+      ...(race === 'Beastfolk' ? { species: courtSpecies[i] } : {}),
+    });
+  });
+  const applicants = Array.from({ length: 8 }, (_, i) => {
+    const race =
+      i < 5 ? predominantRace : minorities[(i - 5) % minorities.length];
+    return person('candidate-' + i, race, 'Councillor', {
       status: 'applicant',
       origin: pick(generatedSites).name,
-      ...(predominantRace === 'Beastfolk'
-        ? { species: courtSpecies[i % 8] }
-        : {}),
-    }),
-  );
+      ...(race === 'Beastfolk' ? { species: courtSpecies[i] } : {}),
+    });
+  });
   const futurePeople = Array.from({ length: 128 }, (_, i) =>
     person('arrival-' + i, realmRace(), 'Councillor', {
       status: 'applicant',
@@ -1146,6 +1157,10 @@ export function generateCampaign(seed, ruler, baseProjects = []) {
     }),
   );
   const player = person('sovereign', predominantRace, 'Sovereign', {
+    ...(predominantRace === 'Beastfolk' &&
+    animalHeritages.includes(ruler.species)
+      ? { species: ruler.species }
+      : {}),
     gender: ruler.gender || 'Nonbinary',
     age: Number(ruler.age) || 28,
     disposition: ruler.disposition || 'Patient',
@@ -1648,4 +1663,14 @@ export function generateCampaign(seed, ruler, baseProjects = []) {
     tutorial: { step: 0, complete: false },
     storyCursor: 0,
   };
+}
+
+export function generatePerson(
+  seed,
+  id,
+  race,
+  role = 'Councillor',
+  extra = {},
+) {
+  return generator(seed).person(id, race, role, extra);
 }
