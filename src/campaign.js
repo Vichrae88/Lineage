@@ -3,7 +3,7 @@ import {
   sites as oldSites,
   expeditions as oldExpeditions,
   relics as oldRelics,
-} from './data.js?v=0.5.0';
+} from './data.js?v=0.5.1';
 
 export const dispositions = [
   'Patient',

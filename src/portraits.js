@@ -1,4 +1,9 @@
-import { hash, bound } from './sim-core.js?v=0.5.0';
+import {
+  choosePaint,
+  paintingMarkup,
+  paintingValid,
+} from './portrait-painting.js?v=0.5.1';
+import { hash, bound } from './sim-core.js?v=0.5.1';
 const starts = {
   Human: 0,
   Elf: 2,
@@ -57,10 +62,16 @@ export function makePortraitRecipe(g, p) {
       (r) => r.race === p.race && r.species === (p.species || null),
     ) || parents[0];
   const text = (p.appearance + ' ' + (p.presentation || '')).toLowerCase();
+  const paint = choosePaint(g, p, seed);
   return {
+    paint: paint.key,
+    paintDescription: paint.description,
+    visibleScar: text.includes('scar'),
+    treatment:
+      text.includes('court') || text.includes('formal') ? 'formal' : 'natural',
     id: 'portrait-' + p.id,
     seed,
-    version: 1,
+    version: 2,
     race: p.race,
     species: p.species || null,
     face:
@@ -141,7 +152,8 @@ const esc = (s) =>
         c
       ],
   );
-export function portraitMarkup(p, cls = '') {
+export function portraitMarkup(p, cls = '', style = null) {
+  if (p.portraitRecipe?.version === 2) return paintingMarkup(p, cls, style);
   const r = p.portraitRecipe;
   if (!r) return '';
   const id = r.id,
@@ -393,6 +405,8 @@ export function portraitsValid(g) {
     const r = p.portraitRecipe;
     if (
       !r ||
+      ![1, 2].includes(r.version) ||
+      (r.version === 2 && !paintingValid(r)) ||
       r.id !== 'portrait-' + p.id ||
       seen.has(r.id) ||
       r.race !== p.race ||

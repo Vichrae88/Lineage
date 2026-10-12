@@ -806,3 +806,34 @@ textarea:focus-visible {
 .tree-person{text-align:center;flex:1 1 150px;max-width:230px;padding:13px 10px;background:#eadabd66;border:1px solid #8e765c55;border-radius:4px;display:grid;gap:6px;color:var(--ink)}
 .tree-person small{letter-spacing:1px;text-transform:uppercase;color:#766449;font-size:10px}.tree-person strong{font-family:var(--serif);font-size:17px}.tree-person span{font-size:12px}.tree-person.remembered{background:#cabb9e33;color:#6d6254}.tree-focus .tree-person{border-color:#8b6a3b}
 .reign-register{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.reign-register article{padding:12px;border-left:2px solid #957c55}.reign-register button{color:var(--ink);background:none;border:0;text-align:left;padding:0}.reign-register p{margin:8px 0;font-size:13px}
+
+.narrative-outcome{border-left:2px solid #ad8f57;padding:0 0 0 18px;margin:22px 0}.narrative-outcome p{line-height:1.65;margin:13px 0}.outcome-ledger{margin:24px 0;padding:14px;border:1px solid #967b4a44;border-radius:4px}.outcome-ledger summary{cursor:pointer;color:#725c39}.promise-card{margin:18px 0;padding:18px;border:1px solid #967b4a55;background:#ede2ca66;border-radius:5px}.promise-card.overdue{border-left:4px solid #8b4b37}.promise-card small{text-transform:uppercase;letter-spacing:1px;font-size:11px}.promise-card h3{margin:12px 0 8px}
+
+.treasury-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:24px 0}.treasury-summary article{padding:15px;background:#e6d7b944;border:1px solid #9d83534d;border-radius:5px;display:grid;gap:9px}.treasury-summary small{color:#6a593e;font-size:11px}.treasury-summary strong{font-family:var(--serif);font-size:21px}.venture-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.venture-card,.opportunity-card{padding:18px;border:1px solid #9d83534d;background:#ece2ce88;border-radius:6px}.venture-card h4,.opportunity-card h4{font-family:var(--serif);font-size:22px;margin:9px 0}.venture-card p,.opportunity-card p{font-size:14px;line-height:1.55}.venture-symbol{font-size:34px;color:#896b37}.venture-grid button{margin:5px 5px 0 0}.trading-partners{display:flex;flex-wrap:wrap;gap:4px}.venture-card details{font-size:13px;margin:14px 0}.dashboard nav{flex-wrap:wrap}@media(max-width:650px){.treasury-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.venture-grid{grid-template-columns:1fr}}
+
+.painted-portrait{background:#393226}.painted-portrait svg{display:block;width:100%;height:100%}.painted-portrait.treatment-chronicle svg{filter:sepia(.65) saturate(.5) contrast(.92);opacity:.96}.portrait-style-label{display:flex;align-items:center;gap:12px;font-size:12px;color:#77664c;margin:20px 0}.portrait-style-label select{max-width:210px;border:1px solid #ad916350;background:#eadbbf70;padding:9px;border-radius:4px;color:var(--ink)}
+/* Painted places and enduring works */
+.place-painting { aspect-ratio: 9/4; background-image: url('assets/realm-places.webp'); background-size: 200% 300%; position: relative; border: 1px solid #947e50; box-shadow: inset 0 0 25px #261b2070; overflow: hidden; }
+.place-painting span { position:absolute; bottom:0; left:0; right:0; padding:1.2rem .7rem .5rem; background:linear-gradient(transparent,#19211ce0); color:#f3e6ca; font-family:var(--display); font-size:1.1rem; }
+.place-painting.dialog-landscape { height:auto; max-height:300px; margin:-1.5rem -1.5rem 1.4rem; border-radius:0; }
+.faction-crest { display:inline-block; width:65px; height:74px; float:right; margin:0 0 .5rem .8rem; filter:drop-shadow(0 2px 1px #2a211740); }
+.faction-crest svg { width:100%; height:100%; }
+.achievement-panel { background:#c6af7330; border:1px solid #ad945c80; border-left:3px solid #a38442; padding:.9rem 1rem; margin:1rem 0; }
+.achievement-panel p { margin:.5rem 0; }
+.achievement-panel small { color:var(--muted); }
+.ambition-options { display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
+.ambition-options button { text-align:left; padding:.8rem; }
+.ambition-options span { display:block; margin-top:.4rem; font-size:.88rem; color:var(--muted); }
+.ambition-panel progress { width:100%; height:.7rem; accent-color:#6a714a; }
+.development-scene { padding:1rem; border:1px solid #a4895460; margin:1rem 0; background:#ede0bd70; }
+.settlement-silhouette { display:flex; gap:.8rem; flex-wrap:wrap; align-items:end; padding:1rem .5rem; border-bottom:2px solid #88714c; background:linear-gradient(transparent,#a9b89d30); }
+.hearth-cluster { font-size:2rem; color:#7b6446; }
+.built-landmark { display:flex; flex-direction:column; align-items:center; color:#4e603e; }
+.built-landmark i { font-size:2.2rem; font-style:normal; }
+.built-landmark small { font-variant:small-caps; }
+.built-landmark.worn { color:#9c613e; opacity:.75; }
+@media(max-width:600px) { .ambition-options { grid-template-columns:1fr; } .place-painting.dialog-landscape { margin:-1rem -1rem 1rem; } }
+
+.chronicle-moment { float:right; padding:.6rem; margin:0 0 1rem 1rem; width:86px; border:1px solid #a1844880; background:#c4a86d20; text-align:center; }
+.chronicle-moment i { display:block; font-style:normal; font-size:2.4rem; color:#827047; }
+.chronicle-moment small { font-size:.68rem; line-height:1.2; }

@@ -1,5 +1,5 @@
-import { escapeText as esc } from './reports-ui.js?v=0.5.0';
-import { claimStrength } from './dynasty.js?v=0.5.0';
+import { escapeText as esc } from './reports-ui.js?v=0.5.1';
+import { claimStrength } from './dynasty.js?v=0.5.1';
 export function familyTreeView(g, focus = g.ruler.id) {
   const p = g.people[focus] || g.ruler;
   const card = (id, label) => {
