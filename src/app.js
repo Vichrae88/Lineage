@@ -46,6 +46,11 @@ let sites, factionLore, expeditions, relics, projects;
 let returnModal = null;
 let modalStack = [];
 const app = document.querySelector('#app');
+const isPreview = /(^|\/)preview(\/|$)/.test(location.pathname);
+const SAVE_KEY = isPreview ? 'lineage-preview-save' : 'lineage-save';
+const PREVIOUS_KEY = isPreview
+  ? 'lineage-preview-previous'
+  : 'lineage-previous';
 let g = null,
   tab = 'council',
   step = 0,
@@ -119,7 +124,7 @@ const contextArt = (kind = 'hall', label = '') =>
 const narrate = (label, value, kind = 'trust') =>
   `<span class="narrative-stat" title="${esc(label)}: ${Math.round(value)} of 100"><small>${esc(label)}</small><strong>${qualitative(value, kind)}</strong></span>`;
 function header() {
-  return `<header class="masthead"><div class="brand"><span class="sigil" aria-hidden="true">♜</span><div><h1>LINEAGE</h1><span>A realm to inherit. A story to leave.</span></div></div><details class="save-menu"><summary>Chronicle <span aria-hidden="true">⌄</span></summary><div class="save-options">${g ? btn('Save in this browser', 'save') : ''}${btn('Load saved game', 'load')}${g ? btn('Export a backup', 'export') + btn('Read the chronicle', 'chronicle') + btn('The ruler’s guide', 'guide') + btn('Start a new campaign', 'new') : ''}<label class="button file-button" tabindex="0">Import a chronicle<input id="import" type="file" accept="application/json,.json" hidden></label>${previousAvailable() ? btn('Restore previous campaign', 'previous') : ''}<small>${g ? 'Decisions save automatically.' : 'Continue a previous reign.'}</small></div></details></header>`;
+  return `<header class="masthead"><div class="brand"><span class="sigil" aria-hidden="true">♜</span><div><h1>LINEAGE</h1><span>${isPreview ? 'Living world · Test version' : 'A realm to inherit. A story to leave.'}</span></div></div><details class="save-menu"><summary>Chronicle <span aria-hidden="true">⌄</span></summary><div class="save-options">${g ? btn('Save in this browser', 'save') : ''}${btn('Load saved game', 'load')}${g ? btn('Export a backup', 'export') + btn('Read the chronicle', 'chronicle') + btn('The ruler’s guide', 'guide') + btn('Start a new campaign', 'new') : ''}<label class="button file-button" tabindex="0">Import a chronicle<input id="import" type="file" accept="application/json,.json" hidden></label>${previousAvailable() ? btn('Restore previous campaign', 'previous') : ''}<small>${g ? 'Decisions save automatically.' : 'Continue a previous reign.'}</small></div></details></header>`;
 }
 const questions = [
   [
@@ -230,7 +235,7 @@ function creation() {
 }
 function previousAvailable() {
   try {
-    return !!localStorage.getItem('lineage-previous');
+    return !!localStorage.getItem(PREVIOUS_KEY);
   } catch {
     return false;
   }
@@ -701,7 +706,7 @@ function open(kind, id, type, agent) {
 }
 function save(quiet = false) {
   try {
-    localStorage.setItem('lineage-save', serializeGame(g));
+    localStorage.setItem(SAVE_KEY, serializeGame(g));
     if (!quiet)
       message =
         'The chronicle is saved in this browser. Export a copy to keep it elsewhere.';
@@ -786,7 +791,7 @@ app.addEventListener('click', (e) => {
   if (a === 'load' || a === 'previous') {
     try {
       const s = localStorage.getItem(
-        a === 'previous' ? 'lineage-previous' : 'lineage-save',
+        a === 'previous' ? PREVIOUS_KEY : SAVE_KEY,
       );
       if (!s) throw Error('No chronicle has been saved in this browser yet.');
       g = parseSave(s);
@@ -822,7 +827,7 @@ app.addEventListener('click', (e) => {
   if (a === 'new') {
     save(true);
     try {
-      localStorage.setItem('lineage-previous', serializeGame(g));
+      localStorage.setItem(PREVIOUS_KEY, serializeGame(g));
     } catch {}
     g = null;
     modal = null;
