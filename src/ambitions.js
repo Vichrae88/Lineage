@@ -1,6 +1,6 @@
-import { appendRecord, snapshot } from './history.js?v=0.5.4';
-import { transitionsBetween } from './transitions.js?v=0.5.4';
-import { bound, idValid } from './sim-core.js?v=0.5.4';
+import { appendRecord, snapshot } from './history.js?v=0.5.5';
+import { transitionsBetween } from './transitions.js?v=0.5.5';
+import { bound, idValid } from './sim-core.js?v=0.5.5';
 export const royalAmbitions = {
   builder: {
     name: 'Leave works that outlive my reign',

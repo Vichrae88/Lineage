@@ -1,21 +1,23 @@
-import { initDilemmas, dilemmasValid } from './dilemmas.js?v=0.5.4';
-import { initAmbitions, ambitionsValid } from './ambitions.js?v=0.5.4';
-import { initCommerce, commerceValid } from './commerce.js?v=0.5.4';
-import { initPromises, promisesValid } from './promises.js?v=0.5.4';
-import { worldReferencesValid } from './integrity.js?v=0.5.4';
-import { initDynasty, dynastyValid } from './dynasty.js?v=0.5.4';
+import { initSeasonal, seasonalValid } from './seasonal.js?v=0.5.5';
+import { initCourtWork, courtWorkValid } from './court-initiatives.js?v=0.5.5';
+import { initDilemmas, dilemmasValid } from './dilemmas.js?v=0.5.5';
+import { initAmbitions, ambitionsValid } from './ambitions.js?v=0.5.5';
+import { initCommerce, commerceValid } from './commerce.js?v=0.5.5';
+import { initPromises, promisesValid } from './promises.js?v=0.5.5';
+import { worldReferencesValid } from './integrity.js?v=0.5.5';
+import { initDynasty, dynastyValid } from './dynasty.js?v=0.5.5';
 import {
   initializeDemographics,
   demographicValid,
-} from './demographics.js?v=0.5.4';
-import { initializePortraits, portraitsValid } from './portraits.js?v=0.5.4';
-import { initEmergent } from './emergent.js?v=0.5.4';
-import { initializeKnownFigures } from './living.js?v=0.5.4';
-import { canonicalizePeople, charactersValid } from './characters.js?v=0.5.4';
-import { sites, factionLore, expeditions, relics } from './data.js?v=0.5.4';
-import { initHistory, historyValid } from './history.js?v=0.5.4';
-import { initSettlements, developmentProjects } from './settlements.js?v=0.5.4';
-import { personList, hash, idValid } from './sim-core.js?v=0.5.4';
+} from './demographics.js?v=0.5.5';
+import { initializePortraits, portraitsValid } from './portraits.js?v=0.5.5';
+import { initEmergent } from './emergent.js?v=0.5.5';
+import { initializeKnownFigures } from './living.js?v=0.5.5';
+import { canonicalizePeople, charactersValid } from './characters.js?v=0.5.5';
+import { sites, factionLore, expeditions, relics } from './data.js?v=0.5.5';
+import { initHistory, historyValid } from './history.js?v=0.5.5';
+import { initSettlements, developmentProjects } from './settlements.js?v=0.5.5';
+import { personList, hash, idValid } from './sim-core.js?v=0.5.5';
 export function initializeWorld(g, projects) {
   g.preparedIdentities ??= Boolean(g.storyDeck);
   g.world ||= {
@@ -35,7 +37,7 @@ export function initializeWorld(g, projects) {
   g.notables ||= [];
   g.futurePeople ||= [];
   canonicalizePeople(g);
-  g.simulationVersion = Math.max(g.simulationVersion || 0, 9);
+  g.simulationVersion = Math.max(g.simulationVersion || 0, 10);
   initEmergent(g);
   g.obligations ||= [];
   for (const p of personList(g)) {
@@ -54,6 +56,8 @@ export function initializeWorld(g, projects) {
   initCommerce(g);
   initAmbitions(g);
   initDilemmas(g);
+  initSeasonal(g);
+  initCourtWork(g);
   g.version = 5;
   return g;
 }
@@ -62,6 +66,8 @@ export function worldStateValid(g) {
     g.portraitPresentation !== undefined &&
     !['natural', 'formal', 'chronicle'].includes(g.portraitPresentation)
   )
+    return false;
+  if (g.simulationVersion >= 10 && (!seasonalValid(g) || !courtWorkValid(g)))
     return false;
   if (g.simulationVersion >= 9 && !dilemmasValid(g)) return false;
   if (g.simulationVersion >= 8 && !ambitionsValid(g)) return false;

@@ -1,32 +1,46 @@
 import {
+  tickCourtWork,
+  personalTimeRemaining,
+  spendPersonalTime,
+  initiativeDecision,
+  interveneInitiative,
+  recordInitiativeResponse,
+} from './court-initiatives.js?v=0.5.5';
+import {
+  tickSeasonal,
+  seasonalOptions,
+  resolveSeasonal,
+  prepareSeasonalAudience,
+} from './seasonal.js?v=0.5.5';
+import {
   chooseDilemmaAgent,
   dilemmaOptions,
   dilemmaEventValid,
   settleDilemma,
   tickDilemmas,
   stakesValid,
-} from './dilemmas.js?v=0.5.4';
+} from './dilemmas.js?v=0.5.5';
 import {
   issueChoices,
   projectStrategies,
   projectStrategyReport,
-} from './decision-strategies.js?v=0.5.4';
+} from './decision-strategies.js?v=0.5.5';
 import {
   royalAmbitions,
   declareAmbition,
   tickAmbitions,
-} from './ambitions.js?v=0.5.4';
-import { makePortraitRecipe } from './portraits.js?v=0.5.4';
+} from './ambitions.js?v=0.5.5';
+import { makePortraitRecipe } from './portraits.js?v=0.5.5';
 import {
   commercialDecision,
   startVenture,
   ventureManagement,
   manageVenture,
-} from './commerce.js?v=0.5.4';
-import { addPromise, tickPromises } from './promises.js?v=0.5.4';
-import { transitionsBetween } from './transitions.js?v=0.5.4';
-import { delta } from './sim-core.js?v=0.5.4';
-import { readSave } from './persistence.js?v=0.5.4';
+} from './commerce.js?v=0.5.5';
+import { addPromise, tickPromises } from './promises.js?v=0.5.5';
+import { transitionsBetween } from './transitions.js?v=0.5.5';
+import { delta } from './sim-core.js?v=0.5.5';
+import { readSave } from './persistence.js?v=0.5.5';
 import {
   courtCapacity,
   commissionCapacity,
@@ -35,7 +49,7 @@ import {
   beginReign,
   evolveRealm,
   governDistricts,
-} from './dynasty.js?v=0.5.4';
+} from './dynasty.js?v=0.5.5';
 import {
   roles,
   biographies,
@@ -51,20 +65,20 @@ import {
   followupReports,
   races,
   beastSpecies,
-} from './data.js?v=0.5.4';
-import { generateCampaign, freshSeed } from './campaign.js?v=0.5.4';
-import { initializeWorld, worldStateValid } from './world-state.js?v=0.5.4';
+} from './data.js?v=0.5.5';
+import { generateCampaign, freshSeed } from './campaign.js?v=0.5.5';
+import { initializeWorld, worldStateValid } from './world-state.js?v=0.5.5';
 import {
   snapshot,
   decisionRecord,
   appendRecord,
   addFact,
-} from './history.js?v=0.5.4';
+} from './history.js?v=0.5.5';
 import {
   seasonProjection,
   applyEconomy,
   finishSeasonReport,
-} from './economy.js?v=0.5.4';
+} from './economy.js?v=0.5.5';
 import {
   developmentProjects,
   developmentChoices,
@@ -73,7 +87,7 @@ import {
   tickInstitutions,
   dueConsequences,
   settleConsequence,
-} from './settlements.js?v=0.5.4';
+} from './settlements.js?v=0.5.5';
 import {
   skills,
   newPerson,
@@ -84,19 +98,19 @@ import {
   practice,
   startTraining,
   tickTraining,
-} from './characters.js?v=0.5.4';
+} from './characters.js?v=0.5.5';
 import {
   tickPeople,
   tickCommunities,
   recordDeath,
   recordMarriage,
   lifeExpectancy,
-} from './living.js?v=0.5.4';
+} from './living.js?v=0.5.5';
 import {
   generateEmergentEvent,
   resolveEmergent,
   tickObligations,
-} from './emergent.js?v=0.5.4';
+} from './emergent.js?v=0.5.5';
 export { professionalForecast, availableMentors };
 export { seasonProjection };
 export {
@@ -195,6 +209,7 @@ export function log(g, text) {
 // Unique stories belong to the campaign, including every ruler who inherits it.
 export function eventKey(e) {
   if (!e) return null;
+  if (e.type === 'seasonal') return 'seasonal:' + e.id;
   if (e.type === 'audience')
     return (
       'audience:' +
@@ -299,7 +314,7 @@ export function prepareAudience(g, e = g.event) {
     (!original.alive ||
       original.status === 'departed' ||
       original.id === g.ruler.id) &&
-    (e.engine || e.dilemma)
+    (e.engine || e.dilemma || e.seasonal)
   ) {
     if (
       [
@@ -342,6 +357,7 @@ export function prepareAudience(g, e = g.event) {
       e.dilemma.actors.affected = replacement.id;
   }
   chooseDilemmaAgent(g, e);
+  prepareSeasonalAudience(g, e);
   const adviser = findPerson(g, e.adviser);
   if (adviser && !living(adviser)) {
     const replacement = activeCourt(g)[0];
@@ -872,6 +888,28 @@ export function getDecision(g, type, target, agent) {
     text: '',
     options: [],
   };
+  if (type === 'initiative') return initiativeDecision(g, target);
+  if (type === 'court-autonomy')
+    return {
+      type,
+      target,
+      title: 'The scope of your court’s own work',
+      text: 'Courtiers can pledge their own savings to modest improvements. New starts leave a serving member free for royal commissions. Existing work continues if new initiatives are held.',
+      options: [
+        option(
+          'entrusted',
+          'Trust the court to begin modest improvements',
+          'No treasury charge. Courtiers choose work suited to their offices, skills and private resources.',
+          0,
+        ),
+        option(
+          'held',
+          'Hold new initiatives for now',
+          'No treasury charge. Current undertakings continue, but nobody begins another on their own.',
+          0,
+        ),
+      ],
+    };
   const c = findPerson(g, target);
   const f = g.factions.find((f) => f.id === target);
   const p = realmProjects(g).find((p) => p.id === target);
@@ -993,8 +1031,10 @@ export function getDecision(g, type, target, agent) {
       option(
         'retainer',
         'Offer an honest retainer',
-        'Pay a fair wage and promise a voice at council.',
-        25,
+        v.heroicService
+          ? 'The hero requests no entrance payment. Promise a fair continuing wage and a voice at council.'
+          : 'Pay a fair wage and promise a voice at council.',
+        v.heroicService ? 0 : 25,
         {},
         { [v.faction]: { trust: 5 } },
       ),
@@ -1096,27 +1136,34 @@ export function getDecision(g, type, target, agent) {
         'listen',
         'Listen without the clerks present',
         'Private attention builds trust and affection; ambitions remain their own.',
-        8,
+        0,
       ),
       option(
         'mentor',
         'Study a difficult case together',
-        'They deepen their strongest craft and respect your investment.',
-        8,
+        'They deepen their strongest craft and respect the time you share.',
+        0,
         { learning: 2 },
       ),
       option(
         'honor',
         'Recognize their work before the court',
         'Public esteem builds loyalty, but also confidence in their own importance.',
-        12,
+        0,
       ),
     ];
-    d.blocked = !living(c)
-      ? 'They are no longer in service.'
-      : c.lastCultivated === g.turn
-        ? 'You have already devoted personal time to them this season.'
-        : null;
+    d.text +=
+      ' No gold is required; each choice uses one of your personal audiences this season.';
+    d.blocked =
+      !c.alive ||
+      ['departed', 'deceased'].includes(c.status) ||
+      c.id === g.ruler.id
+        ? 'A living companion outside the throne’s own identity is needed.'
+        : c.lastCultivated === g.turn
+          ? 'You have already devoted personal time to them this season.'
+          : personalTimeRemaining(g) === 0
+            ? 'Your personal audiences are already committed this season.'
+            : null;
   }
   if (type === 'diplomacy' && f) {
     d.blocked =
@@ -1795,7 +1842,16 @@ export function enact(g, type, target, choice, agent) {
     c.respect = clamp(c.respect + 5);
     text = `${c.name} accepts the office of ${choice}. ${previous && choice !== 'Councillor' ? `${previous.name} remains as an unappointed councillor.` : ''}`;
   }
+  if (type === 'court-autonomy') {
+    g.courtWork.mode = choice === 'held' ? 'held' : 'entrusted';
+    text =
+      choice === 'held'
+        ? 'The court holds new private undertakings; current work and its reports continue.'
+        : 'Courtiers may begin modest work from their own resources and professional judgment.';
+  }
+  if (type === 'initiative') text = interveneInitiative(g, target, choice);
   if (type === 'cultivate') {
+    spendPersonalTime(g);
     c.lastCultivated = g.turn;
     if (choice === 'mentor') {
       const key = Object.keys(c.skills).sort(
@@ -2004,8 +2060,16 @@ export function enact(g, type, target, choice, agent) {
     agent,
     before,
     expected: { realm: o.effects, person: o.person, personId: target },
+    ...(type === 'initiative'
+      ? {
+          cause: g.courtWork.initiatives.find((i) => i.id === target).source,
+          speaker: g.courtWork.initiatives.find((i) => i.id === target).person,
+          site: g.courtWork.initiatives.find((i) => i.id === target).site,
+        }
+      : {}),
   });
   if (type === 'ambition') declareAmbition(g, choice, entry.id);
+  if (type === 'initiative') recordInitiativeResponse(g, target, entry);
   if (type === 'training' || type === 'mentorship')
     startTraining(
       g,
@@ -2116,6 +2180,7 @@ function outsideNominee(g) {
 export function eventOptions(g) {
   const e = g.event;
   if (!e) return [];
+  if (e.seasonal) return seasonalOptions(g, e);
   if (e.dilemma) return dilemmaOptions(g, e);
   if (e.action) {
     const d = getDecision(g, e.action.type, e.action.target, e.agent);
@@ -2307,10 +2372,13 @@ export function resolveEvent(g, choice, agent) {
     );
   }
   const previousAgent = e.agent;
-  const delegates = e.action || e.dilemma?.phase === 'petition';
+  const delegates =
+    e.action ||
+    e.dilemma?.phase === 'petition' ||
+    e.seasonal?.category === 'decision';
   if (delegates && agent !== undefined) {
     if (
-      e.dilemma &&
+      (e.dilemma || e.seasonal) &&
       agent !== null &&
       !g.court.some((p) => p.id === agent && living(p) && !isBusy(g, p.id))
     )
@@ -2340,8 +2408,10 @@ export function resolveEvent(g, choice, agent) {
     }
   } else {
     g.resources.gold -= o.cost;
-    effects(g, o.effects);
-    diplomaticEffects(g, o.relations);
+    if (!e.seasonal) {
+      effects(g, o.effects);
+      diplomaticEffects(g, o.relations);
+    }
   }
   if (key) {
     if (!g.seenEvents.includes(key)) g.seenEvents.push(key);
@@ -2469,7 +2539,7 @@ export function resolveEvent(g, choice, agent) {
     if (choice === 'care') p.wounds = Math.max(0, p.wounds - 1);
   }
   const reserved =
-    e.engine || e.dilemma
+    e.engine || e.dilemma || e.seasonal
       ? appendRecord(g, {
           kind: 'decision',
           people: [e.speaker],
@@ -2485,7 +2555,7 @@ export function resolveEvent(g, choice, agent) {
   if (e.engine === 'emergent') resolveEmergent(g, e, choice);
   if (e.engine === 'consequence') settleConsequence(g, e, choice);
   const speaker = findPerson(g, e.speaker);
-  if (speaker && !e.dilemma) {
+  if (speaker && !e.dilemma && !e.seasonal) {
     speaker.trust = clamp(
       speaker.trust +
         (['silence', 'protect', 'refuse', 'decline', 'postpone'].includes(
@@ -2551,7 +2621,9 @@ export function resolveEvent(g, choice, agent) {
     };
     if (reserveEvent(g, letter)) g.scheduled.push(letter);
   }
-  const text = `${e.title}: ${o.label}. ${o.note}`;
+  const text =
+    (e.seasonal ? resolveSeasonal(g, e, o, reserved.id) : null) ||
+    `${e.title}: ${o.label}. ${o.note}`;
   const entry = record(g, 'audience', e.id || e.title, choice, text, {
     before,
     speaker: e.speaker,
@@ -3114,6 +3186,7 @@ export function advance(g, prior = null) {
     initializeWorld(g, projects);
     tickDilemmas(g);
     tickPeople(g);
+    tickCourtWork(g);
     tickCommunities(g);
     evolveRealm(g);
     governDistricts(g);
@@ -3122,6 +3195,8 @@ export function advance(g, prior = null) {
     tickInstitutions(g);
     tickPromises(g);
     tickAmbitions(g);
+    const seasonalEvent = tickSeasonal(g);
+    if (seasonalEvent) queueUnique(g, seasonalEvent);
     for (const e of dueConsequences(g)) queueUnique(g, e);
     if (g.ruler.alive) {
       const emerging = generateEmergentEvent(g);
@@ -3541,6 +3616,7 @@ export function parseSave(text) {
         )) &&
       [
         'petition',
+        'seasonal',
         'audience',
         'followup',
         'personal',
@@ -3573,7 +3649,7 @@ export function parseSave(text) {
     [...g.seenEvents, ...g.resolvedEvents].some(
       (s) =>
         !str(s) ||
-        !/^(audience|followup|personal|expedition|petition|vacancy|succession):.+$/.test(
+        !/^(audience|followup|personal|expedition|petition|vacancy|succession|seasonal):.+$/.test(
           s,
         ) ||
         s.length > 240,

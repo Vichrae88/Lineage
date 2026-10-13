@@ -1,11 +1,11 @@
-import { attachDilemma } from './dilemmas.js?v=0.5.4';
-import { issueChoices } from './decision-strategies.js?v=0.5.4';
+import { attachDilemma } from './dilemmas.js?v=0.5.5';
+import { issueChoices } from './decision-strategies.js?v=0.5.5';
 import {
   races,
   sites as oldSites,
   expeditions as oldExpeditions,
   relics as oldRelics,
-} from './data.js?v=0.5.4';
+} from './data.js?v=0.5.5';
 
 export const dispositions = [
   'Patient',

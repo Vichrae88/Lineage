@@ -1,5 +1,6 @@
-import { moralAssessment } from './moral-advice.js?v=0.5.4';
-import { commercialForecast } from './commerce.js?v=0.5.4';
+import { moralAssessment } from './moral-advice.js?v=0.5.5';
+import { seasonalOutcomes } from './seasonal.js?v=0.5.5';
+import { commercialForecast } from './commerce.js?v=0.5.5';
 // Advice is a reading of public state, not an extra simulation roll.
 const lenses = {
   Steward: {
@@ -195,6 +196,22 @@ function assess(g, d, p, o, agent) {
   let score =
     parts.reduce((n, [, value]) => n + value, 0) -
     (o.cost || 0) * (w.gold || 1) * 0.55;
+  const uncertainty =
+    d.seasonal?.category === 'decision' ? seasonalOutcomes(g, d, o) : null;
+  if (uncertainty) {
+    const intended = parts.reduce((n, [, value]) => n + value, 0),
+      setback = Object.entries(uncertainty.setback).reduce(
+        (n, [k, v]) => n + difference(g, k, v) * (w[k] || 0.7),
+        0,
+      );
+    score += (1 - uncertainty.chance) * (setback - intended);
+    const injury = uncertainty.setback.courtHealth || 0;
+    if (injury < 0)
+      score +=
+        (1 - uncertainty.chance) *
+        injury *
+        ((p.traits || []).includes('Compassionate') ? 1 : 0.5);
+  }
   const relations = { ...(o.relations || {}) };
   if (d.template === 'frontier' && d.faction) {
     const bargains = {
@@ -263,6 +280,7 @@ function assess(g, d, p, o, agent) {
     option: o,
     score,
     moral,
+    uncertainty,
     priority: parts.find(([, n]) => n > 0)?.[0],
   };
 }
@@ -355,6 +373,16 @@ export function decisionAdvice(
     if (best.moral.personalRisk)
       reason +=
         ' It also puts my own life and service at risk; you should hear that interest plainly.';
+    if (best.uncertainty?.chance < 1)
+      reason +=
+        ' The intended result is uncertain. ' +
+        best.uncertainty.skill +
+        ' and the chosen courtier’s loyalty matter; paying more does not remove the possible setback.';
+    if (
+      best.uncertainty?.setback.courtHealth < 0 &&
+      best.uncertainty.delegate === p.id
+    )
+      reason += ' My own health would be at risk if this fails.';
     const positives = Object.entries(o.relations || {}).find(
       ([id, r]) =>
         id === p.faction && (r.trust > 0 || r.respect > 0 || r.grievance < 0),

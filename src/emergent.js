@@ -1,11 +1,11 @@
-import { attachLiveDilemma } from './dilemmas.js?v=0.5.4';
+import { attachLiveDilemma } from './dilemmas.js?v=0.5.5';
 import {
   commerceProposals,
   resolveCommerceEvent,
-} from './commerce-events.js?v=0.5.4';
-import { personById, bound } from './sim-core.js?v=0.5.4';
-import { appendRecord, addFact } from './history.js?v=0.5.4';
-import { createInstitution } from './settlements.js?v=0.5.4';
+} from './commerce-events.js?v=0.5.5';
+import { personById, bound } from './sim-core.js?v=0.5.5';
+import { appendRecord, addFact } from './history.js?v=0.5.5';
+import { createInstitution } from './settlements.js?v=0.5.5';
 const option = (id, label, note, cost, effects = {}) => ({
   id,
   label,

@@ -1,7 +1,16 @@
-import { dilemmaDecision } from './dilemmas.js?v=0.5.4';
-import { dilemmaContext, stakesSummary } from './dilemma-ui.js?v=0.5.4';
-import { advisorView } from './advisors-ui.js?v=0.5.4';
-import { gold as coins } from './format.js?v=0.5.4';
+import {
+  personalTimeView,
+  courtWorkView,
+  courtWorkBrief,
+  boonsView,
+  seasonalContext,
+  seasonalRiskView,
+} from './court-life-ui.js?v=0.5.5';
+import { seasonalDecision } from './seasonal.js?v=0.5.5';
+import { dilemmaDecision } from './dilemmas.js?v=0.5.5';
+import { dilemmaContext, stakesSummary } from './dilemma-ui.js?v=0.5.5';
+import { advisorView } from './advisors-ui.js?v=0.5.5';
+import { gold as coins } from './format.js?v=0.5.5';
 import {
   ambitionView,
   achievementView,
@@ -10,13 +19,13 @@ import {
   factionCrest,
   historicLandmarks,
   mapWorks,
-} from './world-flavor-ui.js?v=0.5.4';
-import { isBusy } from './characters.js?v=0.5.4';
-import { treasuryView, commercialAdvice } from './treasury-ui.js?v=0.5.4';
-import { promisesView } from './narrative-ui.js?v=0.5.4';
-import { serializeGame } from './persistence.js?v=0.5.4';
-import { familyTreeView, reignsView, claimView } from './dynasty-ui.js?v=0.5.4';
-import { commissionCapacity, courtCapacity } from './dynasty.js?v=0.5.4';
+} from './world-flavor-ui.js?v=0.5.5';
+import { isBusy } from './characters.js?v=0.5.5';
+import { treasuryView, commercialAdvice } from './treasury-ui.js?v=0.5.5';
+import { promisesView } from './narrative-ui.js?v=0.5.5';
+import { serializeGame } from './persistence.js?v=0.5.5';
+import { familyTreeView, reignsView, claimView } from './dynasty-ui.js?v=0.5.5';
+import { commissionCapacity, courtCapacity } from './dynasty.js?v=0.5.5';
 import {
   createGame,
   seasons,
@@ -42,8 +51,8 @@ import {
   household,
   prepareAudience,
   advance,
-} from './game.js?v=0.5.4';
-import { dispositions, presentations } from './campaign.js?v=0.5.4';
+} from './game.js?v=0.5.5';
+import { dispositions, presentations } from './campaign.js?v=0.5.5';
 import {
   projectionView,
   outcomeView,
@@ -51,13 +60,13 @@ import {
   archiveView,
   entryView,
   localDevelopmentView,
-} from './reports-ui.js?v=0.5.4';
+} from './reports-ui.js?v=0.5.5';
 import {
   characterDevelopmentView,
   forecastView,
-} from './characters-ui.js?v=0.5.4';
-import { portraitMarkup, portraitDescription } from './portraits.js?v=0.5.4';
-import { realmDemographics } from './demographics.js?v=0.5.4';
+} from './characters-ui.js?v=0.5.5';
+import { portraitMarkup, portraitDescription } from './portraits.js?v=0.5.5';
+import { realmDemographics } from './demographics.js?v=0.5.5';
 let sites, factionLore, expeditions, relics, projects;
 let returnModal = null;
 let modalStack = [];
@@ -303,7 +312,7 @@ function sidebar() {
     )
     .join(
       '',
-    )}</div></div><div class="sidebar-section"><span class="eyebrow">THIS SEASON</span>${g.queue.length ? g.queue.map((q) => `<p class="charge"><strong>${esc(projects.find((p) => p.id === q.id)?.name)}</strong><span>${esc(g.court.find((c) => c.id === q.who)?.name)} · entrusted</span></p>`).join('') : '<p class="quiet">Your court awaits instructions.</p>'}${g.missions.map((m) => `<p class="charge"><strong>${esc(g.parties.find((p) => p.id === m.party)?.name)}</strong><span>Expected in ${Math.max(0, m.returns - g.turn)} season(s)</span></p>`).join('')}</div><div class="sidebar-section"><span class="eyebrow">WORD FROM THE VILLAGES</span><p>${resourceStory(g, 'happiness')}.</p>${btn('Read the latest chronicle →', 'chronicle', 'class="text-button"')}</div></section></aside>`;
+    )}</div></div><div class="sidebar-section"><span class="eyebrow">THIS SEASON</span>${g.queue.length ? g.queue.map((q) => `<p class="charge"><strong>${esc(projects.find((p) => p.id === q.id)?.name)}</strong><span>${esc(g.court.find((c) => c.id === q.who)?.name)} · entrusted</span></p>`).join('') : '<p class="quiet">' + ((g.courtWork?.initiatives || []).some((i) => i.status === 'active') ? 'Your court also carries its own undertakings.' : 'Your court awaits instructions.') + '</p>'}${g.missions.map((m) => `<p class="charge"><strong>${esc(g.parties.find((p) => p.id === m.party)?.name)}</strong><span>Expected in ${Math.max(0, m.returns - g.turn)} season(s)</span></p>`).join('')}</div><div class="sidebar-section"><span class="eyebrow">WORD FROM THE VILLAGES</span><p>${resourceStory(g, 'happiness')}.</p>${btn('Read the latest chronicle →', 'chronicle', 'class="text-button"')}</div></section></aside>`;
 }
 function commissionCards() {
   return `<div class="commission-grid">${projects.map((p, i) => `<button class="commission" data-action="decision" data-type="project" data-id="${p.id}" ${g.event || g.queue.length >= commissionCapacity(g) ? 'disabled' : ''}><span class="commission-icon" aria-hidden="true">${['⌁', '♧', '♜', '⚑', '✧', '◈', '⚙', '✎', '⚑'][i] || '❧'}</span><span class="commission-copy"><small>${{ stewardship: 'Works & welfare', martial: 'Duty & defense', diplomacy: 'Neighbors & belonging', intrigue: 'Secrets & justice' }[p.skill]}</small><strong>${esc(p.name)}</strong><span>${esc(p.desc)}</span></span><span class="commission-arrow" aria-hidden="true">→</span></button>`).join('')}</div>`;
@@ -320,14 +329,14 @@ function council() {
     )
     .join(
       '',
-    )}</div><div class="recent-chapter"><span class="eyebrow">THE LAST WORD IN YOUR CHRONICLE</span><p>${esc(g.log[0])}</p></div><details class="optional-council"><summary>Direct a commission or review edicts</summary><p class="quiet">Your court brings opportunities forward. You may also initiate work when the season leaves room for it.</p>${commissionCards()}<div class="edict-call"><div><h3>The laws you live by</h3><p>${esc(g.policies.tax)} levy · ${esc(g.policies.law)} justice · ${esc(g.policies.rites)} rites</p></div>${btn('Review edicts', 'decision', 'data-type="policy"')}</div></details></div>`;
+    )}</div>${courtWorkBrief(g)}<div class="recent-chapter"><span class="eyebrow">THE LAST WORD IN YOUR CHRONICLE</span><p>${esc(g.log[0])}</p></div><details class="optional-council"><summary>Direct a commission or review edicts</summary><p class="quiet">Your court brings opportunities forward. You may also initiate work when the season leaves room for it.</p>${commissionCards()}<div class="edict-call"><div><h3>The laws you live by</h3><p>${esc(g.policies.tax)} levy · ${esc(g.policies.law)} justice · ${esc(g.policies.rites)} rites</p></div>${btn('Review edicts', 'decision', 'data-type="policy"')}</div></details></div>`;
 }
 function memberCard(c) {
   const gone = c.status === 'departed' || !c.alive || c.status === 'ruler';
   return `<button class="member-card ${gone ? 'departed' : ''}" data-action="person" data-id="${c.id}" title="${esc(c.story)}"><span class="portrait-frame">${portrait(c)}</span><span class="member-copy"><small>${c.alive ? (c.status === 'departed' ? 'Former retainer' : c.status === 'ruler' ? 'Now sovereign' : c.role) : 'Remembered in service'}</small><strong>${esc(c.name)}</strong><span>${esc(raceName(c))} · ${esc(c.house || 'Independent')}</span><em>${esc((c.traits || []).join(' · '))}</em><span class="quiet">${qualitative(c.loyalty, 'loyalty')} in service · ${qualitative(c.affection, 'affection')} toward you</span><span class="read-profile">Open their story →</span></span></button>`;
 }
 function court() {
-  return `<div class="sheet-heading"><span class="eyebrow">THE PEOPLE BEHIND THE SEAL</span><h2>A court is a gathering of stories</h2><label class="portrait-style-label">How the court is pictured<select id="portrait-presentation">${['natural', 'formal', 'chronicle'].map((p) => '<option value="' + p + '" ' + (g.portraitPresentation === p ? 'selected' : '') + '>' + { natural: 'Naturalistic portraits', formal: 'Formal court paintings', chronicle: 'Illustrated chronicle' }[p] + '</option>').join('')}</select></label><p class="lead">Talent matters. So do the promises they remember, the people they love, and the office you ask them to carry.</p></div><div class="member-grid">${g.court.map(memberCard).join('')}</div><section class="section-inset"><div class="section-title"><div><span class="eyebrow">PETITIONERS FOR SERVICE</span><h2>Who deserves a place?</h2></div><span>${activeCourt(g).length} of ${courtCapacity(g)} seats filled</span></div><div class="candidate-list">${
+  return `<div class="sheet-heading"><span class="eyebrow">THE PEOPLE BEHIND THE SEAL</span><h2>A court is a gathering of stories</h2><label class="portrait-style-label">How the court is pictured<select id="portrait-presentation">${['natural', 'formal', 'chronicle'].map((p) => '<option value="' + p + '" ' + (g.portraitPresentation === p ? 'selected' : '') + '>' + { natural: 'Naturalistic portraits', formal: 'Formal court paintings', chronicle: 'Illustrated chronicle' }[p] + '</option>').join('')}</select></label><p class="lead">Talent matters. So do the promises they remember, the people they love, and the office you ask them to carry.</p></div>${personalTimeView(g)}${courtWorkView(g)}<div class="member-grid">${g.court.map(memberCard).join('')}</div><section class="section-inset"><div class="section-title"><div><span class="eyebrow">PETITIONERS FOR SERVICE</span><h2>Who deserves a place?</h2></div><span>${activeCourt(g).length} of ${courtCapacity(g)} seats filled</span></div><div class="candidate-list">${
     g.applicants
       .filter((c) => c.alive && !g.court.some((p) => p.id === c.id))
       .map(
@@ -352,7 +361,7 @@ function realm() {
   return `<div class="sheet-heading"><span class="eyebrow">A REALM BEYOND ITS LEDGERS</span><h2>Hearths, houses & distant banners</h2><p class="lead">Every border encloses a history. Every treaty touches people who remember the last one.</p></div><div class="realm-sections"><h3>The condition of your realm</h3><div class="condition-grid">${['infrastructure', 'trade', 'military', 'health', 'learning', 'ecology', 'justice', 'faith'].map((k) => `<button class="condition-card" data-action="resource" data-id="${k}" title="${esc(resourceStory(g, k))}"><small>${k}</small><span>${resourceStory(g, k)}</span><em>Read the report →</em></button>`).join('')}</div><h3>Prominent families</h3><div class="family-grid">${g.families.map((h) => `<button class="family-card" data-action="family" data-id="${h.id}"><span class="heraldry" aria-hidden="true">${h.crest === 'sun' ? '☼' : h.crest === 'leaf' ? '❧' : '♜'}</span><small>${esc(h.motto)}</small><strong>${esc(h.name)}</strong><span>${esc(h.estate)}</span><em>Enter the family archive →</em></button>`).join('')}</div><h3>Factions & neighboring realms</h3><div class="faction-grid">${g.factions.map((f) => `<button class="faction-card" data-action="faction" data-id="${f.id}" title="${esc(factionLore[f.id].goal)}">${factionCrest(g, f)}<small>${esc(f.kind)}${f.alliance ? ' · Sworn ally' : ''}</small><strong>${esc(f.name)}</strong><span>${qualitative(f.trust)} toward your throne</span><p>${factionLore[f.id].goal}</p><em>Read their history & intentions →</em></button>`).join('')}</div><h3>Places worth knowing</h3><div class="site-grid">${sites.map((s) => `<button class="site-card" data-action="site" data-id="${s.id}">${placePainting(g, s)}<span><small>${esc(s.kind)}</small><strong>${esc(s.name)}</strong><em>${esc(s.rumor)}</em></span></button>`).join('')}</div></div>`;
 }
 function adventures() {
-  return `<div class="hero">${landscape('ruins', 'An ancient sanctuary above a misty valley')}<div class="hero-caption"><span class="eyebrow">BEYOND THE SAFE ROAD</span><h2>Some doors need a different key</h2></div></div><div class="council-copy"><p class="lead dropcap">Your watch protects the living roads. For buried temples, restless ruins, and dangers without a banner, hire those who know how to return with a story.</p><h3>Companies seeking a patron</h3>${g.parties.map((p) => `<button class="party-card" data-action="party" data-id="${p.id}">${portrait(findPerson(g, p.leaderId) || { name: p.leader, portrait: p.portrait, artset: p.artset })}<span><small>${p.status === 'away' ? 'On an expedition' : p.wounds ? 'Recovering from wounds' : 'Available for a contract'}</small><strong>${esc(p.name)}</strong><span>${esc(p.members)}</span><em>${esc(p.story)}</em></span></button>`).join('')}<h3>Rumors worth following</h3><div class="quest-grid">${expeditions.map((t) => `<article class="quest">${landscape(sites.find((s) => s.id === t.site).scene, sites.find((s) => s.id === t.site).name)}<div><small>${g.completed.includes(t.id) ? (g.expeditionOutcomes[t.id] === 'failure' ? 'An expedition remembered · chapter closed' : 'A discovery remembered · chapter closed') : g.missions.some((m) => m.task === t.id) ? 'A company is seeking an answer' : 'An unresolved rumor'}</small><h3>${t.name}</h3><p>${t.story}</p>${btn('Consider a contract →', 'decision', `data-type="expedition" data-id="${t.id}" class="text-button" ${g.completed.includes(t.id) || g.missions.some((m) => m.task === t.id) ? 'disabled' : ''}`)}</div></article>`).join('')}</div><h3>The realm’s reliquary</h3>${g.treasures.length ? g.treasures.map((t) => `<article class="relic"><span aria-hidden="true">✧</span><div><h4>${relics[t.id].name}</h4><p>${relics[t.id].story}</p><em>${relics[t.id].effect}</em></div></article>`).join('') : '<p class="quiet">No relic yet rests in the hall. What you recover may become a gift, a bargain, or a responsibility.</p>'}</div>`;
+  return `<div class="hero">${landscape('ruins', 'An ancient sanctuary above a misty valley')}<div class="hero-caption"><span class="eyebrow">BEYOND THE SAFE ROAD</span><h2>Some doors need a different key</h2></div></div><div class="council-copy"><p class="lead dropcap">Your watch protects the living roads. For buried temples, restless ruins, and dangers without a banner, hire those who know how to return with a story.</p><h3>Companies seeking a patron</h3>${g.parties.map((p) => `<button class="party-card" data-action="party" data-id="${p.id}">${portrait(findPerson(g, p.leaderId) || { name: p.leader, portrait: p.portrait, artset: p.artset })}<span><small>${p.status === 'away' ? 'On an expedition' : p.wounds ? 'Recovering from wounds' : 'Available for a contract'}</small><strong>${esc(p.name)}</strong><span>${esc(p.members)}</span><em>${esc(p.story)}</em></span></button>`).join('')}<h3>Rumors worth following</h3><div class="quest-grid">${expeditions.map((t) => `<article class="quest">${landscape(sites.find((s) => s.id === t.site).scene, sites.find((s) => s.id === t.site).name)}<div><small>${g.completed.includes(t.id) ? (g.expeditionOutcomes[t.id] === 'failure' ? 'An expedition remembered · chapter closed' : 'A discovery remembered · chapter closed') : g.missions.some((m) => m.task === t.id) ? 'A company is seeking an answer' : 'An unresolved rumor'}</small><h3>${t.name}</h3><p>${t.story}</p>${btn('Consider a contract →', 'decision', `data-type="expedition" data-id="${t.id}" class="text-button" ${g.completed.includes(t.id) || g.missions.some((m) => m.task === t.id) ? 'disabled' : ''}`)}</div></article>`).join('')}</div><h3>The realm’s reliquary</h3>${g.treasures.length ? g.treasures.map((t) => `<article class="relic"><span aria-hidden="true">✧</span><div><h4>${relics[t.id].name}</h4><p>${relics[t.id].story}</p><em>${relics[t.id].effect}</em></div></article>`).join('') : '<p class="quiet">No relic yet rests in the hall. What you recover may become a gift, a bargain, or a responsibility.</p>'}${boonsView(g)}</div>`;
 }
 function lineage() {
   const adults = [
@@ -411,7 +420,7 @@ function personProfile(c, isCandidate = false) {
   const bonds = Object.values(g.relationships).filter(
     (b) => b.a === c.id || b.b === c.id,
   );
-  return `<div class="profile-head">${portrait(c, 'large')}<div><span class="eyebrow">${isCandidate ? 'A PETITIONER FOR SERVICE' : c.status === 'departed' ? 'A FORMER MEMBER OF YOUR COURT' : 'THE COURT ARCHIVE'}</span><h2 id="dialog-title">${esc(c.name)}</h2><p>${esc(raceName(c))} · ${esc(c.gender || 'Nonbinary')} · ${c.age} years · ${esc(c.house || 'Independent')}${c.role ? ' · ' + esc(c.role) : ''}</p><p class="traits">${(c.traits || []).map((t) => `<span>${esc(t)}</span>`).join('')}</p><blockquote>${esc(c.voice || '“A life in service is still a life of one’s own.”')}</blockquote></div></div>${actions}${achievementView(g, c)}<p class="lead dropcap">${esc(c.story)}</p><div class="profile-columns"><section><h3>The person beneath the office</h3><dl><dt>Disposition & appearance</dt><dd>${esc(c.disposition || c.traits?.[0] || 'Reserved')}. ${esc(c.appearance || 'A familiar presence at court.')}</dd><dt>Origins</dt><dd>${esc(c.origin || 'The settlements of your realm')}</dd><dt>What they hope for</dt><dd>${esc(c.desire)}</dd><dt>What they fear</dt><dd>${esc(c.fear || 'That their voice will go unheard.')}</dd><dt>Family & hearth</dt><dd>${esc(c.family || 'Their kin at home follow their fortunes with interest.')}</dd><dt>Faith & custom</dt><dd>${esc(c.faith || 'They keep the customs of their home hearth.')}</dd>${!isCandidate ? `<dt>In confidence</dt><dd>${c.trust >= 70 ? esc(c.secret || 'They have entrusted no further private matters to the record.') : 'There are parts of their story they do not yet trust you to hear.'}</dd>` : ''}</dl></section><section><h3>Their craft & convictions</h3>${Object.entries(
+  return `<div class="profile-head">${portrait(c, 'large')}<div><span class="eyebrow">${isCandidate ? 'A PETITIONER FOR SERVICE' : c.status === 'departed' ? 'A FORMER MEMBER OF YOUR COURT' : 'THE COURT ARCHIVE'}</span><h2 id="dialog-title">${esc(c.name)}</h2><p>${esc(raceName(c))} · ${esc(c.gender || 'Nonbinary')} · ${c.age} years · ${esc(c.house || 'Independent')}${c.role ? ' · ' + esc(c.role) : ''}</p><p class="traits">${(c.traits || []).map((t) => `<span>${esc(t)}</span>`).join('')}</p><blockquote>${esc(c.voice || '“A life in service is still a life of one’s own.”')}</blockquote></div></div>${actions}${achievementView(g, c)}${courtWorkView(g, c.id)}<p class="lead dropcap">${esc(c.story)}</p><div class="profile-columns"><section><h3>The person beneath the office</h3><dl><dt>Disposition & appearance</dt><dd>${esc(c.disposition || c.traits?.[0] || 'Reserved')}. ${esc(c.appearance || 'A familiar presence at court.')}</dd><dt>Origins</dt><dd>${esc(c.origin || 'The settlements of your realm')}</dd><dt>What they hope for</dt><dd>${esc(c.desire)}</dd><dt>What they fear</dt><dd>${esc(c.fear || 'That their voice will go unheard.')}</dd><dt>Family & hearth</dt><dd>${esc(c.family || 'Their kin at home follow their fortunes with interest.')}</dd><dt>Faith & custom</dt><dd>${esc(c.faith || 'They keep the customs of their home hearth.')}</dd>${!isCandidate ? `<dt>In confidence</dt><dd>${c.trust >= 70 ? esc(c.secret || 'They have entrusted no further private matters to the record.') : 'There are parts of their story they do not yet trust you to hear.'}</dd>` : ''}</dl></section><section><h3>Their craft & convictions</h3>${Object.entries(
     c.skills || {},
   )
     .map(([k, n]) => narrate(k, n, 'skill'))
@@ -521,7 +530,7 @@ function decisionContent() {
 }
 function choiceCard(o, action, blocked = false) {
   const disabled = blocked || o.disabled || g.resources.gold < o.cost;
-  return `<button class="decision-option" data-action="${action}" data-choice="${o.id}" ${disabled ? 'disabled' : ''} title="${esc(o.reason || '')}"><span class="option-ornament" aria-hidden="true">❧</span><span><strong>${esc(o.label)}</strong><span>${esc(o.note)}</span>${stakesSummary(g, g.event, o)}<small>${o.cost ? coins(o.cost) + ' gold from the treasury' : 'No treasury expense'}${g.resources.gold < o.cost ? (Math.round(g.resources.gold) >= o.cost ? ' · Balance is rounded; a little more coin is needed' : ' · Not enough coin') : ''}${o.disabled ? ' · ' + esc(o.reason) : ''}</small></span><b aria-hidden="true">→</b></button>`;
+  return `<button class="decision-option" data-action="${action}" data-choice="${o.id}" ${disabled ? 'disabled' : ''} title="${esc(o.reason || '')}"><span class="option-ornament" aria-hidden="true">❧</span><span><strong>${esc(o.label)}</strong><span>${esc(o.note)}</span>${stakesSummary(g, g.event, o)}${seasonalRiskView(g, g.event, o)}<small>${o.cost ? coins(o.cost) + ' gold from the treasury' : 'No treasury expense'}${g.resources.gold < o.cost ? (Math.round(g.resources.gold) >= o.cost ? ' · Balance is rounded; a little more coin is needed' : ' · Not enough coin') : ''}${o.disabled ? ' · ' + esc(o.reason) : ''}</small></span><b aria-hidden="true">→</b></button>`;
 }
 function audienceContent() {
   const e = g.event;
@@ -531,7 +540,7 @@ function audienceContent() {
     party = g.parties.find((p) => p.id === e.party);
   const d = e.action
     ? getDecision(g, e.action.type, e.action.target, e.agent)
-    : dilemmaDecision(g, e);
+    : dilemmaDecision(g, e) || seasonalDecision(g, e);
   const agents = d?.requiresMentor
     ? availableMentors(g, e.action.target)
     : d?.requiresAgent
@@ -551,7 +560,7 @@ function audienceContent() {
     .map((p) => `<p>${esc(p)}</p>`)
     .join(
       '',
-    )}</div>${dilemmaContext(g, e)}${agents ? `<label class="select-label">${d.requiresAgent ? 'Whose judgment will carry your seal?' : 'Which company will carry your contract?'}<select id="audience-agent">${agents.length ? agents.map((c) => `<option value="${c.id}" ${c.id === e.agent ? 'selected' : ''}>${esc(c.name)}${c.role ? ' · ' + esc(c.role) : ''}</option>`).join('') : '<option value="">No one is available</option>'}</select></label><p class="counsel-note">${esc(advice || (e.dilemma ? 'Your court is already committed. Local approaches remain possible, but nobody is free to take another dangerous charge.' : 'No rested company or available courtier can take this charge now. You can decline without expense.'))}</p>` : ''}${d?.type === 'project' && chosen ? forecastView(g, chosen, d.target) : ''}${advisorView(g, d ? { ...d, adviser: e.adviser, origin: e.origin, faction: e.faction } : e, eventOptions(g), chosen)}${d?.blocked ? `<p class="blocked">${esc(d.blocked)}</p>` : ''}<div class="decision-options">${eventOptions(
+    )}</div>${dilemmaContext(g, e)}${seasonalContext(g, e)}${agents ? `<label class="select-label">${d.requiresAgent ? 'Whose judgment will carry your seal?' : 'Which company will carry your contract?'}<select id="audience-agent">${agents.length ? agents.map((c) => `<option value="${c.id}" ${c.id === e.agent ? 'selected' : ''}>${esc(c.name)}${c.role ? ' · ' + esc(c.role) : ''}</option>`).join('') : '<option value="">No one is available</option>'}</select></label><p class="counsel-note">${esc(advice || (e.dilemma || e.seasonal ? 'Your court is already committed. Local approaches remain possible, but nobody is free to take another dangerous charge.' : 'No rested company or available courtier can take this charge now. You can decline without expense.'))}</p>` : ''}${d?.type === 'project' && chosen ? forecastView(g, chosen, d.target) : ''}${e.seasonal && e.seasonal.category !== 'decision' ? '' : advisorView(g, d ? { ...d, adviser: e.adviser, origin: e.origin, faction: e.faction } : e, eventOptions(g), chosen)}${d?.blocked ? `<p class="blocked">${esc(d.blocked)}</p>` : ''}<div class="decision-options">${eventOptions(
     g,
   )
     .map((o) => choiceCard(o, 'event'))
@@ -575,17 +584,17 @@ function tutorialContent() {
     ],
     [
       'Listen, then rule',
-      'Every audience offers several courses and an answer you can afford. The season waits while a petition needs a ruling. Commissions depend on the delegate’s skill, office, loyalty, and rivalries.',
+      'Every audience offers several courses and an answer you can afford. The season waits while a petition needs a ruling. Commissions depend on the delegate’s skill, office, loyalty, and rivalries. Courtiers can also begin modest work with their own savings; their progress appears in Court and seasonal reports.',
       'Return to the audience →',
     ],
     [
       'The realm remembers',
-      'Your first ruling has been recorded. Treasury and stores keep the household going; click them for a narrated report and an exact ledger. Closing a season tests commissions, pays wages, ages people, and brings the next visitors. Aftermath letters can show how earlier promises changed daily life.',
+      'Your first ruling has been recorded. Treasury and stores keep the household going; click them for a narrated report and an exact ledger. Closing a season tests commissions, pays wages, ages people, and brings the next visitors. Unexpected seasonal events have a 33% chance to occur. Aftermath letters can show how earlier promises changed daily life.',
       g.event ? 'Return to your court →' : 'Let the first season turn →',
     ],
     [
       'A legacy beyond one life',
-      'Your royal household includes surviving relatives, but no parents. Cultivate relationships, court a partner, and name any eligible adult heir in Lineage. The Chronicle menu saves, loads, exports backups, and reopens this guide. Decisions save automatically in this browser. The crown can pass; your campaign’s history remains.',
+      'Your royal household includes surviving relatives, but no parents. Personal time with companions costs no gold and uses a limited audience budget each season. Cultivate relationships, court a partner, and name any eligible adult heir in Lineage. The Chronicle menu saves, loads, exports backups, and reopens this guide. Decisions save automatically in this browser. The crown can pass; your campaign’s history remains.',
       'Begin your reign →',
     ],
   ];

@@ -1,5 +1,5 @@
-import { riskForecast } from './dilemmas.js?v=0.5.4';
-import { hazardKinds } from './dilemma-catalog.js?v=0.5.4';
+import { riskForecast } from './dilemmas.js?v=0.5.5';
+import { hazardKinds } from './dilemma-catalog.js?v=0.5.5';
 const esc = (s) =>
   String(s ?? '').replace(
     /[&<>"']/g,
@@ -52,7 +52,7 @@ export function stakesSummary(g, e, o) {
   const s = o.stakes;
   if (!s) return '';
   const actors = {
-    ...e?.dilemma?.actors,
+    ...(e?.dilemma?.actors || e?.seasonal?.actors),
     ruler: g.ruler.id,
     ...(e?.agent ? { adviser: e.agent } : {}),
   };
