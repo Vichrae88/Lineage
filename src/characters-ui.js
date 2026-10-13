@@ -1,12 +1,12 @@
-import { gold as coins } from './format.js?v=0.5.4';
+import { gold as coins } from './format.js?v=0.5.5';
 import {
   attributes,
   skills,
   traitRules,
   professionalForecast,
-} from './characters.js?v=0.5.4';
-import { personById } from './sim-core.js?v=0.5.4';
-import { escapeText as esc } from './reports-ui.js?v=0.5.4';
+} from './characters.js?v=0.5.5';
+import { personById } from './sim-core.js?v=0.5.5';
+import { escapeText as esc } from './reports-ui.js?v=0.5.5';
 const action = (label, type, id) =>
   '<button type="button" data-action="decision" data-type="' +
   type +

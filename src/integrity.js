@@ -1,6 +1,7 @@
-import { dilemmaEventValid } from './dilemmas.js?v=0.5.4';
-import { transitionsValid } from './transitions.js?v=0.5.4';
-import { idValid } from './sim-core.js?v=0.5.4';
+import { seasonalEventValid } from './seasonal.js?v=0.5.5';
+import { dilemmaEventValid } from './dilemmas.js?v=0.5.5';
+import { transitionsValid } from './transitions.js?v=0.5.5';
+import { idValid } from './sim-core.js?v=0.5.5';
 const unique = (rows, key = 'id') =>
   new Set(rows.map((row) => row[key])).size === rows.length;
 const objects = (value) =>
@@ -147,6 +148,7 @@ export function worldReferencesValid(g) {
     'claimant',
   ];
   for (const e of [g.event, ...g.pending, ...g.scheduled].filter(Boolean)) {
+    if (!seasonalEventValid(g, e)) return false;
     if (!dilemmaEventValid(g, e)) return false;
     if (e.engine && !['emergent', 'consequence'].includes(e.engine))
       return false;
@@ -213,6 +215,8 @@ export function worldReferencesValid(g) {
     ['arc', 'promise-', g.promises || []],
     ['arc', 'ambition-', g.ambitions || []],
     ['arc', 'dilemma-', g.dilemmas || []],
+    ['arc', 'initiative-', g.courtWork?.initiatives || []],
+    ['event', 'seasonal-', g.seasonal?.events || []],
   ]) {
     const max = Math.max(
       -1,

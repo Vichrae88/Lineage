@@ -1,6 +1,6 @@
-import { transitionsBetween } from './transitions.js?v=0.5.4';
-import { appendRecord, snapshot } from './history.js?v=0.5.4';
-import { bound, idValid } from './sim-core.js?v=0.5.4';
+import { transitionsBetween } from './transitions.js?v=0.5.5';
+import { appendRecord, snapshot } from './history.js?v=0.5.5';
+import { bound, idValid } from './sim-core.js?v=0.5.5';
 export function initPromises(g) {
   g.promises ||= [];
   for (const q of g.queue) {

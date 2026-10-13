@@ -5,6 +5,7 @@ import {
   resolveEvent,
   eventOptions,
   parseSave,
+  prepareAudience,
 } from '../src/game.js';
 import { serializeGame } from '../src/persistence.js';
 const { chromium } = await import(
@@ -43,6 +44,22 @@ const advance = async () => {
   await click('advance');
   await choose('accounts');
   await click('continue-court');
+  // Seasonal occurrences and the living court can now bring an audience here.
+  for (let n = 0; n < 40; n++) {
+    const g = parseSave(
+      await page.evaluate(() => localStorage.getItem('lineage-save')),
+    );
+    if (!g.event) break;
+    prepareAudience(g);
+    const options = eventOptions(g),
+      o =
+        options.find((o) => !o.disabled && o.cost === 0) ||
+        options.find((o) => !o.disabled && o.cost <= g.resources.gold);
+    assert.ok(o, g.event.title);
+    await choose(o.id);
+    await click('continue-court');
+    if (n === 39) throw Error('The audiences did not drain.');
+  }
   await close();
 };
 try {

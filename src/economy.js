@@ -1,10 +1,11 @@
+import { applySeasonalBoons, boonForecast } from './seasonal.js?v=0.5.5';
 import {
   projectedCommerce,
   commercialUpkeep,
   tickCommerce,
-} from './commerce.js?v=0.5.4';
-import { transitionsBetween } from './transitions.js?v=0.5.4';
-import { bound, delta } from './sim-core.js?v=0.5.4';
+} from './commerce.js?v=0.5.5';
+import { transitionsBetween } from './transitions.js?v=0.5.5';
+import { bound, delta } from './sim-core.js?v=0.5.5';
 export function seasonProjection(g) {
   const r = g.resources,
     nextSeason = (g.season + 1) % 4;
@@ -26,7 +27,8 @@ export function seasonProjection(g) {
     (n, v) => n + v.expected,
     0,
   );
-  const income = taxIncome + commercialIncome;
+  const gifts = boonForecast(g);
+  const income = taxIncome + commercialIncome + (gifts.gold || 0);
   const wages = court * 2;
   const institutions = g.institutions.filter((i) => i.status === 'active');
   const upkeep =
@@ -54,6 +56,8 @@ export function seasonProjection(g) {
   return {
     income,
     taxIncome,
+    magicalIncome: gifts.gold || 0,
+    magicalFood: gifts.food || 0,
     commercialIncome,
     wages,
     upkeep,
@@ -63,7 +67,7 @@ export function seasonProjection(g) {
     consumption,
     harvest,
     spoilage,
-    foodBalance: harvest - consumption - spoilage,
+    foodBalance: harvest - consumption - spoilage + (gifts.food || 0),
     nextSeason,
     assumptions:
       'Existing edicts and funded institutions; unfinished commissions may change these estimates.',
@@ -75,15 +79,18 @@ export function applyEconomy(g) {
   const r = g.resources;
   const actualCommercial = tickCommerce(g);
   p.commercialIncome = actualCommercial;
-  p.income = p.taxIncome + actualCommercial;
+  p.income = p.taxIncome + actualCommercial + p.magicalIncome;
   p.balance = p.income - p.spending;
-  const available = r.gold + p.taxIncome;
+  const available = r.gold + p.taxIncome + p.magicalIncome;
   g.wageFraction = p.wages ? Math.min(1, available / p.wages) : 1;
   g.fundedInstitutions = available >= p.spending;
   p.paidSpending = Math.min(available, p.spending);
   p.unpaid = Math.max(0, p.spending - available);
   r.gold = Math.max(0, available - p.spending);
   r.food = Math.max(0, r.food + p.foodBalance);
+  applySeasonalBoons(g, true, true);
+  p.magicalIncome = boonForecast(g).gold || 0;
+  p.magicalFood = boonForecast(g).food || 0;
   g.economyActual = p;
   return p;
 }

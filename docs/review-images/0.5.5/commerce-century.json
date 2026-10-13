@@ -1,0 +1,34 @@
+[
+  {
+    "scale": "town",
+    "year": 101,
+    "reigns": 2,
+    "ventures": 27,
+    "activeInvestments": 2,
+    "successfulReceipts": 727,
+    "failedReceipts": 30,
+    "largestSeasonalCommercialReceipt": 47,
+    "netCommercialReturn": 736,
+    "gold": 2631,
+    "population": 1821,
+    "majorRecords": 2919,
+    "uniquePetitions": 346,
+    "saveBytes": 4138626
+  },
+  {
+    "scale": "province",
+    "year": 101,
+    "reigns": 2,
+    "ventures": 29,
+    "activeInvestments": 2,
+    "successfulReceipts": 726,
+    "failedReceipts": 44,
+    "largestSeasonalCommercialReceipt": 48,
+    "netCommercialReturn": 669,
+    "gold": 3949,
+    "population": 17433,
+    "majorRecords": 2987,
+    "uniquePetitions": 345,
+    "saveBytes": 4292773
+  }
+]

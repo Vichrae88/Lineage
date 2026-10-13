@@ -1,5 +1,5 @@
-import { gold as coins, moneyField } from './format.js?v=0.5.4';
-import { narrativeForRecord, recordTransitions } from './narrative.js?v=0.5.4';
+import { gold as coins, moneyField } from './format.js?v=0.5.5';
+import { narrativeForRecord, recordTransitions } from './narrative.js?v=0.5.5';
 const esc = (s) =>
   String(s ?? '').replace(
     /[&<>"']/g,

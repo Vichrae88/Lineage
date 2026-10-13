@@ -956,3 +956,12 @@ small, .eyebrow { font-size: 11px; }
 .decision-option > span > .choice-stake, .decision-option > span > .choice-risk, .decision-option > span > .choice-pledge { font:13px/1.6 var(--serif); color:#70472c; }
 .decision-option > span > .choice-risk { border-left:2px solid #916c42; padding-left:10px; }
 @media(max-width:600px) { .dilemma-context { padding:14px; } .dilemma-context > p:first-of-type { font-size:20px; } }
+
+/* Court initiative reports and personal audiences use the existing parchment. */
+.personal-time,.seasonal-note{padding:1rem 1.2rem;margin:1rem 0;background:#eadcbb;border:1px solid #ab8a50;color:#443321}
+.personal-time p,.seasonal-note p{margin:.4rem 0}
+.initiative-list{display:grid;gap:1rem;margin-top:1rem}
+.initiative-card{display:grid;grid-template-columns:72px minmax(0,1fr);gap:1rem;padding:1rem;background:#f7edd5;border:1px solid #b49a68;border-radius:4px;color:#3f3022}
+.initiative-card h4{margin:0 0 .3rem}.initiative-card blockquote{margin:.65rem 0;font-size:1rem;line-height:1.65;color:#473720}
+.initiative-status{color:#655029;font-size:.86rem;margin:.3rem 0}.seasonal-boons{margin-top:1.4rem}
+@media(max-width:600px){.initiative-card{grid-template-columns:52px minmax(0,1fr);padding:.8rem;gap:.65rem}.initiative-card .profile-actions{display:flex;flex-wrap:wrap}.initiative-card blockquote{font-size:.92rem}}

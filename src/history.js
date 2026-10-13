@@ -2,7 +2,7 @@ import {
   personMetrics,
   factionMetrics,
   transitionsBetween,
-} from './transitions.js?v=0.5.4';
+} from './transitions.js?v=0.5.5';
 import {
   dateOf,
   delta,
@@ -11,7 +11,7 @@ import {
   idValid,
   bound,
   rememberPerson,
-} from './sim-core.js?v=0.5.4';
+} from './sim-core.js?v=0.5.5';
 export function initHistory(g) {
   g.serial ||= {
     record: 0,
