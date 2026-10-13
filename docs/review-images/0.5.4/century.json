@@ -1,0 +1,34 @@
+[
+  {
+    "scale": "town",
+    "seed": 72,
+    "year": 101,
+    "reigns": 3,
+    "activePeople": 52,
+    "rememberedPeople": 264,
+    "majorRecords": 1506,
+    "uniqueEmergentPetitions": 118,
+    "seasonsWithoutFood": 0,
+    "gold": 2837,
+    "population": 1829,
+    "food": 186,
+    "saveBytes": 2687475,
+    "elapsedMs": 21270
+  },
+  {
+    "scale": "province",
+    "seed": 72,
+    "year": 101,
+    "reigns": 3,
+    "activePeople": 57,
+    "rememberedPeople": 271,
+    "majorRecords": 1521,
+    "uniqueEmergentPetitions": 118,
+    "seasonsWithoutFood": 0,
+    "gold": 4153,
+    "population": 17466,
+    "food": 248,
+    "saveBytes": 2762813,
+    "elapsedMs": 9897
+  }
+]

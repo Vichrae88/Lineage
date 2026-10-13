@@ -57,12 +57,26 @@ test('Beastfolk populate the court and recruitment roster with diverse species a
   for (let seed = 1; seed <= 12; seed++) {
     const g = campaign(seed, { race: 'Beastfolk' });
     assert.ok(
-      g.court.filter(c=>c.race==='Beastfolk').every(
-        (c) => c.race === 'Beastfolk' && animalHeritages.includes(c.species),
-      ),
+      g.court
+        .filter((c) => c.race === 'Beastfolk')
+        .every(
+          (c) => c.race === 'Beastfolk' && animalHeritages.includes(c.species),
+        ),
     );
-    assert.equal(new Set(g.court.filter(c=>c.race==='Beastfolk').map((c) => c.species)).size, 2);
-    assert.equal(new Set(g.applicants.filter(c=>c.race==='Beastfolk').map((c) => c.species)).size, 5);
+    assert.equal(
+      new Set(
+        g.court.filter((c) => c.race === 'Beastfolk').map((c) => c.species),
+      ).size,
+      2,
+    );
+    assert.equal(
+      new Set(
+        g.applicants
+          .filter((c) => c.race === 'Beastfolk')
+          .map((c) => c.species),
+      ).size,
+      5,
+    );
     assert.ok(
       g.applicants.every(
         (c) => c.artset === 'campaign' && c.name.split(' ').length >= 2,
@@ -188,11 +202,23 @@ test('incident decisions change faction relationships and schedule the chosen af
     g.event = structuredClone(
       g.storyDeck.find((e) => e.faction === faction && e.followups),
     );
-    const trust = g.factions.find((f) => f.id === faction).trust,
+    const standing = structuredClone(g.factions.find((f) => f.id === faction)),
       choice = g.event.options[0],
       name = g.event.title;
     assert.ok(resolveEvent(g, choice.id).ok);
-    assert.equal(g.factions.find((f) => f.id === faction).trust, trust + 9);
+    const after = g.factions.find((f) => f.id === faction);
+    for (const [metric, change] of Object.entries(
+      choice.relations[faction] || {},
+    ))
+      assert.equal(
+        after[metric],
+        Math.max(0, Math.min(100, standing[metric] + change)),
+      );
+    assert.notDeepEqual(
+      after,
+      standing,
+      'The relevant community must feel this particular ruling.',
+    );
     assert.ok(g.scheduled[0].text.includes(choice.label.toLowerCase()));
     assert.notEqual(g.scheduled[0].title, name);
   }

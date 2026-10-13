@@ -1,4 +1,5 @@
-import { commercialForecast } from './commerce.js?v=0.5.3';
+import { moralAssessment } from './moral-advice.js?v=0.5.4';
+import { commercialForecast } from './commerce.js?v=0.5.4';
 // Advice is a reading of public state, not an extra simulation roll.
 const lenses = {
   Steward: {
@@ -250,10 +251,20 @@ function assess(g, d, p, o, agent) {
     if (v?.condition < 45 && o.id === 'maintain') score += 15;
     if (g.resources.gold < 12 && o.id === 'pause') score += 9;
   }
-  if (['postpone', 'refuse', 'decline', 'close', 'blame'].includes(o.id))
+  if (
+    !o.stakes &&
+    ['postpone', 'refuse', 'decline', 'close', 'blame'].includes(o.id)
+  )
     score -= 3;
+  const moral = moralAssessment(g, d, p, o);
+  score += moral.score;
   parts.sort((a, b) => b[1] - a[1]);
-  return { option: o, score, priority: parts.find(([, n]) => n > 0)?.[0] };
+  return {
+    option: o,
+    score,
+    moral,
+    priority: parts.find(([, n]) => n > 0)?.[0],
+  };
 }
 export function decisionAdvice(
   g,
@@ -295,10 +306,23 @@ export function decisionAdvice(
         ((a.id === decision.adviser ? 40 : 0) + (a.skills?.[skill] || 0)) ||
       a.id.localeCompare(b.id),
   );
-  const voices = [
-    advisers[0],
-    advisers.find((p) => p.role !== advisers[0].role) || advisers[1],
-  ].filter(Boolean);
+  const ranked = (p) =>
+    offered
+      .map((o) => assess(g, decision, p, o, agent))
+      .sort(
+        (a, b) => b.score - a.score || a.option.id.localeCompare(b.option.id),
+      );
+  const leadChoice = ranked(advisers[0])[0].option.id;
+  const other =
+    advisers
+      .slice(1)
+      .find(
+        (p) =>
+          p.role !== advisers[0].role && ranked(p)[0].option.id !== leadChoice,
+      ) ||
+    advisers.find((p) => p.role !== advisers[0].role) ||
+    advisers[1];
+  const voices = [advisers[0], other].filter(Boolean);
   return voices.map((p) => {
     const assessments = offered
       .map((o) => assess(g, decision, p, o, agent))
@@ -307,9 +331,11 @@ export function decisionAdvice(
       );
     const best = assessments[0],
       o = best.option;
-    let reason = best.priority
-      ? 'My concern is ' + focus[best.priority] + '.'
-      : 'This is the course I can support within the coin and authority we presently have.';
+    let reason = o.stakes
+      ? best.moral.argument
+      : best.priority
+        ? 'My concern is ' + focus[best.priority] + '.'
+        : 'This is the course I can support within the coin and authority we presently have.';
     if (
       best.priority &&
       ['food', 'health', 'security', 'legitimacy'].includes(best.priority) &&
@@ -319,6 +345,16 @@ export function decisionAdvice(
     if (g.resources.gold - (o.cost || 0) < 10)
       reason +=
         ' It leaves very little coin for the next wages and obligations.';
+    if (best.moral.risk)
+      reason +=
+        ' This carries ' +
+        best.moral.risk.level +
+        '; ' +
+        best.moral.risk.skill +
+        ' can reduce the danger, but cannot purchase certainty.';
+    if (best.moral.personalRisk)
+      reason +=
+        ' It also puts my own life and service at risk; you should hear that interest plainly.';
     const positives = Object.entries(o.relations || {}).find(
       ([id, r]) =>
         id === p.faction && (r.trust > 0 || r.respect > 0 || r.grievance < 0),
@@ -346,8 +382,7 @@ export function decisionAdvice(
       choice: o.id,
       label: o.label,
       commentary:
-        conviction(p) +
-        ' ' +
+        (o.stakes ? '' : conviction(p) + ' ') +
         reason +
         (history
           ? ' This hearing follows the recorded ' +
