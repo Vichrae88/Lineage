@@ -2,7 +2,7 @@
 
 A seasonal fantasy roleplaying game about ruling a realm and the people who make it live. [Play the current release](https://vichrae88.github.io/Lineage/).
 
-**This branch contains Lineage 0.5.3 for review.** Reading surfaces now use illuminated parchment against a wood-toned backdrop, gold displays as whole coins, advisors give contextual recommendations, and petitions offer more issue-specific approaches. See [the visual and council review](docs/council-visual-review.md) for screenshots, tests, and compatibility details. The public Pages source remains `feature/immersion-economy` on 0.5.1; `feature/council-and-parchment` is an unserved review branch. The [isolated preview](https://vichrae88.github.io/Lineage/?preview=1) keeps separate browser-save slots, but still runs the public release.
+**This branch contains Lineage 0.5.4 for review.** Petitions now weigh consent, duty, truth, livelihoods and survival, with real personal and political costs. Advisors bring conflicting convictions; dangerous rulings can injure people, cost lives and leave obligations for later rulers. See [the moral dilemma review](docs/moral-dilemmas-review.md) for examples, screenshots, tests and compatibility details. The parchment interface and whole-coin presentation from 0.5.3 remain. GitHub Pages still serves `feature/immersion-economy` on 0.5.1; `feature/moral-dilemmas` is an unserved review branch. The [isolated preview](https://vichrae88.github.io/Lineage/?preview=1) runs the public release with separate save slots.
 
 ## Develop
 
@@ -28,6 +28,7 @@ LINEAGE_CHROMIUM=/usr/bin/chromium \
 node scripts/browser-check.mjs
 # With the same environment settings, also run:
 node scripts/council-visual-check.mjs
+node scripts/moral-browser-check.mjs
 node scripts/enhancement-browser-check.mjs
 node scripts/portrait-polish-check.mjs
 ```
@@ -74,9 +75,19 @@ Decisions save automatically in the browser. Chronicle provides load, export, im
 
 Compact version-5 saves store each individual once and refer to that identity from household lists. Imports accept earlier production schemas and validate nested data and references. Older campaigns retain known people, names, locations, pending work, and history. Unknown ancestry is left unrecorded. Browser storage quotas vary: export important chronicles to keep a backup outside the browser. Imports have a 12 MB limit.
 
+## Decisions and their aftermath
+
+New campaigns have 36 opening dilemmas with distinct choices about rights, obligations and risk. A flooded estate, an infected workshop, a missing scout and an ill veteran ask different questions. Costlier answers can damage trust, consent or legitimacy; free answers can preserve livelihoods while leaving people in danger. Food reserves, watch strength and existing relationships can also limit a ruling.
+
+A named courtier carries dangerous work and remains occupied until the report arrives. Their actual skill and loyalty, public conditions and sometimes royal reputation affect a bounded chance of harm. Reports record civilian losses and actual injuries or deaths. A death uses the existing inheritance, family and office systems. Reading advice or reloading does not reroll an outcome.
+
+The aftermath presents a further issue-specific choice. Important pledges enter Promises & obligations; honoring an unrelated bargain does not fulfill a promise to restore a veteran’s command or return a fever household’s freedom. Dead officers can be memorialized, and surviving veterans can become actual teachers. Five living-world pressures—hunger, damaged institutions, frontier disputes, succession claims and court rivalries—also carry moral stakes while retaining their original debt, ownership and relationship mechanics. Other strategic decisions retain their existing systems.
+
+Earlier saved petitions keep their recorded choices and prices. Newly generated living-world issues use the new rules. Court responses, undertakings, losses and causes remain in version-5 saves and the Chronicle across reigns.
+
 ## Review and publication
 
-The production Pages workflow publishes on `main`. The directly served branch is currently `feature/immersion-economy`; this review branch is `feature/council-and-parchment` and is not served. Keep both production sources unchanged until review. The separate pull-request workflow runs tests, builds, checks a century of play, and provides a downloadable build for review. Merge or production publication requires the user's review first.
+The production Pages workflow publishes on `main`. The directly served branch is currently `feature/immersion-economy`; this review branch is `feature/moral-dilemmas` and is not served. Keep both production sources unchanged until review. The separate pull-request workflow runs tests, builds, checks a century of play, and provides a downloadable build for review. Merge or production publication requires the user's review first.
 
 The current public release remains [vichrae88.github.io/Lineage](https://vichrae88.github.io/Lineage/). All assets use relative paths under `/Lineage/`.
 

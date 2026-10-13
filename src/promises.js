@@ -1,6 +1,6 @@
-import { transitionsBetween } from './transitions.js?v=0.5.3';
-import { appendRecord, snapshot } from './history.js?v=0.5.3';
-import { bound, idValid } from './sim-core.js?v=0.5.3';
+import { transitionsBetween } from './transitions.js?v=0.5.4';
+import { appendRecord, snapshot } from './history.js?v=0.5.4';
+import { bound, idValid } from './sim-core.js?v=0.5.4';
 export function initPromises(g) {
   g.promises ||= [];
   for (const q of g.queue) {
@@ -103,7 +103,7 @@ export function promisesValid(g) {
       (p) =>
         p &&
         idValid(p.id) &&
-        ['commission', 'education', 'commercial'].includes(p.kind) &&
+        ['commission', 'education', 'commercial', 'dilemma'].includes(p.kind) &&
         typeof p.title === 'string' &&
         Number.isInteger(p.created) &&
         Number.isInteger(p.due) &&
@@ -121,6 +121,15 @@ export function promisesValid(g) {
         p.total > 0 &&
         g.archive.some((e) => e.id === p.source) &&
         g.people[p.ruler] &&
+        (p.kind !== 'dilemma' ||
+          g.dilemmas?.some(
+            (c) => c.id === p.dilemma && c.source === p.source,
+          )) &&
+        (p.accepts === undefined ||
+          p.accepts === null ||
+          (Array.isArray(p.accepts) &&
+            p.accepts.length > 0 &&
+            p.accepts.every(idValid))) &&
         (!p.result || g.archive.some((e) => e.id === p.result)) &&
         (!p.person || g.people[p.person]) &&
         (!p.site || g.settlements[p.site]),

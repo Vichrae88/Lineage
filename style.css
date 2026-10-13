@@ -945,3 +945,14 @@ small, .eyebrow { font-size: 11px; }
 .member-card.departed .portrait { filter:grayscale(.75); }
 .built-landmark.worn { color:#81482e; opacity:1; }
 @media(max-width:600px) { .main-sheet nav button { flex:1 1 calc(33.333% - 6px); } }
+
+.dilemma-context { padding:18px 20px; margin:22px 0; border:1px solid #aa8957; border-left:4px solid #80512f; background:#eadabb; }
+.dilemma-context > p:first-of-type { font:22px/1.4 var(--serif); margin:10px 0 14px; }
+.dilemma-people { display:flex; flex-wrap:wrap; gap:12px 25px; margin:15px 0; }
+.dilemma-people > span { display:grid; }
+.dilemma-people small { color:var(--muted); font-size:11px; letter-spacing:0; text-transform:none; }
+.choice-values { display:flex; flex-wrap:wrap; gap:5px; }
+.choice-values > span { border:1px solid #ad956b; padding:3px 8px; font:11px/1.5 var(--ui); color:#614723; background:#eadbbd; }
+.decision-option > span > .choice-stake, .decision-option > span > .choice-risk, .decision-option > span > .choice-pledge { font:13px/1.6 var(--serif); color:#70472c; }
+.decision-option > span > .choice-risk { border-left:2px solid #916c42; padding-left:10px; }
+@media(max-width:600px) { .dilemma-context { padding:14px; } .dilemma-context > p:first-of-type { font-size:20px; } }

@@ -1,5 +1,5 @@
-import { decisionAdvice } from './advisors.js?v=0.5.3';
-import { portraitMarkup } from './portraits.js?v=0.5.3';
+import { decisionAdvice } from './advisors.js?v=0.5.4';
+import { portraitMarkup } from './portraits.js?v=0.5.4';
 const esc = (s) =>
   String(s ?? '').replace(
     /[&<>"']/g,

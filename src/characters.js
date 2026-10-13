@@ -5,10 +5,10 @@ import {
   rememberPerson,
   roll,
   idValid,
-} from './sim-core.js?v=0.5.3';
-import { transitionsBetween } from './transitions.js?v=0.5.3';
-import { appendRecord, addFact, snapshot } from './history.js?v=0.5.3';
-import { generatePerson, animalHeritages } from './campaign.js?v=0.5.3';
+} from './sim-core.js?v=0.5.4';
+import { transitionsBetween } from './transitions.js?v=0.5.4';
+import { appendRecord, addFact, snapshot } from './history.js?v=0.5.4';
+import { generatePerson, animalHeritages } from './campaign.js?v=0.5.4';
 export const attributes = [
   'strength',
   'dexterity',
@@ -276,6 +276,9 @@ export function relationship(g, a, b, kind = 'acquaintances') {
 }
 export const isBusy = (g, id) =>
   (personById(g, id)?.awayUntil || 0) > g.turn ||
+  (g.dilemmas || []).some(
+    (c) => c.status === 'pending' && c.professional === id,
+  ) ||
   (g.ventures || []).some(
     (v) => v.actor === id && ['forming', 'outbound'].includes(v.status),
   ) ||

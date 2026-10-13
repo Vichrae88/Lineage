@@ -1,5 +1,7 @@
-import { advisorView } from './advisors-ui.js?v=0.5.3';
-import { gold as coins } from './format.js?v=0.5.3';
+import { dilemmaDecision } from './dilemmas.js?v=0.5.4';
+import { dilemmaContext, stakesSummary } from './dilemma-ui.js?v=0.5.4';
+import { advisorView } from './advisors-ui.js?v=0.5.4';
+import { gold as coins } from './format.js?v=0.5.4';
 import {
   ambitionView,
   achievementView,
@@ -8,13 +10,13 @@ import {
   factionCrest,
   historicLandmarks,
   mapWorks,
-} from './world-flavor-ui.js?v=0.5.3';
-import { isBusy } from './characters.js?v=0.5.3';
-import { treasuryView, commercialAdvice } from './treasury-ui.js?v=0.5.3';
-import { promisesView } from './narrative-ui.js?v=0.5.3';
-import { serializeGame } from './persistence.js?v=0.5.3';
-import { familyTreeView, reignsView, claimView } from './dynasty-ui.js?v=0.5.3';
-import { commissionCapacity, courtCapacity } from './dynasty.js?v=0.5.3';
+} from './world-flavor-ui.js?v=0.5.4';
+import { isBusy } from './characters.js?v=0.5.4';
+import { treasuryView, commercialAdvice } from './treasury-ui.js?v=0.5.4';
+import { promisesView } from './narrative-ui.js?v=0.5.4';
+import { serializeGame } from './persistence.js?v=0.5.4';
+import { familyTreeView, reignsView, claimView } from './dynasty-ui.js?v=0.5.4';
+import { commissionCapacity, courtCapacity } from './dynasty.js?v=0.5.4';
 import {
   createGame,
   seasons,
@@ -40,8 +42,8 @@ import {
   household,
   prepareAudience,
   advance,
-} from './game.js?v=0.5.3';
-import { dispositions, presentations } from './campaign.js?v=0.5.3';
+} from './game.js?v=0.5.4';
+import { dispositions, presentations } from './campaign.js?v=0.5.4';
 import {
   projectionView,
   outcomeView,
@@ -49,13 +51,13 @@ import {
   archiveView,
   entryView,
   localDevelopmentView,
-} from './reports-ui.js?v=0.5.3';
+} from './reports-ui.js?v=0.5.4';
 import {
   characterDevelopmentView,
   forecastView,
-} from './characters-ui.js?v=0.5.3';
-import { portraitMarkup, portraitDescription } from './portraits.js?v=0.5.3';
-import { realmDemographics } from './demographics.js?v=0.5.3';
+} from './characters-ui.js?v=0.5.4';
+import { portraitMarkup, portraitDescription } from './portraits.js?v=0.5.4';
+import { realmDemographics } from './demographics.js?v=0.5.4';
 let sites, factionLore, expeditions, relics, projects;
 let returnModal = null;
 let modalStack = [];
@@ -519,7 +521,7 @@ function decisionContent() {
 }
 function choiceCard(o, action, blocked = false) {
   const disabled = blocked || o.disabled || g.resources.gold < o.cost;
-  return `<button class="decision-option" data-action="${action}" data-choice="${o.id}" ${disabled ? 'disabled' : ''} title="${esc(o.reason || '')}"><span class="option-ornament" aria-hidden="true">❧</span><span><strong>${esc(o.label)}</strong><span>${esc(o.note)}</span><small>${o.cost ? coins(o.cost) + ' gold from the treasury' : 'No treasury expense'}${g.resources.gold < o.cost ? (Math.round(g.resources.gold) >= o.cost ? ' · Balance is rounded; a little more coin is needed' : ' · Not enough coin') : ''}${o.disabled ? ' · ' + esc(o.reason) : ''}</small></span><b aria-hidden="true">→</b></button>`;
+  return `<button class="decision-option" data-action="${action}" data-choice="${o.id}" ${disabled ? 'disabled' : ''} title="${esc(o.reason || '')}"><span class="option-ornament" aria-hidden="true">❧</span><span><strong>${esc(o.label)}</strong><span>${esc(o.note)}</span>${stakesSummary(g, g.event, o)}<small>${o.cost ? coins(o.cost) + ' gold from the treasury' : 'No treasury expense'}${g.resources.gold < o.cost ? (Math.round(g.resources.gold) >= o.cost ? ' · Balance is rounded; a little more coin is needed' : ' · Not enough coin') : ''}${o.disabled ? ' · ' + esc(o.reason) : ''}</small></span><b aria-hidden="true">→</b></button>`;
 }
 function audienceContent() {
   const e = g.event;
@@ -529,19 +531,11 @@ function audienceContent() {
     party = g.parties.find((p) => p.id === e.party);
   const d = e.action
     ? getDecision(g, e.action.type, e.action.target, e.agent)
-    : null;
+    : dilemmaDecision(g, e);
   const agents = d?.requiresMentor
     ? availableMentors(g, e.action.target)
     : d?.requiresAgent
-      ? activeCourt(g).filter(
-          (c) =>
-            !g.queue.some((q) => q.who === c.id) &&
-            !g.trainingJobs.some(
-              (j) =>
-                j.status === 'active' &&
-                (j.student === c.id || j.mentor === c.id),
-            ),
-        )
+      ? activeCourt(g).filter((c) => !isBusy(g, c.id))
       : d?.requiresParty
         ? g.parties.filter((p) => p.status === 'available' && !p.wounds)
         : null;
@@ -557,7 +551,7 @@ function audienceContent() {
     .map((p) => `<p>${esc(p)}</p>`)
     .join(
       '',
-    )}</div>${agents ? `<label class="select-label">${d.requiresAgent ? 'Whose judgment will carry your seal?' : 'Which company will carry your contract?'}<select id="audience-agent">${agents.length ? agents.map((c) => `<option value="${c.id}" ${c.id === e.agent ? 'selected' : ''}>${esc(c.name)}${c.role ? ' · ' + esc(c.role) : ''}</option>`).join('') : '<option value="">No one is available</option>'}</select></label><p class="counsel-note">${esc(advice || 'No rested company or available courtier can take this charge now. You can decline without expense.')}</p>` : ''}${d?.type === 'project' && chosen ? forecastView(g, chosen, d.target) : ''}${advisorView(g, d ? { ...d, adviser: e.adviser, origin: e.origin, faction: e.faction } : e, eventOptions(g), chosen)}${d?.blocked ? `<p class="blocked">${esc(d.blocked)}</p>` : ''}<div class="decision-options">${eventOptions(
+    )}</div>${dilemmaContext(g, e)}${agents ? `<label class="select-label">${d.requiresAgent ? 'Whose judgment will carry your seal?' : 'Which company will carry your contract?'}<select id="audience-agent">${agents.length ? agents.map((c) => `<option value="${c.id}" ${c.id === e.agent ? 'selected' : ''}>${esc(c.name)}${c.role ? ' · ' + esc(c.role) : ''}</option>`).join('') : '<option value="">No one is available</option>'}</select></label><p class="counsel-note">${esc(advice || (e.dilemma ? 'Your court is already committed. Local approaches remain possible, but nobody is free to take another dangerous charge.' : 'No rested company or available courtier can take this charge now. You can decline without expense.'))}</p>` : ''}${d?.type === 'project' && chosen ? forecastView(g, chosen, d.target) : ''}${advisorView(g, d ? { ...d, adviser: e.adviser, origin: e.origin, faction: e.faction } : e, eventOptions(g), chosen)}${d?.blocked ? `<p class="blocked">${esc(d.blocked)}</p>` : ''}<div class="decision-options">${eventOptions(
     g,
   )
     .map((o) => choiceCard(o, 'event'))

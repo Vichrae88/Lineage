@@ -1,5 +1,5 @@
-import { gold as coins, moneyField } from './format.js?v=0.5.3';
-import { narrativeForRecord, recordTransitions } from './narrative.js?v=0.5.3';
+import { gold as coins, moneyField } from './format.js?v=0.5.4';
+import { narrativeForRecord, recordTransitions } from './narrative.js?v=0.5.4';
 const esc = (s) =>
   String(s ?? '').replace(
     /[&<>"']/g,
@@ -77,11 +77,13 @@ export function promisesView(g) {
     text:
       p.kind === 'education'
         ? 'Progress follows actual funded classes, not the passing calendar.'
-        : p.status === 'partial'
-          ? 'The commission made partial progress; its original promise remains in the record.'
-          : p.status === 'late'
-            ? 'The deadline passed; the people waiting have lost some confidence.'
-            : 'The undertaking and its result stay recorded across reigns.',
+        : p.kind === 'dilemma'
+          ? 'This is the unresolved duty created by a ruling. A later audience can fulfill it or break it; it is not completed by the calendar alone.'
+          : p.status === 'partial'
+            ? 'The commission made partial progress; its original promise remains in the record.'
+            : p.status === 'late'
+              ? 'The deadline passed; the people waiting have lost some confidence.'
+              : 'The undertaking and its result stay recorded across reigns.',
   }));
   const debts = g.obligations.map((o) => ({
     title: o.title || 'The guild’s grain advance',

@@ -1,24 +1,32 @@
 import {
+  chooseDilemmaAgent,
+  dilemmaOptions,
+  dilemmaEventValid,
+  settleDilemma,
+  tickDilemmas,
+  stakesValid,
+} from './dilemmas.js?v=0.5.4';
+import {
   issueChoices,
   projectStrategies,
   projectStrategyReport,
-} from './decision-strategies.js?v=0.5.3';
+} from './decision-strategies.js?v=0.5.4';
 import {
   royalAmbitions,
   declareAmbition,
   tickAmbitions,
-} from './ambitions.js?v=0.5.3';
-import { makePortraitRecipe } from './portraits.js?v=0.5.3';
+} from './ambitions.js?v=0.5.4';
+import { makePortraitRecipe } from './portraits.js?v=0.5.4';
 import {
   commercialDecision,
   startVenture,
   ventureManagement,
   manageVenture,
-} from './commerce.js?v=0.5.3';
-import { addPromise, tickPromises } from './promises.js?v=0.5.3';
-import { transitionsBetween } from './transitions.js?v=0.5.3';
-import { delta } from './sim-core.js?v=0.5.3';
-import { readSave } from './persistence.js?v=0.5.3';
+} from './commerce.js?v=0.5.4';
+import { addPromise, tickPromises } from './promises.js?v=0.5.4';
+import { transitionsBetween } from './transitions.js?v=0.5.4';
+import { delta } from './sim-core.js?v=0.5.4';
+import { readSave } from './persistence.js?v=0.5.4';
 import {
   courtCapacity,
   commissionCapacity,
@@ -27,7 +35,7 @@ import {
   beginReign,
   evolveRealm,
   governDistricts,
-} from './dynasty.js?v=0.5.3';
+} from './dynasty.js?v=0.5.4';
 import {
   roles,
   biographies,
@@ -43,20 +51,20 @@ import {
   followupReports,
   races,
   beastSpecies,
-} from './data.js?v=0.5.3';
-import { generateCampaign, freshSeed } from './campaign.js?v=0.5.3';
-import { initializeWorld, worldStateValid } from './world-state.js?v=0.5.3';
+} from './data.js?v=0.5.4';
+import { generateCampaign, freshSeed } from './campaign.js?v=0.5.4';
+import { initializeWorld, worldStateValid } from './world-state.js?v=0.5.4';
 import {
   snapshot,
   decisionRecord,
   appendRecord,
   addFact,
-} from './history.js?v=0.5.3';
+} from './history.js?v=0.5.4';
 import {
   seasonProjection,
   applyEconomy,
   finishSeasonReport,
-} from './economy.js?v=0.5.3';
+} from './economy.js?v=0.5.4';
 import {
   developmentProjects,
   developmentChoices,
@@ -65,7 +73,7 @@ import {
   tickInstitutions,
   dueConsequences,
   settleConsequence,
-} from './settlements.js?v=0.5.3';
+} from './settlements.js?v=0.5.4';
 import {
   skills,
   newPerson,
@@ -76,19 +84,19 @@ import {
   practice,
   startTraining,
   tickTraining,
-} from './characters.js?v=0.5.3';
+} from './characters.js?v=0.5.4';
 import {
   tickPeople,
   tickCommunities,
   recordDeath,
   recordMarriage,
   lifeExpectancy,
-} from './living.js?v=0.5.3';
+} from './living.js?v=0.5.4';
 import {
   generateEmergentEvent,
   resolveEmergent,
   tickObligations,
-} from './emergent.js?v=0.5.3';
+} from './emergent.js?v=0.5.4';
 export { professionalForecast, availableMentors };
 export { seasonProjection };
 export {
@@ -260,6 +268,7 @@ export function prepareAudience(g, e = g.event) {
     ];
     delete e.engine;
     delete e.action;
+    delete e.dilemma;
     delete e.speaker;
     appendRecord(g, {
       kind: 'closed-petition',
@@ -274,6 +283,12 @@ export function prepareAudience(g, e = g.event) {
     return false;
   };
   if (
+    e.dilemma?.phase === 'petition' &&
+    ['sleeping-ward', 'oath-illness'].includes(e.dilemma.key) &&
+    !findPerson(g, e.dilemma.actors.subject)?.alive
+  )
+    return cancel();
+  if (
     e.engine === 'emergent' &&
     e.template === 'rivalry' &&
     e.relation.some((id) => !findPerson(g, id)?.alive)
@@ -284,7 +299,7 @@ export function prepareAudience(g, e = g.event) {
     (!original.alive ||
       original.status === 'departed' ||
       original.id === g.ruler.id) &&
-    e.engine
+    (e.engine || e.dilemma)
   ) {
     if (
       [
@@ -323,7 +338,10 @@ export function prepareAudience(g, e = g.event) {
       ' now brings the community’s unfinished request.\n\n' +
       e.text;
     e.speaker = replacement.id;
+    if (e.dilemma?.phase === 'petition')
+      e.dilemma.actors.affected = replacement.id;
   }
+  chooseDilemmaAgent(g, e);
   const adviser = findPerson(g, e.adviser);
   if (adviser && !living(adviser)) {
     const replacement = activeCourt(g)[0];
@@ -2098,6 +2116,7 @@ function outsideNominee(g) {
 export function eventOptions(g) {
   const e = g.event;
   if (!e) return [];
+  if (e.dilemma) return dilemmaOptions(g, e);
   if (e.action) {
     const d = getDecision(g, e.action.type, e.action.target, e.agent);
     return [
@@ -2288,10 +2307,19 @@ export function resolveEvent(g, choice, agent) {
     );
   }
   const previousAgent = e.agent;
-  if (e.action && agent !== undefined) e.agent = agent;
+  const delegates = e.action || e.dilemma?.phase === 'petition';
+  if (delegates && agent !== undefined) {
+    if (
+      e.dilemma &&
+      agent !== null &&
+      !g.court.some((p) => p.id === agent && living(p) && !isBusy(g, p.id))
+    )
+      return result(false, 'Choose a living, available member of your court.');
+    e.agent = agent;
+  }
   const o = eventOptions(g).find((o) => o.id === choice);
   if (!o || o.disabled || g.resources.gold < o.cost) {
-    if (e.action) {
+    if (delegates) {
       if (previousAgent === undefined) delete e.agent;
       else e.agent = previousAgent;
     }
@@ -2440,20 +2468,24 @@ export function resolveEvent(g, choice, agent) {
     );
     if (choice === 'care') p.wounds = Math.max(0, p.wounds - 1);
   }
-  const reserved = e.engine
-    ? appendRecord(g, {
-        kind: 'decision',
-        people: [e.speaker],
-        site: e.site,
-        cause: e.origin || null,
-        text: 'A ruling awaits its recorded outcome.',
-      })
-    : null;
+  const reserved =
+    e.engine || e.dilemma
+      ? appendRecord(g, {
+          kind: 'decision',
+          people: [e.speaker],
+          site: e.site,
+          cause: e.origin || null,
+          text: 'A ruling awaits its recorded outcome.',
+        })
+      : null;
   if (reserved) e.decisionOrigin = reserved.id;
+  const moralLetter = e.dilemma ? settleDilemma(g, e, o, reserved.id) : null;
+  if (moralLetter && reserveEvent(g, moralLetter))
+    g.scheduled.push(moralLetter);
   if (e.engine === 'emergent') resolveEmergent(g, e, choice);
   if (e.engine === 'consequence') settleConsequence(g, e, choice);
   const speaker = findPerson(g, e.speaker);
-  if (speaker) {
+  if (speaker && !e.dilemma) {
     speaker.trust = clamp(
       speaker.trust +
         (['silence', 'protect', 'refuse', 'decline', 'postpone'].includes(
@@ -2472,7 +2504,7 @@ export function resolveEvent(g, choice, agent) {
     for (const [key, value] of Object.entries(o.person))
       speaker[key] = clamp(speaker[key] + value);
   }
-  if (e.followups?.[choice]) {
+  if (!e.dilemma && e.followups?.[choice]) {
     const letter = structuredClone(e.followups[choice]);
     letter.due = g.turn + 2;
     if (reserveEvent(g, letter)) g.scheduled.push(letter);
@@ -3080,6 +3112,7 @@ export function advance(g, prior = null) {
   const ok = advanceCore(g);
   if (ok) {
     initializeWorld(g, projects);
+    tickDilemmas(g);
     tickPeople(g);
     tickCommunities(g);
     evolveRealm(g);
@@ -3390,6 +3423,8 @@ export function parseSave(text) {
         finite(o.cost) &&
         o.cost >= 0 &&
         effectsOK(o.effects) &&
+        stakesValid(o.stakes) &&
+        (o.honor === undefined || typeof o.honor === 'boolean') &&
         (!o.relations || Object.values(o.relations).every(effectsOK)),
     );
   const generatedPersonOK = (c) =>
@@ -3498,6 +3533,7 @@ export function parseSave(text) {
     ((e.id === undefined || idOK(e.id)) &&
       str(e.title) &&
       str(e.text) &&
+      dilemmaEventValid(g, e) &&
       actionOK(e.action) &&
       (!e.followups ||
         Object.values(e.followups).every(

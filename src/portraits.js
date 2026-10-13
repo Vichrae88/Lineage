@@ -2,9 +2,9 @@ import {
   choosePaint,
   paintingMarkup,
   paintingValid,
-} from './portrait-painting.js?v=0.5.3';
-import { paintedFace } from './portrait-catalog.js?v=0.5.3';
-import { hash, bound } from './sim-core.js?v=0.5.3';
+} from './portrait-painting.js?v=0.5.4';
+import { paintedFace } from './portrait-catalog.js?v=0.5.4';
+import { hash, bound } from './sim-core.js?v=0.5.4';
 const starts = {
   Human: 0,
   Elf: 2,

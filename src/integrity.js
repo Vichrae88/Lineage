@@ -1,5 +1,6 @@
-import { transitionsValid } from './transitions.js?v=0.5.3';
-import { idValid } from './sim-core.js?v=0.5.3';
+import { dilemmaEventValid } from './dilemmas.js?v=0.5.4';
+import { transitionsValid } from './transitions.js?v=0.5.4';
+import { idValid } from './sim-core.js?v=0.5.4';
 const unique = (rows, key = 'id') =>
   new Set(rows.map((row) => row[key])).size === rows.length;
 const objects = (value) =>
@@ -19,6 +20,19 @@ export function worldReferencesValid(g) {
     institutions = new Set(g.institutions.map((i) => i.id)),
     families = new Set(g.families.map((h) => h.id)),
     factions = new Set(g.factions.map((f) => f.id));
+  if (
+    g.archive.some(
+      (e) =>
+        e.riskAssessment &&
+        (!Number.isFinite(e.riskAssessment.chanceOfHarm) ||
+          e.riskAssessment.chanceOfHarm < 0 ||
+          e.riskAssessment.chanceOfHarm > 0.72 ||
+          typeof e.riskAssessment.skill !== 'string' ||
+          (e.riskAssessment.delegate !== null &&
+            !people[e.riskAssessment.delegate])),
+    )
+  )
+    return false;
   if (
     !unique(g.institutions) ||
     !unique(g.consequences) ||
@@ -133,6 +147,7 @@ export function worldReferencesValid(g) {
     'claimant',
   ];
   for (const e of [g.event, ...g.pending, ...g.scheduled].filter(Boolean)) {
+    if (!dilemmaEventValid(g, e)) return false;
     if (e.engine && !['emergent', 'consequence'].includes(e.engine))
       return false;
     if (e.origin && !records.has(e.origin)) return false;
@@ -197,6 +212,7 @@ export function worldReferencesValid(g) {
     ['arc', 'debt-', g.obligations],
     ['arc', 'promise-', g.promises || []],
     ['arc', 'ambition-', g.ambitions || []],
+    ['arc', 'dilemma-', g.dilemmas || []],
   ]) {
     const max = Math.max(
       -1,

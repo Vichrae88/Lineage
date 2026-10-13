@@ -1,7 +1,7 @@
-import { createInstitution } from './settlements.js?v=0.5.3';
-import { newPerson, practice } from './characters.js?v=0.5.3';
-import { addPromise } from './promises.js?v=0.5.3';
-import { bound } from './sim-core.js?v=0.5.3';
+import { createInstitution } from './settlements.js?v=0.5.4';
+import { newPerson, practice } from './characters.js?v=0.5.4';
+import { addPromise } from './promises.js?v=0.5.4';
+import { bound } from './sim-core.js?v=0.5.4';
 export function commerceProposals(g) {
   const rows = [];
   for (const v of g.ventures) {

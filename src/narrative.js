@@ -1,4 +1,4 @@
-import { hash, personById } from './sim-core.js?v=0.5.3';
+import { hash, personById } from './sim-core.js?v=0.5.4';
 const adjectives = {
   trust: ['trust in your rule', 'grown', 'waned'],
   loyalty: ['loyalty to the crown', 'strengthened', 'weakened'],
