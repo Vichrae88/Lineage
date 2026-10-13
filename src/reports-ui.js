@@ -1,9 +1,10 @@
-import { dilemmaReport } from './dilemma-ui.js?v=0.5.4';
-import { advisorView } from './advisors-ui.js?v=0.5.4';
-import { gold as coins, moneyField } from './format.js?v=0.5.4';
-import { narrativeView, exactLedger } from './narrative-ui.js?v=0.5.4';
-import { seasonProjection } from './economy.js?v=0.5.4';
-import { personById } from './sim-core.js?v=0.5.4';
+import { seasonalAssessmentView } from './court-life-ui.js?v=0.5.5';
+import { dilemmaReport } from './dilemma-ui.js?v=0.5.5';
+import { advisorView } from './advisors-ui.js?v=0.5.5';
+import { gold as coins, moneyField } from './format.js?v=0.5.5';
+import { narrativeView, exactLedger } from './narrative-ui.js?v=0.5.5';
+import { seasonProjection } from './economy.js?v=0.5.5';
+import { personById } from './sim-core.js?v=0.5.5';
 export const escapeText = (s) =>
   String(s ?? '').replace(
     /[&<>"']/g,
@@ -42,7 +43,13 @@ export function projectionView(g, choices) {
     esc(p.assumptions) +
     '</p><div class="projection-grid"><section><h3>The treasury</h3><dl><dt>Expected income</dt><dd>' +
     coins(p.income) +
-    ' gold</dd><dt>Court wages</dt><dd>' +
+    ' gold</dd>' +
+    (p.magicalIncome
+      ? '<dt>Of this, lasting magical gifts</dt><dd>' +
+        coins(p.magicalIncome) +
+        ' gold</dd>'
+      : '') +
+    '<dt>Court wages</dt><dd>' +
     coins(p.wages) +
     '</dd><dt>Institutions & watch</dt><dd>' +
     coins(p.upkeep) +
@@ -54,7 +61,11 @@ export function projectionView(g, choices) {
     p.consumption +
     '</dd><dt>Expected harvest</dt><dd>' +
     p.harvest +
-    '</dd><dt>Expected spoilage</dt><dd>' +
+    '</dd>' +
+    (p.magicalFood
+      ? '<dt>Lasting gifts to the stores</dt><dd>' + p.magicalFood + '</dd>'
+      : '') +
+    '<dt>Expected spoilage</dt><dd>' +
     p.spoilage +
     '</dd><dt>Projected change</dt><dd>' +
     signed(p.foodBalance) +
@@ -99,6 +110,7 @@ export function outcomeView(g) {
     '</p>' +
     narrativeView(g, e) +
     dilemmaReport(g, e) +
+    seasonalAssessmentView(e) +
     exactLedger(g, e) +
     (o.facts.length
       ? '<h3>A lasting condition</h3>' +
@@ -156,7 +168,7 @@ export function seasonReportView(g) {
     ['Spring', 'Summer', 'Autumn', 'Winter'][r.season] +
     ', Year ' +
     r.year +
-    '</h2><p class="lead">Your commissions were tested, the household’s obligations came due, and the realm carried on.</p>' +
+    '</h2><p class="lead">Your commissions were tested, courtiers carried their own work forward, and the household’s obligations came due. Each new season also brings a 33% chance of an unexpected event.</p>' +
     narrativeView(g, {
       id: r.id,
       effects: r.changes,
@@ -319,6 +331,7 @@ export function entryView(g, id) {
     '</p>' +
     narrativeView(g, e) +
     dilemmaReport(g, e) +
+    seasonalAssessmentView(e) +
     exactLedger(g, e) +
     assessmentView(e) +
     (origin

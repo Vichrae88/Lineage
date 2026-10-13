@@ -102,9 +102,9 @@ try {
   await checkVersion();
   await page.screenshot({ path: folder + '/legacy-court.png' });
   await page.evaluate(async () => {
-    const { createGame } = await import('./src/game.js?v=0.5.4'),
-      { portraitMarkup } = await import('./src/portraits.js?v=0.5.4'),
-      { portraitCatalog } = await import('./src/portrait-catalog.js?v=0.5.4');
+    const { createGame } = await import('./src/game.js?v=0.5.5'),
+      { portraitMarkup } = await import('./src/portraits.js?v=0.5.5'),
+      { portraitCatalog } = await import('./src/portrait-catalog.js?v=0.5.5');
     const g = createGame({ seed: 713, race: 'Beastfolk', scale: 'town' }),
       rows = [];
     for (const species of [

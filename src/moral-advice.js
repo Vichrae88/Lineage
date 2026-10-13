@@ -1,6 +1,6 @@
-import { riskForecast } from './dilemmas.js?v=0.5.4';
-import { hazardKinds } from './dilemma-catalog.js?v=0.5.4';
-import { ethicalWeights } from './moral-beliefs.js?v=0.5.4';
+import { riskForecast } from './dilemmas.js?v=0.5.5';
+import { hazardKinds } from './dilemma-catalog.js?v=0.5.5';
+import { ethicalWeights } from './moral-beliefs.js?v=0.5.5';
 export { ethicalWeights };
 const actual = (p, k, n) =>
   Math.max(0, Math.min(k === 'wealth' ? Infinity : 100, p[k] + n)) - p[k];
@@ -8,7 +8,7 @@ export function moralAssessment(g, d, p, o) {
   if (!o.stakes) return { score: 0, argument: '' };
   const values = ethicalWeights(p),
     actors = {
-      ...d.dilemma?.actors,
+      ...(d.dilemma?.actors || d.seasonal?.actors),
       ruler: g.ruler.id,
       ...(d.agent ? { adviser: d.agent } : {}),
     };

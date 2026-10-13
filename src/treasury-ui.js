@@ -1,11 +1,11 @@
-import { gold as coins } from './format.js?v=0.5.4';
+import { gold as coins } from './format.js?v=0.5.5';
 import {
   commercialKinds,
   commercialForecast,
   projectedCommerce,
-} from './commerce.js?v=0.5.4';
-import { seasonProjection } from './economy.js?v=0.5.4';
-import { escapeText as esc } from './reports-ui.js?v=0.5.4';
+} from './commerce.js?v=0.5.5';
+import { seasonProjection } from './economy.js?v=0.5.5';
+import { escapeText as esc } from './reports-ui.js?v=0.5.5';
 const button = (text, kind, target) =>
   '<button data-action="decision" data-type="' +
   kind +
@@ -32,6 +32,11 @@ export function treasuryView(g, modal = false) {
     ' gold</strong></article></div><p class="quiet">Commercial receipts are estimates with risk, not guaranteed returns. Journey capital is at risk until the cargo returns.</p><div class="projection-grid"><section><h3>Where the coin comes from</h3><p>Levy, customary dues and existing trade: ' +
     coins(p.taxIncome ?? p.income) +
     ' gold.</p>' +
+    (p.magicalIncome
+      ? '<p>Gifts held in the public reliquary: ' +
+        coins(p.magicalIncome) +
+        ' gold each season.</p>'
+      : '') +
     business
       .map(
         (b) =>

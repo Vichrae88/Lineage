@@ -1,0 +1,248 @@
+[
+  {
+    "name": "creation",
+    "checked": 19,
+    "imageLabels": 4,
+    "failures": []
+  },
+  {
+    "name": "opening-audience",
+    "checked": 73,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "ruling",
+    "checked": 24,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "ruling-ledger",
+    "checked": 24,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "council",
+    "checked": 119,
+    "imageLabels": 3,
+    "failures": []
+  },
+  {
+    "name": "nav-hover",
+    "checked": 119,
+    "imageLabels": 3,
+    "failures": []
+  },
+  {
+    "name": "court",
+    "checked": 121,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "treasury",
+    "checked": 124,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "realm",
+    "checked": 165,
+    "imageLabels": 6,
+    "failures": []
+  },
+  {
+    "name": "adventures",
+    "checked": 89,
+    "imageLabels": 2,
+    "failures": []
+  },
+  {
+    "name": "lineage",
+    "checked": 129,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "character",
+    "checked": 114,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "faction",
+    "checked": 34,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "family",
+    "checked": 33,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "site",
+    "checked": 20,
+    "imageLabels": 1,
+    "failures": []
+  },
+  {
+    "name": "chronicle",
+    "checked": 15,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "chronicle-entry",
+    "checked": 15,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "promises",
+    "checked": 6,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "season-forecast",
+    "checked": 51,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "decision-hover",
+    "checked": 51,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "fever-audience",
+    "checked": 79,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "fever-result",
+    "checked": 36,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "mobile-council",
+    "checked": 115,
+    "imageLabels": 3,
+    "failures": []
+  },
+  {
+    "name": "mobile-court",
+    "checked": 117,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "mobile-treasury",
+    "checked": 120,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "mobile-realm",
+    "checked": 161,
+    "imageLabels": 6,
+    "failures": []
+  },
+  {
+    "name": "mobile-adventures",
+    "checked": 85,
+    "imageLabels": 2,
+    "failures": []
+  },
+  {
+    "name": "mobile-lineage",
+    "checked": 125,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "mobile-audience",
+    "checked": 79,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "council-own-work",
+    "checked": 128,
+    "imageLabels": 3,
+    "failures": []
+  },
+  {
+    "name": "court-own-work",
+    "checked": 131,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "initiative-response",
+    "checked": 31,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "initiative-encouragement",
+    "checked": 15,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "mobile-own-work",
+    "checked": 128,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "seasonal-positive",
+    "checked": 14,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "seasonal-recorded",
+    "checked": 10,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "public-magical-gifts",
+    "checked": 99,
+    "imageLabels": 2,
+    "failures": []
+  },
+  {
+    "name": "seasonal-negative",
+    "checked": 15,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "seasonal-mixed",
+    "checked": 15,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "seasonal-decision",
+    "checked": 49,
+    "imageLabels": 0,
+    "failures": []
+  },
+  {
+    "name": "mobile-seasonal-decision",
+    "checked": 49,
+    "imageLabels": 0,
+    "failures": []
+  }
+]

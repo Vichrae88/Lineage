@@ -1,7 +1,7 @@
-import { gold as coins } from './format.js?v=0.5.4';
-import { royalAmbitions } from './ambitions.js?v=0.5.4';
-import { escapeText as esc } from './reports-ui.js?v=0.5.4';
-import { hash } from './sim-core.js?v=0.5.4';
+import { gold as coins } from './format.js?v=0.5.5';
+import { royalAmbitions } from './ambitions.js?v=0.5.5';
+import { escapeText as esc } from './reports-ui.js?v=0.5.5';
+import { hash } from './sim-core.js?v=0.5.5';
 const link = (g, id, label) =>
   g.archive.some((e) => e.id === id)
     ? '<button class="text-button" data-action="entry" data-id="' +

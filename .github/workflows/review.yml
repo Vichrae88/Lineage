@@ -50,6 +50,7 @@ jobs:
           curl --fail --silent http://localhost:3002/ > /dev/null
           node scripts/council-visual-check.mjs
           node scripts/moral-browser-check.mjs
+          node scripts/seasonal-court-browser-check.mjs
           node scripts/browser-check.mjs
           node scripts/enhancement-browser-check.mjs
           node scripts/portrait-polish-check.mjs

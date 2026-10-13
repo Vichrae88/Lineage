@@ -2,7 +2,7 @@
 
 A seasonal fantasy roleplaying game about ruling a realm and the people who make it live. [Play the current release](https://vichrae88.github.io/Lineage/).
 
-**This branch contains Lineage 0.5.4 for review.** Petitions now weigh consent, duty, truth, livelihoods and survival, with real personal and political costs. Advisors bring conflicting convictions; dangerous rulings can injure people, cost lives and leave obligations for later rulers. See [the moral dilemma review](docs/moral-dilemmas-review.md) for examples, screenshots, tests and compatibility details. The parchment interface and whole-coin presentation from 0.5.3 remain. GitHub Pages still serves `feature/immersion-economy` on 0.5.1; `feature/moral-dilemmas` is an unserved review branch. The [isolated preview](https://vichrae88.github.io/Lineage/?preview=1) runs the public release with separate save slots.
+**This branch contains Lineage 0.5.5 for review.** Every new season has a 33% chance of an unexpected occurrence, drawn from 208 one-time events: 51 positive, 50 negative, 50 mixed and 57 decisions. Heroes can join the court, magical gifts sustain the realm, personal attention costs time rather than gold, and courtiers can finance modest improvements and report their progress. See [the seasons and court review](docs/seasons-and-court-review.md) for details, examples, screenshots and validation. The moral choices and parchment interface from 0.5.4 remain. GitHub Pages still serves `feature/immersion-economy` on 0.5.1; `feature/seasons-and-court` is an unserved review branch. The [isolated preview](https://vichrae88.github.io/Lineage/?preview=1) runs the public release with separate save slots.
 
 ## Develop
 
@@ -29,6 +29,7 @@ node scripts/browser-check.mjs
 # With the same environment settings, also run:
 node scripts/council-visual-check.mjs
 node scripts/moral-browser-check.mjs
+node scripts/seasonal-court-browser-check.mjs
 node scripts/enhancement-browser-check.mjs
 node scripts/portrait-polish-check.mjs
 ```
@@ -75,6 +76,16 @@ Decisions save automatically in the browser. Chronicle provides load, export, im
 
 Compact version-5 saves store each individual once and refer to that identity from household lists. Imports accept earlier production schemas and validate nested data and references. Older campaigns retain known people, names, locations, pending work, and history. Unknown ancestry is left unrecorded. Browser storage quotas vary: export important chronicles to keep a backup outside the browser. Imports have a 12 MB limit.
 
+## Unexpected seasons and a court with its own purpose
+
+The 33% seasonal lottery runs once per completed turn, alongside existing petitions and historical consequences. Its outcome is deterministic for the campaign and season, so loading does not reroll it. Authored events are drawn without replacement. Positive, negative and mixed occurrences apply their effects immediately and bring a free report to the throne. Decision events wait for your answer, offer three tailored approaches and include uncertain outcomes affected by the chosen courtier’s actual craft and loyalty. Every decision has a free approach even when no court member can accept dangerous work. After the catalogue is exhausted, fresh responses can arise from actual Chronicle chapters rather than replaying completed events.
+
+Seven heroic arrivals draw from existing prepared identities, retaining names and portraits. They join without an entrance fee when a seat is free, or wait in the recruitment roster for an opening; continuing wages still apply. Nine magical gifts remain with the realm across rulers. Recurring effects have limits, and coin and food gifts appear in seasonal forecasts and Treasury accounts.
+
+Listening privately, studying a case together and recognizing someone’s service cost no gold. Each uses a personal audience: two per town season, three for a province or city, four for a kingdom. The same person can receive that attention once a season. Kin can receive it too. The budget renews with the calendar and is shown in Court.
+
+Serving courtiers can begin one of 20 modest undertakings suited to their office, talents, loyalty, health, morale and private savings. They spend their own money, remain occupied during the work and report actual progress, setbacks, completion and professional growth. New starts leave someone free for royal commissions, and repeated improvements have diminishing returns. Reports appear in Council, Court, profiles, the seasonal account and the Chronicle. You may encourage the work with personal time, contribute materials for gold, end it without a refund, or hold new starts while existing work continues. Death, dismissal, a changed office or accession ends incompatible work; unfinished undertakings and their reports survive a change of ruler.
+
 ## Decisions and their aftermath
 
 New campaigns have 36 opening dilemmas with distinct choices about rights, obligations and risk. A flooded estate, an infected workshop, a missing scout and an ill veteran ask different questions. Costlier answers can damage trust, consent or legitimacy; free answers can preserve livelihoods while leaving people in danger. Food reserves, watch strength and existing relationships can also limit a ruling.
@@ -87,7 +98,7 @@ Earlier saved petitions keep their recorded choices and prices. Newly generated 
 
 ## Review and publication
 
-The production Pages workflow publishes on `main`. The directly served branch is currently `feature/immersion-economy`; this review branch is `feature/moral-dilemmas` and is not served. Keep both production sources unchanged until review. The separate pull-request workflow runs tests, builds, checks a century of play, and provides a downloadable build for review. Merge or production publication requires the user's review first.
+The production Pages workflow publishes on `main`. The directly served branch is currently `feature/immersion-economy`; this review branch is `feature/seasons-and-court` and is not served. Keep both production sources unchanged until review. The separate pull-request workflow runs tests, builds, checks a century of play, and provides a downloadable build for review. Merge or production publication requires the user's review first.
 
 The current public release remains [vichrae88.github.io/Lineage](https://vichrae88.github.io/Lineage/). All assets use relative paths under `/Lineage/`.
 

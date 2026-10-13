@@ -1,24 +1,24 @@
-import { ethicalWeights } from './moral-beliefs.js?v=0.5.4';
+import { ethicalWeights } from './moral-beliefs.js?v=0.5.5';
 import {
   dilemmas,
   moralChoices,
   hazardKinds,
   aftermathVoices,
   liveMoralOptions,
-} from './dilemma-catalog.js?v=0.5.4';
-import { appendRecord, addFact, snapshot } from './history.js?v=0.5.4';
-import { transitionsBetween } from './transitions.js?v=0.5.4';
+} from './dilemma-catalog.js?v=0.5.5';
+import { appendRecord, addFact, snapshot } from './history.js?v=0.5.5';
+import { transitionsBetween } from './transitions.js?v=0.5.5';
 import {
   personById,
   bound,
   hash,
   idValid,
   rememberPerson,
-} from './sim-core.js?v=0.5.4';
-import { isBusy } from './characters.js?v=0.5.4';
-import { recordDeath } from './living.js?v=0.5.4';
-import { apportionPopulation } from './demographics.js?v=0.5.4';
-import { addPromise } from './promises.js?v=0.5.4';
+} from './sim-core.js?v=0.5.5';
+import { isBusy } from './characters.js?v=0.5.5';
+import { recordDeath } from './living.js?v=0.5.5';
+import { apportionPopulation } from './demographics.js?v=0.5.5';
+import { addPromise } from './promises.js?v=0.5.5';
 const object = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const roles = ['affected', 'sponsor', 'adviser', 'subject', 'ruler'];
 const metrics = [

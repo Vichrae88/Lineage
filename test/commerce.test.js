@@ -1,3 +1,4 @@
+import { isBusy } from '../src/characters.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -180,7 +181,14 @@ test('a dead operator cannot earn a receipt and can be replaced without losing t
   turn(g);
   assert.equal(g.ventures[0].status, 'paused');
   assert.ok(
-    enact(g, 'operator', g.ventures[0].id, 'appoint', g.court[1].id).ok,
+    enact(
+      g,
+      'operator',
+      g.ventures[0].id,
+      'appoint',
+      g.court.find((p) => p.alive && p.status === 'serving' && !isBusy(g, p.id))
+        .id,
+    ).ok,
   );
   assert.equal(g.ventures[0].source, source);
   assert.equal(g.ventures[0].status, 'operating');

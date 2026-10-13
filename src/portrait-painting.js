@@ -1,5 +1,5 @@
-import { hash, bound } from './sim-core.js?v=0.5.4';
-import { portraitCatalog, paintedFace } from './portrait-catalog.js?v=0.5.4';
+import { hash, bound } from './sim-core.js?v=0.5.5';
+import { portraitCatalog, paintedFace } from './portrait-catalog.js?v=0.5.5';
 const esc = (s) =>
   String(s ?? '').replace(
     /[&<>"']/g,

@@ -1,3 +1,5 @@
+import { tickSeasonal } from '../src/seasonal.js';
+import { tickCourtWork } from '../src/court-initiatives.js';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import {
@@ -211,7 +213,9 @@ try {
   );
   await load(g);
   await audit('fever-audience', true);
-  await page.locator('dialog .advisor-council').screenshot({ path: folder + '/advisor-council.png' });
+  await page
+    .locator('dialog .advisor-council')
+    .screenshot({ path: folder + '/advisor-council.png' });
   const recommendations = await page
     .locator('.advisor-recommends')
     .allTextContents();
@@ -236,6 +240,82 @@ try {
   );
   await load(g);
   await audit('mobile-audience', true);
+  // Exercise the new reading surfaces with actual simulated encounters and work.
+  const own = createGame({
+    seed: 81,
+    scale: 'town',
+    race: 'Beastfolk',
+    history: 'Inherited',
+  });
+  resolveEvent(own, 'decline');
+  own.tutorial.complete = true;
+  for (const p of own.court) {
+    p.wealth = 80;
+    p.health = 90;
+    p.loyalty = 80;
+    p.morale = 80;
+    for (const k of Object.keys(p.skills)) p.skills[k] = 80;
+  }
+  for (let n = 0; n < 30 && !own.courtWork.initiatives.length; n++) {
+    own.turn++;
+    tickCourtWork(own);
+  }
+  own.resources.gold = 0;
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await load(own);
+  await audit('council-own-work', true);
+  await page.locator('[data-tab="court"]').click();
+  await audit('court-own-work', true);
+  await page.locator('[data-type="initiative"]').first().click();
+  await audit('initiative-response', true);
+  await page.locator('[data-choice="encourage"]').click();
+  await audit('initiative-encouragement');
+  await close();
+  await page.setViewportSize({ width: 360, height: 900 });
+  await page.locator('[data-tab="court"]').click();
+  await audit('mobile-own-work', true);
+  for (const category of ['positive', 'negative', 'mixed', 'decision']) {
+    const news = createGame({
+      seed: 81,
+      scale: 'town',
+      race: 'Beastfolk',
+      history: 'Inherited',
+    });
+    resolveEvent(news, 'decline');
+    news.tutorial.complete = true;
+    news.resources.gold = 500;
+    for (let n = 0; n < 1500; n++) {
+      news.turn++;
+      const e = tickSeasonal(news);
+      if (!e) continue;
+      news.event = e;
+      const h = news.seasonal.events.at(-1);
+      if (
+        h.category === category &&
+        (category !== 'positive' || h.definition.special?.kind === 'boon')
+      )
+        break;
+      const o = eventOptions(news).find(
+        (o) => !o.disabled && o.cost <= news.resources.gold,
+      );
+      assert.ok(resolveEvent(news, o.id).ok);
+    }
+    assert.equal(news.event.seasonal.category, category);
+    await page.setViewportSize({ width: 1440, height: 1100 });
+    await load(news);
+    await audit('seasonal-' + category, true);
+    if (category === 'positive') {
+      await page.locator('[data-choice="record"]').click();
+      await audit('seasonal-recorded');
+      await close();
+      await page.locator('[data-tab="adventures"]').click();
+      await audit('public-magical-gifts', true);
+    }
+    if (category === 'decision') {
+      await page.setViewportSize({ width: 360, height: 900 });
+      await audit('mobile-seasonal-decision', true);
+    }
+  }
   await writeFile(
     folder + '/contrast-audit.json',
     JSON.stringify(audits, null, 2),

@@ -2219,7 +2219,7 @@ export const dilemmas = {
     ],
   ),
 };
-// Additional alternatives keep their distinct 0.5.4 directions, with new human stakes.
+// Additional alternatives keep their distinct 0.5.5 directions, with new human stakes.
 const extraValues = {
   bond: ['duty', 'order'],
   wetland: ['restraint', 'mercy'],
