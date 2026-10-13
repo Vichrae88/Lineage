@@ -1,10 +1,11 @@
+import { attachLiveDilemma } from './dilemmas.js?v=0.5.4';
 import {
   commerceProposals,
   resolveCommerceEvent,
-} from './commerce-events.js?v=0.5.3';
-import { personById, bound } from './sim-core.js?v=0.5.3';
-import { appendRecord, addFact } from './history.js?v=0.5.3';
-import { createInstitution } from './settlements.js?v=0.5.3';
+} from './commerce-events.js?v=0.5.4';
+import { personById, bound } from './sim-core.js?v=0.5.4';
+import { appendRecord, addFact } from './history.js?v=0.5.4';
+import { createInstitution } from './settlements.js?v=0.5.4';
 const option = (id, label, note, cost, effects = {}) => ({
   id,
   label,
@@ -535,7 +536,7 @@ export function generateEmergentEvent(g) {
   g.eventMemory.subjects[e.speaker.id] = g.turn;
   g.eventMemory.fingerprints[e.template + ':' + e.fingerprint] = id;
   const name = e.speaker.name;
-  return {
+  return attachLiveDilemma(g, {
     ...e,
     id,
     type: 'audience',
@@ -557,7 +558,7 @@ export function generateEmergentEvent(g) {
       '.\n\n' +
       e.text +
       '\n\nThe choices before you will enter the history of this place, alongside the work already done there.',
-  };
+  });
 }
 export function resolveEmergent(g, e, choice) {
   if (
@@ -584,6 +585,9 @@ export function resolveEmergent(g, e, choice) {
         source: debt.id,
         due: g.turn + 2,
         amount: 8,
+        principal: 8,
+        paid: 0,
+        originalDue: g.turn + 2,
         status: 'active',
         faction: 'guild',
       });

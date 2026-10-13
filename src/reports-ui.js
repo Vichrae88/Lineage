@@ -1,8 +1,9 @@
-import { advisorView } from './advisors-ui.js?v=0.5.3';
-import { gold as coins, moneyField } from './format.js?v=0.5.3';
-import { narrativeView, exactLedger } from './narrative-ui.js?v=0.5.3';
-import { seasonProjection } from './economy.js?v=0.5.3';
-import { personById } from './sim-core.js?v=0.5.3';
+import { dilemmaReport } from './dilemma-ui.js?v=0.5.4';
+import { advisorView } from './advisors-ui.js?v=0.5.4';
+import { gold as coins, moneyField } from './format.js?v=0.5.4';
+import { narrativeView, exactLedger } from './narrative-ui.js?v=0.5.4';
+import { seasonProjection } from './economy.js?v=0.5.4';
+import { personById } from './sim-core.js?v=0.5.4';
 export const escapeText = (s) =>
   String(s ?? '').replace(
     /[&<>"']/g,
@@ -97,6 +98,7 @@ export function outcomeView(g) {
     esc(o.text) +
     '</p>' +
     narrativeView(g, e) +
+    dilemmaReport(g, e) +
     exactLedger(g, e) +
     (o.facts.length
       ? '<h3>A lasting condition</h3>' +
@@ -316,6 +318,7 @@ export function entryView(g, id) {
     esc(e.text) +
     '</p>' +
     narrativeView(g, e) +
+    dilemmaReport(g, e) +
     exactLedger(g, e) +
     assessmentView(e) +
     (origin

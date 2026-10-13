@@ -2,9 +2,9 @@ import {
   projectedCommerce,
   commercialUpkeep,
   tickCommerce,
-} from './commerce.js?v=0.5.3';
-import { transitionsBetween } from './transitions.js?v=0.5.3';
-import { bound, delta } from './sim-core.js?v=0.5.3';
+} from './commerce.js?v=0.5.4';
+import { transitionsBetween } from './transitions.js?v=0.5.4';
+import { bound, delta } from './sim-core.js?v=0.5.4';
 export function seasonProjection(g) {
   const r = g.resources,
     nextSeason = (g.season + 1) % 4;

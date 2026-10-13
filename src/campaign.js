@@ -1,10 +1,11 @@
-import { issueChoices } from './decision-strategies.js?v=0.5.3';
+import { attachDilemma } from './dilemmas.js?v=0.5.4';
+import { issueChoices } from './decision-strategies.js?v=0.5.4';
 import {
   races,
   sites as oldSites,
   expeditions as oldExpeditions,
   relics as oldRelics,
-} from './data.js?v=0.5.3';
+} from './data.js?v=0.5.4';
 
 export const dispositions = [
   'Patient',
@@ -1586,21 +1587,25 @@ export function generateCampaign(seed, ruler, baseProjects = []) {
         },
       ]),
     );
-    return {
-      id,
-      type: 'audience',
-      title: title + ' · ' + site.name,
-      archetype,
-      site: siteId,
-      speaker: visitor.id,
-      adviser: adviser.id,
-      faction,
-      backdrop,
-      scene: site.scene,
-      text,
-      options,
-      followups,
-    };
+    return attachDilemma(
+      {
+        id,
+        type: 'audience',
+        title: title + ' · ' + site.name,
+        archetype,
+        site: siteId,
+        speaker: visitor.id,
+        adviser: adviser.id,
+        faction,
+        backdrop,
+        scene: site.scene,
+        text,
+        options,
+        followups,
+      },
+      notables,
+      court,
+    );
   });
   const requests = projects.map((p, i) => ({
     id: 'request-' + p.id,

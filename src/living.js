@@ -1,20 +1,20 @@
-import { closeKin } from './dynasty.js?v=0.5.3';
-import { apportionPopulation } from './demographics.js?v=0.5.3';
+import { closeKin } from './dynasty.js?v=0.5.4';
+import { apportionPopulation } from './demographics.js?v=0.5.4';
 import {
   bound,
   roll,
   hash,
   personById,
   rememberPerson,
-} from './sim-core.js?v=0.5.3';
+} from './sim-core.js?v=0.5.4';
 import {
   newPerson,
   practice,
   relationship,
   isBusy,
-} from './characters.js?v=0.5.3';
-import { appendRecord, addFact } from './history.js?v=0.5.3';
-import { races } from './data.js?v=0.5.3';
+} from './characters.js?v=0.5.4';
+import { appendRecord, addFact } from './history.js?v=0.5.4';
+import { races } from './data.js?v=0.5.4';
 export const lifeExpectancy = (p) =>
   ({
     Human: 85,
@@ -56,7 +56,13 @@ export function recordMarriage(g, a, b, source = null) {
   rememberPerson(g, b, e.text);
   return e;
 }
-export function recordDeath(g, p, cause = 'illness') {
+export function recordDeath(
+  g,
+  p,
+  cause = 'illness',
+  source = null,
+  site = p.siteId,
+) {
   if (p.deathRecorded) return;
   p.deathRecorded = true;
   p.alive = false;
@@ -64,8 +70,9 @@ export function recordDeath(g, p, cause = 'illness') {
   p.deathTurn = g.turn;
   const e = appendRecord(g, {
     kind: 'death',
+    cause: source,
     people: [p.id],
-    site: p.siteId,
+    site,
     text:
       p.name + ' dies of ' + cause + '. Their history and obligations remain.',
   });
